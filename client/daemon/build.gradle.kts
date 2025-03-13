@@ -10,7 +10,7 @@ kotlin {
     androidNativeArm64("native") {  // Target ARM64 Android devices
         binaries {
             executable {
-                entryPoint = "main"
+                entryPoint = "org.OpenPin.Daemon.main"
             }
         }
     }
@@ -29,21 +29,22 @@ tasks.register("deployToAdb") {
 
     doLast {
         val binaryPath = "build/bin/native/debugExecutable/daemon.kexe"
+        val adbCommand = "/opt/homebrew/bin/adb"
         val adbPath = "/data/local/tmp/daemon"
 
         println("Pushing binary to device...")
         exec {
-            commandLine("adb", "push", binaryPath, adbPath)
+            commandLine(adbCommand, "push", binaryPath, adbPath)
         }
 
         println("Granting execute permissions...")
         exec {
-            commandLine("adb", "shell", "chmod", "+x", adbPath)
+            commandLine(adbCommand, "shell", "chmod", "+x", adbPath)
         }
 
         println("Running the binary on ADB target...")
         exec {
-            commandLine("adb", "shell", adbPath)
+            commandLine(adbCommand, "shell", adbPath)
         }
     }
 }
