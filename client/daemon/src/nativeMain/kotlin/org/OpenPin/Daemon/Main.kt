@@ -2,6 +2,7 @@ package org.OpenPin.Daemon
 
 fun main() {
     println("Listening for input events...")
+    println("pepe")
     val eventReader = InputEventReader()
     // Instantiate GestureDetector with custom thresholds and a gesture callback.
     val gestureDetector = GestureDetector(

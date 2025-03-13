@@ -19,6 +19,7 @@ kotlin {
         val nativeMain by getting {
             dependencies {
                 implementation(kotlin("stdlib"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-androidnativearm64:1.7.0")
             }
         }
     }

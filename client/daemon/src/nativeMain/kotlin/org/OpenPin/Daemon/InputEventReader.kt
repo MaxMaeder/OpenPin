@@ -11,7 +11,8 @@ import platform.posix.popen
 data class InputEvent(val device: String, val type: String, val code: String, val value: String)
 
 // Encapsulates the logic to parse log lines and read events.
-class InputEventReader {
+class InputEventReader(private val inputDevice: String = "/dev/input/event1") {
+
     // Parses a single log line into an InputEvent.
     fun parseEventLine(line: String): InputEvent? {
         val parts = line.split(":")
@@ -22,15 +23,17 @@ class InputEventReader {
         return InputEvent(device, tokens[0], tokens[1], tokens[2])
     }
 
-    // Lazily reads events from "getevent -l" and yields InputEvent objects.
+    // Lazily reads events from getevent -l using the specified device and yields InputEvent objects.
     @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
     fun readEvents(): Sequence<InputEvent> = sequence {
-        val process = popen("getevent -l", "r") ?: error("Failed to start process")
+        val command = "getevent -l"
+        val process = popen(command, "r") ?: error("Failed to start process")
         try {
             memScoped {
                 val buffer = ByteArray(1024)
                 while (fgets(buffer.refTo(0), buffer.size, process) != null) {
                     val line = buffer.toKString()
+                    //print(line)
                     parseEventLine(line)?.let { yield(it) }
                 }
             }

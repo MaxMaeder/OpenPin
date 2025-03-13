@@ -2,16 +2,14 @@ package org.OpenPin.Daemon
 
 import kotlin.math.abs
 import kotlin.math.sqrt
+import kotlinx.coroutines.*
 
-// Gesture type definitions.
 enum class GestureType {
     TAP, LONG_PRESS_DOWN, LONG_PRESS_UP, DRAG_UP, DRAG_DOWN, DRAG_LEFT, DRAG_RIGHT
 }
 
 data class GestureEvent(val fingerCount: Int, val type: GestureType)
 
-// GestureDetector aggregates input events and detects gestures.
-// It is configurable via its constructor.
 class GestureDetector(
     private val longPressThreshold: Long = 300L,
     private val swipeThreshold: Int = 20,
@@ -19,7 +17,7 @@ class GestureDetector(
 ) {
     private var touchActive = false
     private var dragStarted = false
-    private var longPressTriggered = false
+    private var longPressFired = false
     private var touchStartTime: Long = 0
     private var startX: Int? = null
     private var startY: Int? = null
@@ -31,7 +29,10 @@ class GestureDetector(
     // Track finger slots observed during the gesture.
     private val observedSlots = mutableSetOf<Int>()
 
-    // Process a new input event.
+    // Use an internal CoroutineScope instead of GlobalScope.
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var longPressJob: Job? = null
+
     fun processEvent(event: InputEvent) {
         when (event.type) {
             "EV_KEY" -> {
@@ -46,7 +47,7 @@ class GestureDetector(
                 when (event.code) {
                     "ABS_X" -> onXUpdate(parseCoordinate(event.value))
                     "ABS_Y" -> onYUpdate(parseCoordinate(event.value))
-                    // Each time a new multi‑touch slot is reported, add it.
+                    // Each time a new multi–touch slot is reported, record its slot.
                     "ABS_MT_SLOT" -> {
                         val slot = parseCoordinate(event.value)
                         observedSlots.add(slot)
@@ -61,11 +62,10 @@ class GestureDetector(
         }
     }
 
-    // Called when a touch starts.
     private fun onTouchDown() {
         touchActive = true
         dragStarted = false
-        longPressTriggered = false
+        longPressFired = false
         touchStartTime = SystemUtils.getMillis()
         startX = null
         startY = null
@@ -74,25 +74,32 @@ class GestureDetector(
         lastDragX = 0
         lastDragY = 0
         observedSlots.clear()
-    }
 
-    // Called when a touch ends.
-    private fun onTouchUp() {
-        if (!touchActive) return
-        // If no drag occurred, then decide between tap and long press up.
-        if (!dragStarted) {
-            val now = SystemUtils.getMillis()
-            val duration = now - touchStartTime
-            if (duration < longPressThreshold) {
-                gestureCallback(GestureEvent(getFingerCount(), GestureType.TAP))
-            } else {
-                gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_UP))
+        // Launch a coroutine to trigger LONG_PRESS_DOWN after longPressThreshold ms.
+        longPressJob = coroutineScope.launch {
+            delay(longPressThreshold)
+            if (touchActive && !dragStarted) {
+                gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_DOWN))
+                longPressFired = true
             }
         }
-        // Reset the gesture state.
+    }
+
+    private fun onTouchUp() {
+        if (!touchActive) return
+        longPressJob?.cancel()
+        longPressJob = null
+
+        // If a long press was fired, finish with LONG_PRESS_UP.
+        if (longPressFired) {
+            gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_UP))
+        } else if (!dragStarted) {
+            gestureCallback(GestureEvent(getFingerCount(), GestureType.TAP))
+        }
+        // Reset gesture state.
         touchActive = false
         dragStarted = false
-        longPressTriggered = false
+        longPressFired = false
     }
 
     private fun onXUpdate(x: Int) {
@@ -109,36 +116,33 @@ class GestureDetector(
         }
     }
 
-    // Called on each SYN_REPORT; handles long press detection and drag events.
+    // onSynReport() now handles drag (swipe) detection only if long press hasn't fired.
     private fun onSynReport() {
-        if (!touchActive) return
-        val now = SystemUtils.getMillis()
-        val duration = now - touchStartTime
+        if (!touchActive || longPressFired) return
 
-        // If not yet dragging, check if movement from start exceeds swipeThreshold.
-        if (!dragStarted && startX != null && startY != null && lastX != null && lastY != null) {
+        // Check if movement exceeds threshold (only if long press hasn't already fired).
+        if (!dragStarted &&
+            startX != null && startY != null && lastX != null && lastY != null
+        ) {
             val totalDeltaX = lastX!! - startX!!
             val totalDeltaY = lastY!! - startY!!
             val totalDistance = sqrt((totalDeltaX * totalDeltaX + totalDeltaY * totalDeltaY).toDouble())
             if (totalDistance >= swipeThreshold) {
                 dragStarted = true
-                // Initialize drag base coordinate to the start.
                 lastDragX = startX!!
                 lastDragY = startY!!
-                // Cancel long press if a drag is detected.
-                longPressTriggered = true
+                longPressJob?.cancel()
+                longPressJob = null
             }
         }
 
-        // If in drag mode, check if accumulated movement crosses another swipeThreshold.
+        // Process drag events only if in drag mode and long press hasn’t fired.
         if (dragStarted && lastX != null && lastY != null) {
             var diffX = lastX!! - lastDragX
             var diffY = lastY!! - lastDragY
-            // Process as many threshold crossings as available.
             while (true) {
                 if (abs(diffX) < swipeThreshold && abs(diffY) < swipeThreshold) break
 
-                // Determine the dominant axis of movement.
                 if (abs(diffX) >= abs(diffY)) {
                     if (diffX > 0) {
                         gestureCallback(GestureEvent(getFingerCount(), GestureType.DRAG_RIGHT))
@@ -159,12 +163,6 @@ class GestureDetector(
                 diffX = lastX!! - lastDragX
                 diffY = lastY!! - lastDragY
             }
-        }
-
-        // If not dragging and long press not yet triggered, check for long press.
-        if (!dragStarted && !longPressTriggered && duration >= longPressThreshold) {
-            gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_DOWN))
-            longPressTriggered = true
         }
     }
 
