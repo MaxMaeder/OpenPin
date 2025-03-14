@@ -42,6 +42,7 @@ From inside `daemon` folder:
 ```bash
 ./gradlew build
 adb push build/bin/native/debugExecutable/daemon.kexe /data/local/tmp/daemon
+adb shell chmod +x /data/local/tmp/daemon
 adb shell 'nohup /data/local/tmp/daemon > /dev/null 2>&1 &'
 ```
 
