@@ -4,11 +4,14 @@ import android.Manifest
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.openpin.app.backend.BackendHandler
 import org.openpin.app.daemonbridge.DaemonReceiver
@@ -17,6 +20,7 @@ import org.openpin.app.daemonbridge.GestureListener
 import org.openpin.app.daemonbridge.GestureType.*
 import org.openpin.app.daemonbridge.ProcessRunner
 import org.openpin.app.util.AudioRecorder
+import org.openpin.app.util.DeviceIdentity
 import org.openpin.app.util.ImageCapturer
 import java.io.File
 
@@ -40,6 +44,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(View(this))
+
+        DeviceIdentity.initialize(this)
+
         permissionsLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
@@ -88,9 +95,31 @@ class MainActivity : ComponentActivity() {
         audioRecorder.stopRecording()
         playSound(R.raw.record_end)
 
-        // Instead of transcription and chat request, send the combined request.
         lifecycleScope.launch {
+            // List of loading sound resources
+            val loadingSounds = listOf(
+                R.raw.loading1,
+                R.raw.loading2,
+                R.raw.loading3,
+                R.raw.loading4,
+                R.raw.loading5
+            )
+
+            // Launch a coroutine to play the loading sounds sequentially.
+            val loadingJob = launch {
+                var index = 0
+                delay(2000L)
+                while (isActive) {
+                    playSound(loadingSounds[index])
+                    index = (index + 1) % loadingSounds.size
+                    delay(2000L)
+                }
+            }
+
+            // Execute the backend request while the loading sound is playing.
             val mp3ResponseFile = backendHandler.sendRequest(audioFile, capturedImageFile)
+            // Once the request completes, cancel the loading sound coroutine.
+            loadingJob.cancel()
             if (mp3ResponseFile != null) {
                 playAudio(mp3ResponseFile)
             }
@@ -111,7 +140,13 @@ class MainActivity : ComponentActivity() {
             Log.i("MainActivity", "Tap detected. Capturing image.")
             val imageFile = processRunner.createAuxFile("image.jpeg")
             playSound(R.raw.shutter)
-            imageCapturer.captureImage(imageFile) { success ->
+            imageCapturer.captureImage(
+                cameraId = "0",
+                resolution = Size(1280, 720),
+                jpegQuality = 40,
+                convergeDelayMs = 1000L,
+                outputFile = imageFile
+            ) { success ->
                 if (success) {
                     Log.i("MainActivity", "Image capture successful.")
                     capturedImageFile = imageFile

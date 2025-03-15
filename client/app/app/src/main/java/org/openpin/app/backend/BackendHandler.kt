@@ -3,6 +3,7 @@ package org.openpin.app.backend
 import android.util.Log
 import org.json.JSONObject
 import org.openpin.app.daemonbridge.ProcessRunner
+import org.openpin.app.util.DeviceIdentity
 import java.io.File
 
 class BackendHandler(private val processRunner: ProcessRunner) {
@@ -17,7 +18,7 @@ class BackendHandler(private val processRunner: ProcessRunner) {
             put("audioSize", audioFile.length())
             put("audioFormat", "m4a")
             put("imageSize", imageFile?.length() ?: 0)
-            put("deviceId", "1")
+            put("deviceId", DeviceIdentity.identifier)
             put("audioBitrate", "64k")
         }
         // Convert JSON to string, append a null terminator.
@@ -45,7 +46,7 @@ class BackendHandler(private val processRunner: ProcessRunner) {
 
         // Build and execute the curl command (no extra HTTP headers).
         val shellProcess = processRunner.generateProcess { ShellProcess() }
-        val command = """curl -X POST "https://glasses.mmaeder.com/api/dev/handle" --data-binary @${requestFile.absolutePath} -o ${responseFile.absolutePath}"""
+        val command = """curl -X POST "https://openpin.center/api/dev/handle" --data-binary @${requestFile.absolutePath} -o ${responseFile.absolutePath}"""
         shellProcess.command = command
 
         val resultProcess = shellProcess.execute()
