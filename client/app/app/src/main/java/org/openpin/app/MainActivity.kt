@@ -1,16 +1,14 @@
 package org.openpin.app
 
 import android.Manifest
-import android.content.pm.PackageManager
 import android.media.MediaPlayer
-import android.media.MediaRecorder
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.View
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -20,6 +18,8 @@ import org.openpin.app.daemonbridge.GestureListener
 import org.openpin.app.daemonbridge.GestureType.*
 import org.openpin.app.daemonbridge.ProcessRunner
 import org.openpin.app.secrets.Grok
+import org.openpin.app.util.AudioRecorder
+import org.openpin.app.util.ImageCapturer
 import java.io.File
 import java.util.Locale
 
@@ -29,25 +29,29 @@ class MainActivity : ComponentActivity() {
     private lateinit var audioRecorder: AudioRecorder
     private lateinit var textToSpeech: TextToSpeech
     private lateinit var audioFile: File
+    private lateinit var imageCapturer: ImageCapturer
 
-    // Activity Result launcher for requesting RECORD_AUDIO permission.
-    private val micPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            initializeApp()
-        } else {
-            Log.e("MainActivity", "Microphone permission is required")
-        }
-    }
+    // Launcher for requesting both RECORD_AUDIO and CAMERA permissions.
+    private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Remove any UI by setting an empty view.
         setContentView(View(this))
 
-        // Request microphone permission using the Activity Result API.
-        micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        // Request both microphone and camera permissions.
+        permissionsLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            val micGranted = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+            val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
+            if (micGranted && cameraGranted) {
+                initializeApp()
+            } else {
+                Log.e("MainActivity", "Required permissions not granted: Mic: $micGranted, Camera: $cameraGranted")
+            }
+        }
+        permissionsLauncher.launch(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA))
     }
 
     private fun initializeApp() {
@@ -58,10 +62,15 @@ class MainActivity : ComponentActivity() {
         audioFile = processRunner.createAuxFile("audio.m4a")
         audioRecorder = AudioRecorder(audioFile)
 
+        // Initialize the image capturer.
+        imageCapturer = ImageCapturer(this)
+
         // Initialize GestureListener with separate callbacks.
         gestureListener = GestureListener(this)
         gestureListener.subscribeGesture(1, LONG_PRESS_DOWN, ::onLongPressDown)
         gestureListener.subscribeGesture(1, LONG_PRESS_UP, ::onLongPressUp)
+        // Add a TAP gesture listener.
+        gestureListener.subscribeGesture(1, TAP, ::onTap)
 
         // Initialize Android's TextToSpeech.
         textToSpeech = TextToSpeech(this) { status ->
@@ -83,14 +92,14 @@ class MainActivity : ComponentActivity() {
 
     private fun onLongPressDown(event: GestureEvent) {
         Log.i("MainActivity", "Long press down detected. Starting audio recording.")
-        //playSound(R.raw.record_start)
+        playSound(R.raw.record_start)
         audioRecorder.startRecording()
     }
 
     private fun onLongPressUp(event: GestureEvent) {
         Log.i("MainActivity", "Long press up detected. Stopping audio recording.")
         audioRecorder.stopRecording()
-        //playSound(R.raw.record_end)
+        playSound(R.raw.record_end)
 
         lifecycleScope.launch {
             // Get the transcription from the recorded audio.
@@ -101,9 +110,28 @@ class MainActivity : ComponentActivity() {
 
             // Only speak the chat response.
             textToSpeech.speak(chatResponse, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
 
-            // Clean up the auxiliary file.
-            //processRunner.deleteAuxFile(audioFile)
+    /**
+     * Tap gesture callback.
+     * If TTS is speaking, it stops it; otherwise, it silently captures an image.
+     */
+    private fun onTap(event: GestureEvent) {
+        if (textToSpeech.isSpeaking) {
+            Log.i("MainActivity", "Tap gesture detected while TTS is speaking. Stopping TTS.")
+            textToSpeech.stop()
+        } else {
+            Log.i("MainActivity", "Tap gesture detected. Capturing image.")
+            val imageFile = processRunner.createAuxFile("image.jpeg")
+            playSound(R.raw.shutter)
+            imageCapturer.captureImage(imageFile) { success ->
+                if (success) {
+                    Log.i("MainActivity", "Image capture successful.")
+                } else {
+                    Log.e("MainActivity", "Image capture failed.")
+                }
+            }
         }
     }
 
@@ -121,7 +149,6 @@ class MainActivity : ComponentActivity() {
         shellProcess.command = command
 
         val resultProcess = shellProcess.execute()
-
         if (resultProcess.error.isNotBlank()) {
             Log.e("MainActivity", "Transcription err: ${resultProcess.error}")
             resultProcess.release()
@@ -146,7 +173,6 @@ class MainActivity : ComponentActivity() {
      */
     private suspend fun performChatRequest(message: String): String {
         val shellProcess = processRunner.generateProcess { ShellProcess() }
-
 
         // Build the JSON payload using the detected message.
         val payload = """
@@ -197,41 +223,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         textToSpeech.shutdown()
+        imageCapturer.release() // Release camera resources if needed.
         DaemonReceiver.unregister(this)
-    }
-}
-
-/**
- * Simple helper class for audio recording using MediaRecorder.
- */
-class AudioRecorder(private val outputFile: File) {
-    private var recorder: MediaRecorder? = null
-
-    fun startRecording() {
-        try {
-            recorder = MediaRecorder().apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(outputFile.absolutePath)
-                prepare()
-                start()
-            }
-        } catch (e: Exception) {
-            Log.e("AudioRecorder", "Error starting audio recording", e)
-        }
-    }
-
-    fun stopRecording() {
-        try {
-            recorder?.apply {
-                stop()
-                release()
-            }
-        } catch (e: Exception) {
-            Log.e("AudioRecorder", "Error stopping audio recording", e)
-        } finally {
-            recorder = null
-        }
     }
 }
