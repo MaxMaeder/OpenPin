@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCaptureSession
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
@@ -15,11 +14,7 @@ import android.media.ImageReader
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import java.io.File
-import java.nio.ByteBuffer
 
-/**
- * Helper class for capturing images using the Camera2 API.
- */
 class ImageCapturer(private val context: Context) {
     private var cameraDevice: CameraDevice? = null
     private val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
@@ -30,28 +25,15 @@ class ImageCapturer(private val context: Context) {
      * @param onComplete Callback with the result of the capture: true if successful, false otherwise.
      */
     fun captureImage(outputFile: File, onComplete: (Boolean) -> Unit) {
-        // Choose a back-facing camera.
-        var cameraId: String? = null
-        for (id in cameraManager.cameraIdList) {
-            val characteristics = cameraManager.getCameraCharacteristics(id)
-            val lensFacing = characteristics.get(CameraCharacteristics.LENS_FACING)
-            if (lensFacing != null && lensFacing == CameraCharacteristics.LENS_FACING_BACK) {
-                cameraId = id
-                break
-            }
-        }
-        if (cameraId == null) {
-            Log.e("ImageCapturer", "No back camera found")
-            onComplete(false)
-            return
-        }
+        // Choose a back-facing camera. (This example simply uses cameraId "0".)
+        val cameraId = "0"
 
-        // Create an ImageReader to receive the JPEG image.
-        val imageReader = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 1)
+        // Create an ImageReader for HD resolution (1920x1080) JPEG capture.
+        val imageReader = ImageReader.newInstance(1920, 1080, ImageFormat.JPEG, 1)
         imageReader.setOnImageAvailableListener({ reader ->
             val image = reader.acquireLatestImage()
             if (image != null) {
-                val buffer: ByteBuffer = image.planes[0].buffer
+                val buffer = image.planes[0].buffer
                 val bytes = ByteArray(buffer.remaining())
                 buffer.get(bytes)
                 try {
@@ -70,11 +52,8 @@ class ImageCapturer(private val context: Context) {
             }
         }, null)
 
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        // Check for CAMERA permission.
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Log.e("ImageCapturer", "Permission not granted")
             onComplete(false)
             return
@@ -84,28 +63,32 @@ class ImageCapturer(private val context: Context) {
             override fun onOpened(camera: CameraDevice) {
                 cameraDevice = camera
                 try {
-                    camera.createCaptureSession(
-                        listOf(imageReader.surface),
+                    camera.createCaptureSession(listOf(imageReader.surface),
                         object : CameraCaptureSession.StateCallback() {
                             override fun onConfigured(session: CameraCaptureSession) {
                                 try {
-                                    val captureRequestBuilder = camera.createCaptureRequest(
-                                        CameraDevice.TEMPLATE_STILL_CAPTURE)
+                                    val captureRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
                                     captureRequestBuilder.addTarget(imageReader.surface)
+
+                                    // Set the control modes and parameters for AF, AE, and AWB.
                                     captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
-                                    session.capture(
-                                        captureRequestBuilder.build(),
-                                        object : CameraCaptureSession.CaptureCallback() {
-                                            override fun onCaptureCompleted(
-                                                session: CameraCaptureSession,
-                                                request: CaptureRequest,
-                                                result: TotalCaptureResult
-                                            ) {
-                                                Log.i("ImageCapturer", "Capture completed.")
-                                            }
-                                        },
-                                        null
-                                    )
+                                    captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                                    captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+                                    captureRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO)
+
+                                    // Set JPEG quality (100 = best quality).
+                                    captureRequestBuilder.set(CaptureRequest.JPEG_QUALITY, 100.toByte())
+
+                                    // Optionally, trigger autofocus explicitly.
+                                    captureRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START)
+
+                                    session.capture(captureRequestBuilder.build(), object : CameraCaptureSession.CaptureCallback() {
+                                        override fun onCaptureCompleted(session: CameraCaptureSession,
+                                                                        request: CaptureRequest,
+                                                                        result: TotalCaptureResult) {
+                                            Log.i("ImageCapturer", "Capture completed.")
+                                        }
+                                    }, null)
                                 } catch (e: Exception) {
                                     Log.e("ImageCapturer", "Error during capture", e)
                                     onComplete(false)
@@ -115,8 +98,7 @@ class ImageCapturer(private val context: Context) {
                                 Log.e("ImageCapturer", "Failed to configure capture session.")
                                 onComplete(false)
                             }
-                        },
-                        null
+                        }, null
                     )
                 } catch (e: Exception) {
                     Log.e("ImageCapturer", "Error creating capture session", e)
