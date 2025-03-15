@@ -14,10 +14,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import org.openpin.app.daemonbridge.DaemonReceiver
 import org.openpin.app.daemonbridge.GestureEvent
 import org.openpin.app.daemonbridge.GestureListener
 import org.openpin.app.daemonbridge.GestureType.*
 import org.openpin.app.daemonbridge.ProcessRunner
+import org.openpin.app.secrets.Grok
 import java.io.File
 import java.util.Locale
 
@@ -27,8 +29,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var audioRecorder: AudioRecorder
     private lateinit var textToSpeech: TextToSpeech
     private lateinit var audioFile: File
-
-    val GROQ_API_KEY = "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"
 
     // Activity Result launcher for requesting RECORD_AUDIO permission.
     private val micPermissionLauncher = registerForActivityResult(
@@ -46,21 +46,15 @@ class MainActivity : ComponentActivity() {
         // Remove any UI by setting an empty view.
         setContentView(View(this))
 
-        // Check if microphone permission is already granted.
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            initializeApp()
-        } else {
-            // Request microphone permission using the Activity Result API.
-            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
+        // Request microphone permission using the Activity Result API.
+        micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
     }
 
     private fun initializeApp() {
         // Initialize ProcessRunner and create the auxiliary audio file.
         processRunner = ProcessRunner(this)
         processRunner.init()
+
         audioFile = processRunner.createAuxFile("audio.m4a")
         audioRecorder = AudioRecorder(audioFile)
 
@@ -88,30 +82,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onLongPressDown(event: GestureEvent) {
-        Log.e("MainActivity", "Long press down detected. Starting audio recording.")
+        Log.i("MainActivity", "Long press down detected. Starting audio recording.")
+        //playSound(R.raw.record_start)
         audioRecorder.startRecording()
-        playSound(R.raw.record_start)
     }
 
     private fun onLongPressUp(event: GestureEvent) {
-        Log.e("MainActivity", "Long press up detected. Stopping audio recording.")
+        Log.i("MainActivity", "Long press up detected. Stopping audio recording.")
         audioRecorder.stopRecording()
-        playSound(R.raw.record_end)
+        //playSound(R.raw.record_end)
 
         lifecycleScope.launch {
             // Get the transcription from the recorded audio.
             val transcription = performTranscription(audioFile)
-            Log.e("MainActivity", "Detected transcription: $transcription")
 
             // Use the transcription as a message for the chat API.
             val chatResponse = performChatRequest(transcription)
-            Log.e("MainActivity", "Chat response: $chatResponse")
 
             // Only speak the chat response.
             textToSpeech.speak(chatResponse, TextToSpeech.QUEUE_FLUSH, null, null)
 
             // Clean up the auxiliary file.
-            processRunner.deleteAuxFile(audioFile)
+            //processRunner.deleteAuxFile(audioFile)
         }
     }
 
@@ -121,7 +113,7 @@ class MainActivity : ComponentActivity() {
     private suspend fun performTranscription(audioFile: File): String {
         val shellProcess = processRunner.generateProcess { ShellProcess() }
         val command = """curl "https://api.groq.com/openai/v1/audio/transcriptions" \
--H "Authorization: Bearer $GROQ_API_KEY" \
+-H "Authorization: Bearer ${Grok.GROK_KEY}" \
 -F "model=whisper-large-v3-turbo" \
 -F "file=@${audioFile.absolutePath}" \
 -F "response_format=verbose_json" \
@@ -129,9 +121,15 @@ class MainActivity : ComponentActivity() {
         shellProcess.command = command
 
         val resultProcess = shellProcess.execute()
+
+        if (resultProcess.error.isNotBlank()) {
+            Log.e("MainActivity", "Transcription err: ${resultProcess.error}")
+            resultProcess.release()
+            return "No text recognized"
+        }
+
         val output = resultProcess.output
-        Log.e("MainActivity", "Transcription result: $output")
-        Log.e("MainActivity", "Transcription err: ${resultProcess.error}")
+        Log.i("MainActivity", "Transcription result: $output")
         resultProcess.release()
 
         return try {
@@ -171,13 +169,13 @@ class MainActivity : ComponentActivity() {
         val command = """curl "https://api.groq.com/openai/v1/chat/completions" \
 -X POST \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $GROQ_API_KEY" \
+-H "Authorization: Bearer ${Grok.GROK_KEY}" \
 -d '$payload'"""
         shellProcess.command = command
 
         val resultProcess = shellProcess.execute()
         val output = resultProcess.output
-        Log.e("MainActivity", "Chat response: $output")
+        Log.i("MainActivity", "Chat response: $output")
         resultProcess.release()
 
         return try {
@@ -199,8 +197,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         textToSpeech.shutdown()
-        // Uncomment if you decide to unregister gestureListener.
-        // gestureListener.unregister()
+        DaemonReceiver.unregister(this)
     }
 }
 

@@ -113,13 +113,6 @@ class ProcessRunner(private val context: Context) {
         var error: String = ""
             protected set
 
-//        /**
-//         * Sets the shell command to execute.
-//         */
-//        fun setCommand(cmd: String) {
-//            command = cmd
-//        }
-
         /**
          * Executes the process:
          * 1. Writes the command file to (base)/processes/{pid}-cmd.txt.
@@ -133,7 +126,6 @@ class ProcessRunner(private val context: Context) {
                 processesDir.mkdirs()
             }
             val cmdFile = File(processesDir, "$pid-cmd.txt")
-            Log.e("Runner", "Written to: ${cmdFile.absolutePath}")
             try {
                 FileWriter(cmdFile).use { writer ->
                     writer.write(command)
@@ -150,7 +142,6 @@ class ProcessRunner(private val context: Context) {
                     filter = mapOf("pid" to pid),
                     once = true
                 ) { intent ->
-                    Log.e("Runner", "Was done")
                     val outFile = File(processesDir, "$pid-out.txt")
                     val errFile = File(processesDir, "$pid-error.txt")
                     output = if (outFile.exists()) outFile.readText() else ""
@@ -164,19 +155,16 @@ class ProcessRunner(private val context: Context) {
          * Releases this process by removing its pid from active processes.
          */
         fun release() {
-            Log.e("Runner", "Released")
             activeProcesses.remove(pid)
             updateActiveProcessesFile()
         }
     }
 
     private fun updateActiveProcessesFile() {
-        Log.e("Runner", "will up")
         try {
             FileWriter(activeProcessesFile, false).use { writer ->
                 activeProcesses.forEach { writer.write("$it\n") }
             }
-            Log.e("Runner", "did up")
         } catch (e: IOException) {
             Log.e("ProcessRunner", "Error updating active processes file", e)
         }

@@ -37,7 +37,6 @@ object DaemonReceiver {
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            Log.e("EventReceiver", "GOT MSG");
             if (intent == null) return
             val action = intent.action ?: return
             val intentType = DaemonIntentType.values().find { it.action == action } ?: return
