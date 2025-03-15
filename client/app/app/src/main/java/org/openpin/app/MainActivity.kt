@@ -38,6 +38,9 @@ class MainActivity : ComponentActivity() {
     // MediaPlayer instance for audio playback.
     private var mediaPlayer: MediaPlayer? = null
 
+    // Flag to disable touch events while backend request is running.
+    private var isRequestInProgress: Boolean = false
+
     // Launcher for requesting RECORD_AUDIO and CAMERA permissions.
     private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
 
@@ -85,18 +88,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onLongPressDown(event: GestureEvent) {
+        if (isRequestInProgress) return
+
+        if (mediaPlayer?.isPlaying == true) {
+            Log.i("MainActivity", "Long press down detected while audio is playing. Stopping playback.")
+            stopAudioPlayback()
+            return
+        }
+
         Log.i("MainActivity", "Long press down detected. Starting audio recording.")
         playSound(R.raw.record_start)
         audioRecorder.startRecording()
     }
 
     private fun onLongPressUp(event: GestureEvent) {
+        if (isRequestInProgress) return
+
         Log.i("MainActivity", "Long press up detected. Stopping audio recording.")
         audioRecorder.stopRecording()
         playSound(R.raw.record_end)
 
         lifecycleScope.launch {
-            // List of loading sound resources
+            // List of loading sound resources.
             val loadingSounds = listOf(
                 R.raw.loading1,
                 R.raw.loading2,
@@ -116,15 +129,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Execute the backend request while the loading sound is playing.
-            val mp3ResponseFile = backendHandler.sendRequest(audioFile, capturedImageFile)
-            // Once the request completes, cancel the loading sound coroutine.
-            loadingJob.cancel()
-            if (mp3ResponseFile != null) {
-                playAudio(mp3ResponseFile)
+            try {
+                isRequestInProgress = true
+                // Execute the backend request while the loading sound is playing.
+                val mp3ResponseFile = backendHandler.sendRequest(audioFile, capturedImageFile)
+                loadingJob.cancel()
+                if (mp3ResponseFile != null) {
+                    playAudio(mp3ResponseFile)
+                }
+                // Clear the captured image file after processing.
+                if (capturedImageFile != null) {
+                    processRunner.deleteAuxFile(capturedImageFile!!)
+                    capturedImageFile = null
+                }
+            } finally {
+                isRequestInProgress = false
             }
-            // Clear the captured image file after processing.
-            capturedImageFile = null
         }
     }
 
@@ -133,6 +153,8 @@ class MainActivity : ComponentActivity() {
      * If an audio response is playing, stop playback; otherwise, capture an image.
      */
     private fun onTap(event: GestureEvent) {
+        if (isRequestInProgress) return
+
         if (mediaPlayer?.isPlaying == true) {
             Log.i("MainActivity", "Tap detected while audio is playing. Stopping playback.")
             stopAudioPlayback()
@@ -144,7 +166,7 @@ class MainActivity : ComponentActivity() {
                 cameraId = "0",
                 resolution = Size(1280, 720),
                 jpegQuality = 40,
-                convergeDelayMs = 1000L,
+                convergeDelayMs = 500L,
                 outputFile = imageFile
             ) { success ->
                 if (success) {
