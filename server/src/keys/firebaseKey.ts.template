@@ -1,0 +1,10 @@
+/* eslint-disable max-len */
+import admin from "firebase-admin";
+
+const key: admin.ServiceAccount = {
+  projectId: "XXX",
+  privateKey: "-----BEGIN PRIVATE KEY-----\nXXX\n-----END PRIVATE KEY-----\n",
+  clientEmail: "XXX",
+};
+
+export default key;

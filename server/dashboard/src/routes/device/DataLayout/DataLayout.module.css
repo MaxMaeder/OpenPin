@@ -1,0 +1,82 @@
+.container {
+  display: flex;
+  justify-content: space-between;
+  aspect-ratio: 3.5;
+  width: 90%;
+  max-width: 1200px;
+}
+.bigBox {
+  height: 100%;
+  aspect-ratio: 1.25;
+}
+.littleBox {
+  height: 100%;
+  aspect-ratio: 0.75;
+}
+
+@media (min-width: 1051px) and (max-width: 1200px) {
+  .container {
+    width: 100%;
+    margin-left: 10px;
+    margin-right: 10px;
+    aspect-ratio: 3.35;
+  }
+}
+
+@media (min-width: 577px) and (max-width: 1050px) {
+  .container {
+    display: grid;
+    width: 100%;
+    margin: 10px;
+    aspect-ratio: unset;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px 10px;
+  }
+  .bigBox {
+    height: unset;
+  }
+  .bigBox:first-child {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  .bigBox:last-child {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .littleBox {
+    aspect-ratio: unset;
+    grid-row: 2;
+    grid-column-end: span 2;
+    display: grid;
+  }
+}
+
+@media (max-width: 576px) {
+  .center {
+    align-items: start;
+    height: unset !important;
+  }
+  .container {
+    display: grid;
+    width: 100%;
+    margin: 10px;
+    aspect-ratio: unset;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px 10px;
+  }
+  .bigBox {
+    height: unset;
+  }
+  .bigBox:first-child {
+    grid-row: 1;
+  }
+  .bigBox:last-child {
+    grid-row: 2;
+  }
+  .littleBox {
+    grid-row: 3;
+    aspect-ratio: unset;
+  }
+}
