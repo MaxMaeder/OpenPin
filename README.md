@@ -2,6 +2,8 @@
 
 A fix for the disabled Humane AI Pins. Somewhat unstable, and does not support all of the original features of AI Pin yet.
 
+Skip to: [Building an Interposer](#building-a-interposer) · [Installing Replacement Client](#installing-replacement-ai-pin-client) · [Usage](#usage)
+
 > **🚨: You will need a valid Humane ADB cert to proceed. You won't find that here.**
 
 This fix requires three components:
