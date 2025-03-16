@@ -1,6 +1,7 @@
 package org.openpin.app
 
 import android.Manifest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
@@ -17,12 +18,15 @@ import org.openpin.app.backend.BackendHandler
 import org.openpin.app.daemonbridge.DaemonReceiver
 import org.openpin.app.daemonbridge.GestureEvent
 import org.openpin.app.daemonbridge.GestureListener
-import org.openpin.app.daemonbridge.GestureType.*
+import org.openpin.app.daemonbridge.GestureType.LONG_PRESS_DOWN
+import org.openpin.app.daemonbridge.GestureType.LONG_PRESS_UP
+import org.openpin.app.daemonbridge.GestureType.TAP
 import org.openpin.app.daemonbridge.ProcessRunner
 import org.openpin.app.util.AudioRecorder
 import org.openpin.app.util.DeviceIdentity
 import org.openpin.app.util.ImageCapturer
 import java.io.File
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var processRunner: ProcessRunner
@@ -77,6 +81,13 @@ class MainActivity : ComponentActivity() {
         gestureListener.subscribeGesture(1, LONG_PRESS_DOWN, ::onLongPressDown)
         gestureListener.subscribeGesture(1, LONG_PRESS_UP, ::onLongPressUp)
         gestureListener.subscribeGesture(1, TAP, ::onTap)
+
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
+            0
+        )
     }
 
     // Helper function to play a sound effect.
@@ -208,6 +219,7 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         stopAudioPlayback()
         imageCapturer.release()
+        gestureListener.unsubscribeAll()
         DaemonReceiver.unregister(this)
     }
 }

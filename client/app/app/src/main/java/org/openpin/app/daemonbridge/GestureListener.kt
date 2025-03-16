@@ -29,43 +29,53 @@ data class GestureEvent(val fingerCount: Int, val type: GestureType)
  */
 class GestureListener(private val context: Context) {
 
-    /**
-     * Subscribes to all gesture events.
-     */
+    // Store registered callback functions for gesture events.
+    private val gestureCallbacks = mutableListOf<(Intent) -> Unit>()
+
     fun subscribeAll(callback: (GestureEvent) -> Unit) {
+        val intentCallback: (Intent) -> Unit = { intent ->
+            parseGestureEvent(intent)?.let { event ->
+                callback(event)
+            }
+        }
+        gestureCallbacks.add(intentCallback)
         DaemonReceiver.registerCallback(
             intentType = DaemonIntentType.GESTURE,
             filter = emptyMap(),
-            once = false
-        ) { intent ->
-            parseGestureEvent(intent)?.let { event ->
-                callback(event)
-            }
-        }
+            once = false,
+            callback = intentCallback
+        )
     }
 
-    /**
-     * Subscribes only to gesture events that match the specified fingerCount and type.
-     */
     fun subscribeGesture(fingerCount: Int, type: GestureType, callback: (GestureEvent) -> Unit) {
         val filter = mapOf(
             "fingerCount" to fingerCount,
-            "type" to type.name // Assumes the intent sends the gesture type as a string matching the enum name.
+            "type" to type.name
         )
-        DaemonReceiver.registerCallback(
-            intentType = DaemonIntentType.GESTURE,
-            filter = filter,
-            once = false
-        ) { intent ->
+        val intentCallback: (Intent) -> Unit = { intent ->
             parseGestureEvent(intent)?.let { event ->
                 callback(event)
             }
         }
+        gestureCallbacks.add(intentCallback)
+        DaemonReceiver.registerCallback(
+            intentType = DaemonIntentType.GESTURE,
+            filter = filter,
+            once = false,
+            callback = intentCallback
+        )
     }
 
     /**
-     * Converts an Intent into a GestureEvent, if possible.
+     * Unsubscribes from all gesture events by unregistering all stored callbacks.
      */
+    fun unsubscribeAll() {
+        for (callback in gestureCallbacks) {
+            DaemonReceiver.unregisterCallback(callback)
+        }
+        gestureCallbacks.clear()
+    }
+
     private fun parseGestureEvent(intent: Intent): GestureEvent? {
         val extras = intent.extras ?: return null
         val fingerCount = extras.getInt("fingerCount", -1)
