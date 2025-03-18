@@ -1,47 +1,26 @@
 package org.openpin.uiexample
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.openpin.uiexample.ui.theme.ClientTheme
+import org.openpin.appframework.core.PinActivity
+import org.openpin.appframework.ui.config.UIConfig
+import org.openpin.appframework.ui.controllers.NavigationController
+import org.openpin.appframework.ui.hosts.AppContainer
+import org.openpin.uiexample.views.MainView
 
-class MainActivity : ComponentActivity() {
+class MainActivity : PinActivity() {
+
+    // Optionally override to customize defaults.
+    override val config: UIConfig = UIConfig(
+        // debugShowHitboxes = true, // etc.
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ClientTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+        val navigationController = NavigationController().apply {
+            init { MainView(navigationController = this) }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ClientTheme {
-        Greeting("Android")
+        setGraphicsContent {
+            AppContainer(navigationController = navigationController)
+        }
     }
 }
