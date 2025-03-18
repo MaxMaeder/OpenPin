@@ -42,7 +42,7 @@ fun TextButton(
             baseButtonConfig = config.base,
             shape = androidx.compose.foundation.shape.RoundedCornerShape(25.dp)
         ) {
-            CustomText(
+            Text(
                 text = text,
                 textSize = config.textSize,
                 textConfig = uiConfig.text

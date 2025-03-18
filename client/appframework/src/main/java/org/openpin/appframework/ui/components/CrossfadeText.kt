@@ -33,7 +33,7 @@ fun CrossfadeText(
         }
     }
 
-    CustomText(
+    Text(
         text = currentText,
         textSize = uiConfig.text.fontSize,
         textConfig = uiConfig.text,

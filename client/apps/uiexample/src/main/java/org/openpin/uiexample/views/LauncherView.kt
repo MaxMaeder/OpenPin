@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.openpin.appframework.ui.components.CrossfadeText
-import org.openpin.appframework.ui.components.CustomText
+import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.components.IconButton
 import org.openpin.appframework.ui.config.TextConfig
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -104,12 +104,12 @@ fun LauncherView() {
                     .fillMaxWidth()
                     .height(80.dp)
             ) {
-                CustomText(
+                Text(
                     text = "wi-fi",
                     textSize = 70.sp,
                     textConfig = TextConfig()
                 )
-                CustomText(
+                Text(
                     text = "100%",
                     textSize = 70.sp,
                     textConfig = TextConfig()

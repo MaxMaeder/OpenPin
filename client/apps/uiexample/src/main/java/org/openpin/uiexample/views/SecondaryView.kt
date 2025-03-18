@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.openpin.appframework.ui.components.CustomText
+import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.components.TextButton
 import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -20,7 +20,7 @@ fun SecondaryView(navigationController: NavigationController, message: String) {
             .fillMaxSize()
             .padding(config.viewMargin)
     ) {
-        CustomText(
+        Text(
             text = message,
             textSize = config.text.fontSize,
             textConfig = config.text,

@@ -5,7 +5,7 @@ import androidx.compose.ui.geometry.Offset
 import org.openpin.appframework.ui.config.UIConfig
 import org.openpin.appframework.ui.controllers.MagneticTargetsController
 
-val LocalUIConfig = staticCompositionLocalOf<UIConfig> { UIConfig() }
+val LocalUIConfig = staticCompositionLocalOf { UIConfig() }
 
 val LocalPointerPosition = staticCompositionLocalOf { Offset.Zero }
 val LocalPointerPressed = staticCompositionLocalOf { false }

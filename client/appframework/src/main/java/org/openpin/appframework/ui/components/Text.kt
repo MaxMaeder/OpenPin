@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.TextUnit
 import org.openpin.appframework.ui.config.TextConfig
 
 @Composable
-fun CustomText(
+fun Text(
     text: String,
     textSize: TextUnit,
     textConfig: TextConfig,
