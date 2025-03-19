@@ -1,5 +1,6 @@
 package org.openpin.appframework.ui.components
 
+import android.util.Log
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
@@ -8,10 +9,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -22,6 +25,7 @@ import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
 import org.openpin.appframework.ui.locals.LocalMagneticTargetsController
 import org.openpin.appframework.ui.locals.LocalPointerPosition
+import org.openpin.appframework.ui.locals.LocalPointerPositionState
 import org.openpin.appframework.ui.locals.LocalPointerPressed
 import java.util.UUID
 
@@ -37,7 +41,8 @@ fun MagneticTarget(
     onClick: () -> Unit = {},
     content: @Composable (isFocused: Boolean, isActive: Boolean, magnetOffset: Offset, scaleFactor: Float) -> Unit
 ) {
-    val pointerPosition = LocalPointerPosition.current
+    // Read the pointer state (provided as State<Offset>)
+    val pointerPositionState = LocalPointerPositionState.current
     val pointerPressed = LocalPointerPressed.current
     val controller = LocalMagneticTargetsController.current
 
@@ -59,6 +64,10 @@ fun MagneticTarget(
         val isFocused = (focusedId == id)
         val isActive = isFocused && pointerPressed
 
+        SideEffect {
+            Log.e("MagneticTarget", "Recomposed: id=$id, isFocused=$isFocused")
+        }
+
         var wasActive by remember { mutableStateOf(false) }
         LaunchedEffect(pointerPressed, isFocused) {
             val currentlyActive = isFocused && pointerPressed
@@ -72,11 +81,24 @@ fun MagneticTarget(
             if (isFocused) onFocus?.invoke()
         }
 
+        // Use a local effective pointer position that only updates when focused.
+        var effectivePointerPosition by remember { mutableStateOf(pointerPositionState.value) }
+        if (isFocused) {
+            // When focused, subscribe to pointer updates.
+            LaunchedEffect(isFocused) {
+                snapshotFlow { pointerPositionState.value }
+                    .collect { newPos ->
+                        effectivePointerPosition = newPos
+                    }
+            }
+        }
+
+        // Compute magnet effect using the effective pointer position.
         val targetShift = if (magnetEnabled && isFocused && targetRect != null) {
             val center = targetRect!!.center
-            val distance = (pointerPosition - center).getDistance()
+            val distance = (effectivePointerPosition - center).getDistance()
             val rubberFactor = 1f / (1f + magneticTargetConfig.magnetRubberBandFactor * distance)
-            (pointerPosition - center) * magneticTargetConfig.magnetEffectStrength * rubberFactor
+            (effectivePointerPosition - center) * magneticTargetConfig.magnetEffectStrength * rubberFactor
         } else Offset.Zero
 
         val tweenSpec = remember(magneticTargetConfig.animationDuration) {

@@ -1,7 +1,9 @@
 package org.openpin.appframework.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.openpin.appframework.ui.config.ButtonVariant
@@ -22,6 +24,10 @@ fun TextButton(
 ) {
     val uiConfig: UIConfig = LocalUIConfig.current
     val config = textButtonConfig ?: uiConfig.textButton
+
+    SideEffect {
+        Log.e("BTN", "BTNh")
+    }
 
     MagneticTarget(
         onClick = onClick,
