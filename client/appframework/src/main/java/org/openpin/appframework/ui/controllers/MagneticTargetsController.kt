@@ -20,16 +20,20 @@ class MagneticTargetsController {
 
     fun focusedTargetId(pointer: Offset): String? {
         if (targets.isEmpty()) return null
-        val tolerance = 0.001f
-        val distances = targets.mapValues { (_, info) -> distanceToRect(info.rect, pointer) }
-        val minDistance = distances.values.minOrNull() ?: return null
-        val equallyClose = distances.filterValues { (it - minDistance) < tolerance }.keys
-
-        return if (equallyClose.size == 1) {
-            equallyClose.first()
-        } else {
-            equallyClose.maxByOrNull { targets[it]?.zIndex ?: 0 }
+        var bestId: String? = null
+        var bestDistance = Float.MAX_VALUE
+        targets.forEach { (id, info) ->
+            val distance = distanceToRect(info.rect, pointer)
+            if (distance < bestDistance) {
+                bestDistance = distance
+                bestId = id
+            } else if (distance == bestDistance) {
+                if (info.zIndex > (targets[bestId]?.zIndex ?: 0)) {
+                    bestId = id
+                }
+            }
         }
+        return bestId
     }
 
     private fun distanceToRect(rect: Rect, point: Offset): Float {

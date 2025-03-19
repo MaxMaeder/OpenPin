@@ -55,11 +55,19 @@ fun AppContainer(navigationController: NavigationController) {
                     } else false
                 }
                 .pointerInput(Unit) {
-                    while (true) {
-                        val event = awaitPointerEventScope { awaitPointerEvent() }
-                        event.changes.firstOrNull()?.let { change ->
-                            pointerPosition = change.position
-                            pointerPressed = change.pressed
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            event.changes.firstOrNull()?.let { change ->
+                                val newPos = change.position
+                                // Only update if the pointer has moved more than a small threshold (e.g., 1 pixel)
+                                if (kotlin.math.abs(newPos.x - pointerPosition.x) > 1f ||
+                                    kotlin.math.abs(newPos.y - pointerPosition.y) > 1f
+                                ) {
+                                    pointerPosition = newPos
+                                }
+                                pointerPressed = change.pressed
+                            }
                         }
                     }
                 }

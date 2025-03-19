@@ -23,11 +23,16 @@ fun NavigationHost(navigationController: NavigationController) {
     var showOverlay by remember { mutableStateOf(false) }
     var displayedView by remember { mutableStateOf(navigationController.currentView) }
 
+    // Cache the tween spec for overlay animation.
+    val overlayTweenSpec = remember(config.appearanceTransition.animationDuration) {
+        tween<Float>(durationMillis = config.appearanceTransition.animationDuration)
+    }
     val overlayAlpha by animateFloatAsState(
         targetValue = if (showOverlay) 1f else 0f,
-        animationSpec = tween(durationMillis = config.appearanceTransition.animationDuration)
+        animationSpec = overlayTweenSpec
     )
 
+    // Use LaunchedEffect keyed to currentView changes.
     LaunchedEffect(navigationController.currentView) {
         showOverlay = true
         delay(config.appearanceTransition.animationDuration.toLong())

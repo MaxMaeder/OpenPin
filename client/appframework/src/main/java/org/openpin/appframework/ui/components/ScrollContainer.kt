@@ -49,12 +49,9 @@ fun ScrollContainer(
             .fillMaxSize()
             .clipToBounds()
     ) {
-        // Custom layout to allow unbounded height for the content.
         Layout(
             content = {
-                Column(
-                    modifier = Modifier.padding(horizontal = uiConfig.viewMargin)
-                ) {
+                Column(modifier = Modifier.padding(horizontal = uiConfig.viewMargin)) {
                     content()
                 }
             },
@@ -62,10 +59,8 @@ fun ScrollContainer(
                 .onGloballyPositioned { coords ->
                     viewportHeight = coords.size.height
                 }
-                // Offset the content vertically based on the scroll offset.
                 .offset { IntOffset(x = 0, y = -scrollOffsetAnim.value.roundToInt()) }
         ) { measurables, constraints ->
-            // Allow children to have “infinite” vertical space.
             val childConstraints = constraints.copy(minHeight = 0, maxHeight = Int.MAX_VALUE)
             val placeables = measurables.map { it.measure(childConstraints) }
             contentHeight = placeables.sumOf { it.height }
@@ -81,7 +76,7 @@ fun ScrollContainer(
             }
         }
 
-        val canScroll = contentHeight > viewportHeight
+        val canScroll = remember(viewportHeight, contentHeight) { contentHeight > viewportHeight }
         if (canScroll) {
             LaunchedEffect(contentHeight, viewportHeight) {
                 val maxOffset = (contentHeight - viewportHeight).coerceAtLeast(0)
@@ -95,17 +90,19 @@ fun ScrollContainer(
             val canScrollUp = currentOffset > 0f
             val canScrollDown = currentOffset < maxOffset
 
-            // Animate arrow fade in/out.
+            // Cache the tween spec for arrow fade animations.
+            val arrowTweenSpec = remember(config.scrollAnimationDuration) {
+                tween<Float>(durationMillis = config.scrollAnimationDuration)
+            }
             val alphaUp by animateFloatAsState(
                 targetValue = if (canScrollUp) 1f else 0f,
-                animationSpec = tween(config.scrollAnimationDuration)
+                animationSpec = arrowTweenSpec
             )
             val alphaDown by animateFloatAsState(
                 targetValue = if (canScrollDown) 1f else 0f,
-                animationSpec = tween(config.scrollAnimationDuration)
+                animationSpec = arrowTweenSpec
             )
 
-            // Calculate the jump size based on a fraction of the viewport height.
             val jumpSize = viewportHeight * config.scrollJumpFraction
 
             ScrollArrowButton(
@@ -135,28 +132,6 @@ fun ScrollContainer(
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
-
-            // Scrollbar drawn along the right margin.
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxHeight()
-//                    .width(config.scrollbarThickness)
-//                    .align(Alignment.CenterEnd)
-//                    .padding(end = uiConfig.viewMargin)
-//            ) {
-//                if (contentHeight > viewportHeight) {
-//                    val scrollbarHeightFraction = viewportHeight.toFloat() / contentHeight.toFloat()
-//                    val thumbHeight = viewportHeight * scrollbarHeightFraction
-//                    val thumbOffset = ((viewportHeight - thumbHeight) * (currentOffset / contentHeight))
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(thumbHeight.dp)
-//                            .offset(y = thumbOffset.dp)
-//                            .background(uiConfig.navigationHost.backgroundColor)
-//                    )
-//                }
-//            }
         }
     }
 }

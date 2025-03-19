@@ -11,10 +11,12 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -45,13 +47,18 @@ fun BaseLaserButton(
         isFocused -> variantConfig.focused
         else -> variantConfig.normal
     }
+
+    val colorTweenSpec = remember(baseButtonConfig.appearanceTransition.animationDuration) {
+        tween<Color>(durationMillis = baseButtonConfig.appearanceTransition.animationDuration)
+    }
+
     val animatedBackgroundColor by animateColorAsState(
         targetValue = stateConfig.backgroundColor,
-        animationSpec = tween(durationMillis = baseButtonConfig.appearanceTransition.animationDuration)
+        animationSpec = colorTweenSpec
     )
     val animatedContentColor by animateColorAsState(
         targetValue = stateConfig.textColor,
-        animationSpec = tween(durationMillis = baseButtonConfig.appearanceTransition.animationDuration)
+        animationSpec = colorTweenSpec
     )
 
     val borderWidth = 4.dp

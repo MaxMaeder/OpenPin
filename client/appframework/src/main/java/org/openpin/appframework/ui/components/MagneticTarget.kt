@@ -79,15 +79,21 @@ fun MagneticTarget(
             (pointerPosition - center) * magneticTargetConfig.magnetEffectStrength * rubberFactor
         } else Offset.Zero
 
+        val tweenSpec = remember(magneticTargetConfig.animationDuration) {
+            tween<Offset>(durationMillis = magneticTargetConfig.animationDuration)
+        }
         val animatedShift by animateValueAsState(
             targetValue = targetShift,
             typeConverter = Offset.VectorConverter,
-            animationSpec = tween(magneticTargetConfig.animationDuration)
+            animationSpec = tweenSpec
         )
 
+        val scaleTweenSpec = remember(transitionConfig.animationDuration) {
+            tween<Float>(durationMillis = transitionConfig.animationDuration)
+        }
         val scaleFactor by animateFloatAsState(
             targetValue = if (scaleOnFocus && isFocused) magneticTargetConfig.scaleEffectMagnitude else 1f,
-            animationSpec = tween(durationMillis = transitionConfig.animationDuration)
+            animationSpec = scaleTweenSpec
         )
 
         content(isFocused, isActive, animatedShift, scaleFactor)
