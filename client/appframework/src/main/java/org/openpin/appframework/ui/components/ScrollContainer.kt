@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +26,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import kotlinx.coroutines.launch
 import org.openpin.appframework.ui.config.ScrollContainerConfig
+import org.openpin.appframework.ui.config.UIIcon
 import org.openpin.appframework.ui.locals.LocalUIConfig
 import kotlin.math.roundToInt
 
@@ -108,28 +107,28 @@ fun ScrollContainer(
             ScrollArrowButton(
                 visible = (alphaUp > 0f),
                 gradientBrush = Brush.verticalGradient(listOf(Color.Black, Color.Transparent)),
-                arrowIcon = androidx.compose.material.icons.Icons.Default.KeyboardArrowUp,
-                contentDescription = "Scroll Up",
+                arrowIcon = UIIcon.ChevronUp,
                 onClick = {
                     coroutineScope.launch {
                         val newOffset = (currentOffset - jumpSize).coerceAtLeast(0f)
                         scrollOffsetAnim.animateTo(newOffset, tween(config.scrollAnimationDuration))
                     }
                 },
+                config = config.scrollButton,
                 modifier = Modifier.align(Alignment.TopCenter)
             )
 
             ScrollArrowButton(
                 visible = (alphaDown > 0f),
                 gradientBrush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black)),
-                arrowIcon = androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
-                contentDescription = "Scroll Down",
+                arrowIcon = UIIcon.ChevronDown,
                 onClick = {
                     coroutineScope.launch {
                         val newOffset = (currentOffset + jumpSize).coerceAtMost(maxOffset)
                         scrollOffsetAnim.animateTo(newOffset, tween(config.scrollAnimationDuration))
                     }
                 },
+                config = config.scrollButton,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

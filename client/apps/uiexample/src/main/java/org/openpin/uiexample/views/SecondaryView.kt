@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.components.TextButton
@@ -22,9 +21,6 @@ fun SecondaryView(navigationController: NavigationController, message: String) {
     ) {
         Text(
             text = message,
-            textSize = config.text.fontSize,
-            textConfig = config.text,
-            color = Color.White
         )
         TextButton(
             text = "Btn 3",

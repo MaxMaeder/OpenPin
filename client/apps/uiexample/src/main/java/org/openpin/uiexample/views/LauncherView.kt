@@ -16,6 +16,7 @@ import androidx.compose.material.icons.rounded.Face
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,8 +30,9 @@ import androidx.compose.ui.unit.sp
 import org.openpin.appframework.ui.components.CrossfadeText
 import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.components.IconButton
-import org.openpin.appframework.ui.config.TextConfig
+import org.openpin.appframework.ui.config.UIIcon
 import org.openpin.appframework.ui.locals.LocalUIConfig
+import org.openpin.appframework.utils.update
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -48,11 +50,9 @@ fun calculatePentagonOffsets(radius: Float, angleOffset: Float): List<IntOffset>
 @Composable
 fun LauncherView() {
     val density = LocalDensity.current
-    val config = LocalUIConfig.current
 
     val radiusDp = 130.dp
     val radiusPx = with(density) { radiusDp.toPx() }
-    val iconSizeDp = 100.dp
 
     var focusedLabel by remember { mutableStateOf("call") }
 
@@ -67,24 +67,39 @@ fun LauncherView() {
                 .fillMaxSize()
                 .padding(top = 40.dp)
         ) {
-            val iconData = listOf(
-                Icons.Rounded.PlayArrow to "play",
-                Icons.Rounded.PlayArrow to "play",
-                Icons.Rounded.Settings to "settings",
-                Icons.Rounded.Face to "face",
-                Icons.Rounded.Call to "call"
-            )
-            val offsets = calculatePentagonOffsets(radiusPx, angleOffset = -126f)
-            iconData.forEachIndexed { i, (icon, label) ->
-                IconButton(
-                    scaleOnFocus = true,
-                    icon = icon,
-                    contentDescription = null,
-                    shadowEnabled = true,
-                    onClick = { /* handle click if needed */ },
-                    onFocus = { focusedLabel = label },
-                    modifier = Modifier.offset { offsets[i] }
+            CompositionLocalProvider(
+                LocalUIConfig provides LocalUIConfig.current.update {
+                    copy(
+                        iconButton = iconButton.update {
+                            copy(
+                                iconSize = 80.dp,
+                                base = base.update {
+                                    copy(padding = 25.dp)
+                                }
+                            )
+                        }
+                    )
+                }
+            ) {
+                val iconData = listOf(
+                    UIIcon.MusicalNotes to "play",
+                    UIIcon.Chatbox to "messages",
+                    UIIcon.Call to "call",
+                    UIIcon.Settings to "settings",
+                    UIIcon.Camera to "capture"
                 )
+                val offsets = calculatePentagonOffsets(radiusPx, angleOffset = -126f)
+                iconData.forEachIndexed { i, (icon, label) ->
+                    IconButton(
+                        scaleOnFocus = true,
+                        icon = icon,
+                        contentDescription = null,
+                        shadowEnabled = true,
+                        onClick = { /* handle click if needed */ },
+                        onFocus = { focusedLabel = label },
+                        modifier = Modifier.offset { offsets[i] }
+                    )
+                }
             }
         }
 
@@ -95,6 +110,7 @@ fun LauncherView() {
         ) {
             CrossfadeText(
                 text = focusedLabel,
+                size = 90.sp,
                 modifier = Modifier.offset(y = (-10).dp)
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -106,13 +122,11 @@ fun LauncherView() {
             ) {
                 Text(
                     text = "wi-fi",
-                    textSize = 70.sp,
-                    textConfig = TextConfig()
+                    size = 70.sp,
                 )
                 Text(
                     text = "100%",
-                    textSize = 70.sp,
-                    textConfig = TextConfig()
+                    size = 70.sp,
                 )
             }
         }

@@ -15,14 +15,17 @@ data class ScrollContainerConfig(
     val scrollAnimationDuration: Int = 300,
     // Fraction of the viewport height to jump on arrow click.
     val scrollJumpFraction: Float = 0.75f,
-    // The height for the arrow area (the container for the arrow buttons).
-    val arrowAreaHeight: Dp = 100.dp
+
+    val scrollButton: ScrollArrowButtonConfig = ScrollArrowButtonConfig(),
 )
 
 /**
  * Configuration for the wide scroll arrow button used in the scroll container.
  */
 data class ScrollArrowButtonConfig(
+    // The height for the arrow area (the container for the arrow buttons).
+    val arrowAreaHeight: Dp = 100.dp,
+
     // Size of the “pill” button.
     val pillWidth: Dp = 80.dp,
     val pillHeight: Dp = 40.dp,

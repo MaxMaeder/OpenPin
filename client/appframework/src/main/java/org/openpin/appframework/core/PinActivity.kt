@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import org.openpin.appframework.ui.config.UIConfig
@@ -33,8 +34,7 @@ abstract class PinActivity : ComponentActivity() {
 
     protected fun setGraphicsContent(content: @Composable () -> Unit) {
         setContent {
-            // Provide the UI configuration to the entire composition.
-            androidx.compose.runtime.CompositionLocalProvider(LocalUIConfig provides config) {
+            CompositionLocalProvider(LocalUIConfig provides config) {
                 content()
             }
         }

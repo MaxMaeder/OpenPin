@@ -1,6 +1,9 @@
 package org.openpin.appframework.ui.config
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,7 +39,8 @@ data class BaseButtonConfig(
     val shadow: ButtonShadowConfig = ButtonShadowConfig(),
     val appearanceTransition: AppearanceTransitionConfig = AppearanceTransitionConfig(),
     val variants: Map<ButtonVariant, ButtonVariantConfig> = defaultButtonVariants(),
-    val padding: Dp = 16.dp
+    val padding: Dp = 16.dp,
+    val shape: Shape
 )
 
 fun defaultButtonVariants(): Map<ButtonVariant, ButtonVariantConfig> {
@@ -86,14 +90,17 @@ fun defaultButtonVariants(): Map<ButtonVariant, ButtonVariantConfig> {
 
 data class IconButtonConfig(
     val base: BaseButtonConfig = BaseButtonConfig(
-        magnetTarget = MagneticTargetConfig(scaleEffectMagnitude = 1.2f)
+        magnetTarget = MagneticTargetConfig(scaleEffectMagnitude = 1.2f),
+        shape = CircleShape
     ),
     val iconSize: Dp = 80.dp
 )
 
 data class TextButtonConfig(
     val base: BaseButtonConfig = BaseButtonConfig(
-        magnetTarget = MagneticTargetConfig(scaleEffectMagnitude = 1.015f)
+        magnetTarget = MagneticTargetConfig(scaleEffectMagnitude = 1.015f),
+        shape = RoundedCornerShape(25.dp)
     ),
-    val textSize: androidx.compose.ui.unit.TextUnit = 60.sp
+    val textSize: androidx.compose.ui.unit.TextUnit = 60.sp,
+    val fullWidth: Boolean = true
 )

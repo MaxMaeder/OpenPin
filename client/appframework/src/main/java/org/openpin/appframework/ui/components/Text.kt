@@ -1,26 +1,31 @@
 package org.openpin.appframework.ui.components
 
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
-import org.openpin.appframework.ui.config.TextConfig
+import org.openpin.appframework.ui.locals.LocalContentColor
+import org.openpin.appframework.ui.locals.LocalUIConfig
 
 @Composable
 fun Text(
     text: String,
-    textSize: TextUnit,
-    textConfig: TextConfig,
     modifier: Modifier = Modifier,
-    color: androidx.compose.ui.graphics.Color? = null
+    size: TextUnit? = null,
+    weight: FontWeight? = null,
 ) {
-    Text(
+    val config = LocalUIConfig.current.text
+
+    BasicText(
         text = text,
-        fontSize = textSize,
-        fontWeight = textConfig.fontWeight,
-        fontFamily = textConfig.fontFamily,
-        color = color ?: LocalContentColor.current,
+        style = TextStyle(
+            fontFamily = config.fontFamily,
+            fontSize = size ?: config.fontSize,
+            fontWeight = weight ?: config.fontWeight,
+            color = LocalContentColor.current
+        ),
         modifier = modifier
     )
 }

@@ -1,6 +1,5 @@
 package org.openpin.appframework.ui.components
 
-import android.util.Log
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,19 +22,18 @@ import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
 import org.openpin.appframework.ui.locals.LocalMagneticTargetsController
-import org.openpin.appframework.ui.locals.LocalPointerPosition
 import org.openpin.appframework.ui.locals.LocalPointerPositionState
 import org.openpin.appframework.ui.locals.LocalPointerPressed
 import java.util.UUID
 
 @Composable
 fun MagneticTarget(
+    zIndex: Int,
     modifier: Modifier = Modifier,
     magnetEnabled: Boolean = true,
     scaleOnFocus: Boolean = false,
     magneticTargetConfig: MagneticTargetConfig,
     transitionConfig: AppearanceTransitionConfig,
-    zIndex: Int = 0,
     onFocus: (() -> Unit)? = null,
     onClick: () -> Unit = {},
     content: @Composable (isFocused: Boolean, isActive: Boolean, magnetOffset: Offset, scaleFactor: Float) -> Unit
@@ -63,10 +60,6 @@ fun MagneticTarget(
         val focusedId = LocalFocusedTargetId.current
         val isFocused = (focusedId == id)
         val isActive = isFocused && pointerPressed
-
-        SideEffect {
-            Log.e("MagneticTarget", "Recomposed: id=$id, isFocused=$isFocused")
-        }
 
         var wasActive by remember { mutableStateOf(false) }
         LaunchedEffect(pointerPressed, isFocused) {

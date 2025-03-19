@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -50,7 +49,7 @@ fun NavigationHost(navigationController: NavigationController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = overlayAlpha))
+                    .background(config.backgroundColor.copy(alpha = overlayAlpha))
             )
         }
     }

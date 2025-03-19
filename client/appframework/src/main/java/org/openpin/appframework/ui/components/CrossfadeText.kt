@@ -10,33 +10,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import org.openpin.appframework.ui.config.FadingTextConfig
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import org.openpin.appframework.ui.locals.LocalUIConfig
 
 @Composable
 fun CrossfadeText(
     text: String,
     modifier: Modifier = Modifier,
-    fadingTextConfig: FadingTextConfig? = null
+    size: TextUnit? = null,
+    weight: FontWeight? = null,
 ) {
-    val uiConfig = LocalUIConfig.current
-    val config = fadingTextConfig ?: uiConfig.fadingText
+    val config = LocalUIConfig.current.fadingText
 
     var currentText by remember { mutableStateOf(text) }
     val alphaAnim = remember { Animatable(1f) }
 
     LaunchedEffect(text) {
         if (text != currentText) {
-            alphaAnim.animateTo(0f, animationSpec = tween(config.appearanceTransition.animationDuration))
+            alphaAnim.animateTo(0f, animationSpec = tween(config.animationDuration))
             currentText = text
-            alphaAnim.animateTo(1f, animationSpec = tween(config.appearanceTransition.animationDuration))
+            alphaAnim.animateTo(1f, animationSpec = tween(config.animationDuration))
         }
     }
 
     Text(
         text = currentText,
-        textSize = uiConfig.text.fontSize,
-        textConfig = uiConfig.text,
+        size = size,
+        weight = weight,
         modifier = modifier.graphicsLayer { alpha = alphaAnim.value }
     )
 }

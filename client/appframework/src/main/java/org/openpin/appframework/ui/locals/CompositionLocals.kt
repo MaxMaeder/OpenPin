@@ -6,15 +6,14 @@ import androidx.compose.ui.geometry.Offset
 import org.openpin.appframework.ui.config.UIConfig
 import org.openpin.appframework.ui.controllers.MagneticTargetsController
 
-val LocalUIConfig = staticCompositionLocalOf { UIConfig() }
+val defaultUIConfig = UIConfig()
+val LocalUIConfig = staticCompositionLocalOf { defaultUIConfig }
+val LocalContentColor = staticCompositionLocalOf { defaultUIConfig.contentColor }
 
-// In LocalProviders.kt or similar:
 val LocalPointerPositionState = staticCompositionLocalOf<State<Offset>> {
     error("No pointer position provided")
 }
-
-
-val LocalPointerPosition = staticCompositionLocalOf { Offset.Zero }
 val LocalPointerPressed = staticCompositionLocalOf { false }
+
 val LocalMagneticTargetsController = staticCompositionLocalOf { MagneticTargetsController() }
 val LocalFocusedTargetId = staticCompositionLocalOf<String?> { null }

@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -17,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import org.openpin.appframework.ui.config.BaseButtonConfig
 import org.openpin.appframework.ui.config.BorderStyle
 import org.openpin.appframework.ui.config.ButtonVariant
 import org.openpin.appframework.ui.config.DeviceColors
+import org.openpin.appframework.ui.locals.LocalContentColor
 import kotlin.math.roundToInt
 
 @Composable
@@ -31,15 +30,15 @@ fun BaseLaserButton(
     isFocused: Boolean,
     isActive: Boolean,
     variant: ButtonVariant,
-    onClick: () -> Unit,
     magnetOffset: Offset,
     scaleFactor: Float,
-    shadowEnabled: Boolean = false,
     modifier: Modifier = Modifier,
+    shadowEnabled: Boolean = false,
     baseButtonConfig: BaseButtonConfig,
-    shape: Shape,
     content: @Composable () -> Unit
 ) {
+
+
     val variantConfig = baseButtonConfig.variants[variant]
         ?: error("Button variant config not defined for $variant")
     val stateConfig = when {
@@ -63,9 +62,9 @@ fun BaseLaserButton(
 
     val borderWidth = 4.dp
     val borderModifier = if (stateConfig.borderStyle == BorderStyle.Dashed) {
-        Modifier.border(borderWidth, stateConfig.borderColor, shape)
+        Modifier.border(borderWidth, stateConfig.borderColor, baseButtonConfig.shape)
     } else {
-        Modifier.border(borderWidth, stateConfig.borderColor, shape)
+        Modifier.border(borderWidth, stateConfig.borderColor, baseButtonConfig.shape)
     }
 
     Box {
@@ -75,7 +74,7 @@ fun BaseLaserButton(
             Box(
                 modifier = Modifier
                     .offset { IntOffset(shadowOffsetX, shadowOffsetY) }
-                    .background(DeviceColors.LASER_503_MUTED, shape)
+                    .background(DeviceColors.LASER_503_MUTED, baseButtonConfig.shape)
                     .matchParentSize()
             )
         }
@@ -84,7 +83,7 @@ fun BaseLaserButton(
             modifier = modifier
                 .offset { IntOffset(magnetOffset.x.roundToInt(), magnetOffset.y.roundToInt()) }
                 .scale(scaleFactor)
-                .background(animatedBackgroundColor, shape)
+                .background(animatedBackgroundColor, baseButtonConfig.shape)
                 .then(borderModifier)
                 .padding(baseButtonConfig.padding),
             contentAlignment = Alignment.Center
