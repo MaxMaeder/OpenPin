@@ -29,12 +29,15 @@ data class ScrollArrowButtonConfig(
     // Size of the “pill” button.
     val pillWidth: Dp = 80.dp,
     val pillHeight: Dp = 40.dp,
+
     // Size for the icon inside the pill.
     val pillIconSize: Dp = 30.dp,
-    // Shape for the pill button.
-    val pillShape: Shape = RoundedCornerShape(percent = 50),
+
     // The z‑index to force the arrow on top of other content.
     val zIndex: Int = 99,
-    // Duration for any internal animations (e.g. fading).
-    val animationDuration: Int = 300
+
+    val baseButtonConfig: BaseButtonConfig = BaseButtonConfig(
+        shape = RoundedCornerShape(percent = 50),
+        padding = 0.dp
+    ),
 )

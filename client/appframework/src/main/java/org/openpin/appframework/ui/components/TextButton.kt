@@ -14,7 +14,7 @@ fun TextButton(
     variant: ButtonVariant = ButtonVariant.Primary,
     scaleOnFocus: Boolean = true,
     shadowEnabled: Boolean = false,
-    onFocus: (() -> Unit)? = null,
+    onFocus: () -> Unit = {},
     zIndex: Int = 1,
 ) {
     val config = LocalUIConfig.current.textButton

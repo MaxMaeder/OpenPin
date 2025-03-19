@@ -14,7 +14,7 @@ fun IconButton(
     variant: ButtonVariant = ButtonVariant.Primary,
     scaleOnFocus: Boolean = true,
     shadowEnabled: Boolean = true,
-    onFocus: (() -> Unit)? = null,
+    onFocus: () -> Unit = {},
     zIndex: Int = 0,
 ) {
     val config = LocalUIConfig.current.iconButton

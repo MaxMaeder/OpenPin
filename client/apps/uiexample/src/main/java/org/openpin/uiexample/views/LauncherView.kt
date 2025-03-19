@@ -10,11 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Call
-import androidx.compose.material.icons.rounded.Face
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -91,10 +86,7 @@ fun LauncherView() {
                 val offsets = calculatePentagonOffsets(radiusPx, angleOffset = -126f)
                 iconData.forEachIndexed { i, (icon, label) ->
                     IconButton(
-                        scaleOnFocus = true,
                         icon = icon,
-                        contentDescription = null,
-                        shadowEnabled = true,
                         onClick = { /* handle click if needed */ },
                         onFocus = { focusedLabel = label },
                         modifier = Modifier.offset { offsets[i] }

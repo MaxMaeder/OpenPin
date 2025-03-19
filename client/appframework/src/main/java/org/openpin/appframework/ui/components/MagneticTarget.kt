@@ -18,12 +18,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import org.openpin.appframework.audioplayer.AudioType
+import org.openpin.appframework.audioplayer.LocalAudioPlayer
 import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
 import org.openpin.appframework.ui.locals.LocalMagneticTargetsController
 import org.openpin.appframework.ui.locals.LocalPointerPositionState
 import org.openpin.appframework.ui.locals.LocalPointerPressed
+import org.openpin.appframework.ui.locals.LocalUIConfig
 import java.util.UUID
 
 @Composable
@@ -34,10 +37,13 @@ fun MagneticTarget(
     scaleOnFocus: Boolean = false,
     magneticTargetConfig: MagneticTargetConfig,
     transitionConfig: AppearanceTransitionConfig,
-    onFocus: (() -> Unit)? = null,
+    onFocus: () -> Unit = {},
     onClick: () -> Unit = {},
     content: @Composable (isFocused: Boolean, isActive: Boolean, magnetOffset: Offset, scaleFactor: Float) -> Unit
 ) {
+    val audioPlayer = LocalAudioPlayer.current
+    val audioFeedbackConfig = LocalUIConfig.current.audioFeedbackConfig
+
     // Read the pointer state (provided as State<Offset>)
     val pointerPositionState = LocalPointerPositionState.current
     val pointerPressed = LocalPointerPressed.current
@@ -65,13 +71,23 @@ fun MagneticTarget(
         LaunchedEffect(pointerPressed, isFocused) {
             val currentlyActive = isFocused && pointerPressed
             if (!pointerPressed && wasActive) {
+                if (audioFeedbackConfig.onClickSound != null) {
+                    audioPlayer.play(audioFeedbackConfig.onClickSound, AudioType.SOUND)
+                }
+
                 onClick()
             }
             wasActive = currentlyActive
         }
 
         LaunchedEffect(isFocused) {
-            if (isFocused) onFocus?.invoke()
+            if (isFocused) {
+                if (audioFeedbackConfig.onFocusSound != null) {
+                    audioPlayer.play(audioFeedbackConfig.onFocusSound, AudioType.SOUND)
+                }
+
+                onFocus()
+            }
         }
 
         // Use a local effective pointer position that only updates when focused.
@@ -88,10 +104,7 @@ fun MagneticTarget(
 
         // Compute magnet effect using the effective pointer position.
         val targetShift = if (magnetEnabled && isFocused && targetRect != null) {
-            val center = targetRect!!.center
-            val distance = (effectivePointerPosition - center).getDistance()
-            val rubberFactor = 1f / (1f + magneticTargetConfig.magnetRubberBandFactor * distance)
-            (effectivePointerPosition - center) * magneticTargetConfig.magnetEffectStrength * rubberFactor
+            calculateMagnetOffset(effectivePointerPosition, targetRect!!, magneticTargetConfig)
         } else Offset.Zero
 
         val tweenSpec = remember(magneticTargetConfig.animationDuration) {
@@ -114,3 +127,15 @@ fun MagneticTarget(
         content(isFocused, isActive, animatedShift, scaleFactor)
     }
 }
+
+private fun calculateMagnetOffset(
+    pointer: Offset,
+    targetRect: Rect,
+    config: MagneticTargetConfig
+): Offset {
+    val center = targetRect.center
+    val distance = (pointer - center).getDistance()
+    val rubberFactor = 1f / (1f + config.magnetRubberBandFactor * distance)
+    return (pointer - center) * config.magnetEffectStrength * rubberFactor
+}
+

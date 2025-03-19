@@ -10,7 +10,7 @@ import org.openpin.uiexample.views.MainView
 class MainActivity : PinActivity() {
 
     // Optionally override to customize defaults.
-    override val config: UIConfig = UIConfig(
+    override val uiConfig: UIConfig = UIConfig(
         // debugShowHitboxes = true, // etc.
     )
 

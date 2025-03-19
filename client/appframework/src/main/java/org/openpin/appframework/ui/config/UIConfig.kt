@@ -16,6 +16,8 @@ data class UIConfig(
 
     val scrollContainerConfig: ScrollContainerConfig = ScrollContainerConfig(),
 
+    val audioFeedbackConfig: AudioFeedbackConfig = AudioFeedbackConfig(),
+
     // Global/app‑level settings
     val contentColor: Color = DeviceColors.LASER_503,
     val viewMargin: Dp = 16.dp,

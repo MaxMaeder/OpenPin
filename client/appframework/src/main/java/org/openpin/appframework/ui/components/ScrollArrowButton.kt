@@ -10,13 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.unit.dp
-import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.ButtonVariant
-import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.config.ScrollArrowButtonConfig
 import org.openpin.appframework.ui.config.UIIcon
-import org.openpin.appframework.ui.locals.LocalUIConfig
 
 @Composable
 fun ScrollArrowButton(
@@ -32,7 +28,7 @@ fun ScrollArrowButton(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp) // Alternatively you could use config values if desired.
+            .height(config.arrowAreaHeight)
     ) {
         // Background gradient overlay.
         Box(
@@ -44,8 +40,8 @@ fun ScrollArrowButton(
         MagneticTarget(
             modifier = Modifier.fillMaxSize(),
             scaleOnFocus = false,
-            magneticTargetConfig = MagneticTargetConfig(),
-            transitionConfig = AppearanceTransitionConfig(animationDuration = config.animationDuration),
+            magneticTargetConfig = config.baseButtonConfig.magnetTarget,
+            transitionConfig = config.baseButtonConfig.appearanceTransition,
             zIndex = config.zIndex,
             onClick = onClick
         ) { isFocused, isActive, magnetOffset, scaleFactor ->
@@ -54,14 +50,10 @@ fun ScrollArrowButton(
                     isFocused = isFocused,
                     isActive = isActive,
                     variant = ButtonVariant.Primary,
-                    onClick = onClick,
                     magnetOffset = magnetOffset,
                     scaleFactor = scaleFactor,
                     shadowEnabled = false,
-                    shape = config.pillShape,
-                    baseButtonConfig = LocalUIConfig.current.iconButton.base.copy(
-                        padding = 0.dp
-                    ),
+                    baseButtonConfig = config.baseButtonConfig,
                     modifier = Modifier.size(width = config.pillWidth, height = config.pillHeight)
                 ) {
                     Icon(
