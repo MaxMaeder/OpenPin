@@ -12,7 +12,7 @@ import org.openpin.appframework.ui.components.TextButton
 @Composable
 fun ScrollView() {
     ScrollContainer(modifier = Modifier.fillMaxSize()) {
-        for (i in 1..30) {
+        for (i in 1..12) {
             TextButton(
                 text = "Item $i",
                 onClick = { /* handle click */ },

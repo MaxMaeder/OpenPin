@@ -1,17 +1,19 @@
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "org.openpin.appframework"
+    namespace = "org.openpin.primaryapp"
     compileSdk = 35
 
     defaultConfig {
+        applicationId = "org.openpin.primaryapp"
         minSdk = 32
-
-        consumerProguardFiles("consumer-rules.pro")
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
@@ -36,21 +38,18 @@ android {
 }
 
 dependencies {
-
+    // Android Core
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
+    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    implementation("androidx.camera:camera-core:1.4.1")
-    implementation("androidx.camera:camera-camera2:1.4.1")
-    implementation("androidx.camera:camera-lifecycle:1.4.1")
-    implementation("androidx.camera:camera-video:1.4.1")
-
-    // ZXing core for QR code scanning.
-    implementation("com.google.zxing:core:3.4.1")
+    // Add appFramework dependency
+    implementation(project(":appframework"))
 }

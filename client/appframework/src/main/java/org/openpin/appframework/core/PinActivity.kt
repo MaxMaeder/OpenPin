@@ -9,7 +9,7 @@ import org.openpin.appframework.audioplayer.AudioPlayer
 import org.openpin.appframework.audioplayer.AudioPlayerConfig
 import org.openpin.appframework.audioplayer.LocalAudioPlayer
 import org.openpin.appframework.ui.config.UIConfig
-import org.openpin.appframework.ui.controllers.FullScreenController
+import org.openpin.appframework.ui.managers.FullScreenManager
 import org.openpin.appframework.ui.locals.LocalUIConfig
 
 abstract class PinActivity : ComponentActivity() {
@@ -25,7 +25,7 @@ abstract class PinActivity : ComponentActivity() {
         // Lock orientation and enable full screen based on UI config.
         requestedOrientation = uiConfig.orientation
         if (uiConfig.fullScreen) {
-            FullScreenController(this).enable()
+            FullScreenManager(this).enable()
         }
 
         audioPlayer = AudioPlayer(this, audioPlayerConfig)

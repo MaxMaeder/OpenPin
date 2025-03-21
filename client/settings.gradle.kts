@@ -23,6 +23,8 @@ rootProject.name = "Client"
 
 include(":appframework")
 include(":apps:uiexample")
+include(":apps:primaryapp")
 
 project(":apps:uiexample").projectDir = file("apps/uiexample")
+project(":apps:primaryapp").projectDir = file("apps/primaryapp")
 project(":appframework").projectDir = file("appframework")
