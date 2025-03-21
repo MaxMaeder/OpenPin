@@ -280,15 +280,15 @@ class CameraManager
 
     private fun buildImageCapture(config: ImageCaptureConfig): ImageCapture {
         val builder = ImageCapture.Builder()
-            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-        config.aspectRatio?.let { builder.setTargetAspectRatio(it) }
+            .setCaptureMode(config.captureMode)
+        config.jpegQuality?.let { builder.setJpegQuality(it) }
         return builder.build()
     }
 
     private fun buildVideoCapture(config: VideoCaptureConfig): VideoCapture<Recorder> {
-        val recorderBuilder = Recorder.Builder()
-        recorderBuilder.setQualitySelector(config.qualitySelector)
-        val recorder = recorderBuilder.build()
+        val recorder = Recorder.Builder()
+            .setQualitySelector(config.qualitySelector)
+            .build()
         return VideoCapture.withOutput(recorder)
     }
 

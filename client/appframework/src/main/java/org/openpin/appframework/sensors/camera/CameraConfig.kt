@@ -1,21 +1,25 @@
 package org.openpin.appframework.sensors.camera
 
+import androidx.camera.core.ImageCapture
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 
 /**
  * Configuration for image capture.
  *
- * @param aspectRatio Optional aspect ratio (use AspectRatio.RATIO_4_3 or AspectRatio.RATIO_16_9).
+ * @property captureMode The mode used to prioritize either latency or quality when capturing an image.
+ * @property jpegQuality Optional JPEG quality setting (1-100).
  */
 data class ImageCaptureConfig(
-    val aspectRatio: Int? = null,
+    val captureMode: Int = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY,
+    val jpegQuality: Int? = null,
 )
 
 /**
  * Configuration for video capture.
  *
- * @param qualitySelector Optional quality selector (default is HIGHEST).
+ * @property qualitySelector Selector used to determine the video quality.
+ * @property recordAudio Indicates whether audio should be recorded along with the video.
  */
 data class VideoCaptureConfig(
     val qualitySelector: QualitySelector = QualitySelector.from(Quality.HIGHEST),
