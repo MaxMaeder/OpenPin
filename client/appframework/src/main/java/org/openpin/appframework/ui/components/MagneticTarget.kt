@@ -18,8 +18,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import org.koin.compose.koinInject
+import org.openpin.appframework.audioplayer.AudioPlayer
 import org.openpin.appframework.audioplayer.AudioType
-import org.openpin.appframework.audioplayer.LocalAudioPlayer
 import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
@@ -41,7 +42,8 @@ fun MagneticTarget(
     onClick: () -> Unit = {},
     content: @Composable (isFocused: Boolean, isActive: Boolean, magnetOffset: Offset, scaleFactor: Float) -> Unit
 ) {
-    val audioPlayer = LocalAudioPlayer.current
+    val audioPlayer = koinInject<AudioPlayer>()
+
     val audioFeedbackConfig = LocalUIConfig.current.audioFeedbackConfig
 
     // Read the pointer state (provided as State<Offset>)

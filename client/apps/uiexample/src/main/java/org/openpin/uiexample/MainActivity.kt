@@ -1,6 +1,5 @@
 package org.openpin.uiexample
 
-import android.os.Bundle
 import org.openpin.appframework.core.PinActivity
 import org.openpin.appframework.ui.config.UIConfig
 import org.openpin.appframework.ui.controllers.NavigationController
@@ -14,8 +13,21 @@ class MainActivity : PinActivity() {
         // debugShowHitboxes = true, // etc.
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        //super.onPinReady()
+//        //super.onCreate(savedInstanceState)
+//        val navigationController = NavigationController().apply {
+//            init { MainView(navigationController = this) }
+//        }
+//        setGraphicsContent {
+//            AppContainer(navigationController = navigationController)
+//        }
+//    }
+
+    override fun onPinReady() {
+        //super.onCreate(savedInstanceState)
         val navigationController = NavigationController().apply {
             init { MainView(navigationController = this) }
         }

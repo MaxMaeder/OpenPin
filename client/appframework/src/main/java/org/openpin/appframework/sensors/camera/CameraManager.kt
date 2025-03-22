@@ -44,7 +44,8 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 
-class CameraManager(
+class CameraManager
+    (
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
     private val cameraConfig: CameraConfig = CameraConfig()
@@ -53,18 +54,8 @@ class CameraManager(
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private var cameraProvider: ProcessCameraProvider? = null
-    private var isInitialized = false
 
-    fun initialize() {
-        // Check for CAMERA permission; do not prompt the user
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            throw IllegalStateException("Camera permission not granted")
-        }
-        // Perform CameraX initialization that was previously in the constructor
+    init {
         val config: CameraXConfig = CameraXConfig.Builder.fromConfig(Camera2Config.defaultConfig())
             .setAvailableCamerasLimiter(CameraSelector.DEFAULT_BACK_CAMERA)
             .build()
@@ -73,18 +64,22 @@ class CameraManager(
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             cameraProvider = future.get()
-            isInitialized = true
         }, ContextCompat.getMainExecutor(context))
     }
 
+    // --- Public Methods ---
+
     /**
      * Captures a still image.
+     *
+     * @param outputFile Where the image will be saved.
+     * @param captureConfig Optional config override; if null, uses cameraConfig.defaultImageCaptureConfig.
+     * @return A [CaptureResult] with the [Uri] on success or an exception on failure.
      */
     suspend fun captureImage(
         outputFile: File,
         captureConfig: ImageCaptureConfig? = null
     ): CaptureResult<Uri> = suspendCancellableCoroutine { cont ->
-        ensureInitialized()
         val config = captureConfig ?: cameraConfig.defaultImageCaptureConfig
         val imageCapture = buildImageCapture(config)
         val preview = buildPreview()
@@ -109,8 +104,15 @@ class CameraManager(
         }
     }
 
+
     /**
      * Captures a video.
+     *
+     * @param outputFile Where the video will be saved.
+     * @param duration Optional maximum duration in milliseconds.
+     *                 If null, recording continues until stopped manually.
+     * @param captureConfig Optional config override; if null, uses cameraConfig.defaultVideoCaptureConfig.
+     * @return A [CaptureSession] that lets you wait for the final [CaptureResult] (with the [Uri]) or stop early.
      */
     @SuppressLint("MissingPermission")
     fun captureVideo(
@@ -118,19 +120,7 @@ class CameraManager(
         duration: Long?,
         captureConfig: VideoCaptureConfig? = null
     ): CaptureSession<Uri> {
-        ensureInitialized()
         val config = captureConfig ?: cameraConfig.defaultVideoCaptureConfig
-
-        // If recording with audio is requested, check for microphone permission
-        if (config.recordAudio &&
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            throw IllegalStateException("Microphone permission not granted for video recording with audio")
-        }
-
         val videoCapture = buildVideoCapture(config)
         val preview = buildPreview()
         var recording: Recording? = null
@@ -139,7 +129,8 @@ class CameraManager(
         openCameraForUseCases(preview, videoCapture) { provider ->
             val outputOptions = FileOutputOptions.Builder(outputFile).build()
 
-            var recordingSession = videoCapture.output.prepareRecording(context, outputOptions)
+            var recordingSession = videoCapture.output
+                .prepareRecording(context, outputOptions)
             if (config.recordAudio) {
                 recordingSession = recordingSession.withAudioEnabled()
             }
@@ -168,9 +159,12 @@ class CameraManager(
 
     /**
      * Scans for a QR code.
+     *
+     * @param timeoutMs Optional timeout in milliseconds.
+     *                  If the timeout elapses with no QR code, waitForResult() returns success with null.
+     * @return A [CaptureSession] that lets you wait for the final [CaptureResult] (with the decoded QR text or null) or stop early.
      */
     fun scanQrCode(timeoutMs: Long? = null): CaptureSession<String?> {
-        ensureInitialized()
         val preview = buildPreview()
         val imageAnalysis = buildImageAnalysis()
         var providerForStop: ProcessCameraProvider? = null
@@ -209,7 +203,7 @@ class CameraManager(
                             mainHandler.post { providerForStop?.unbindAll() }
                         }
                     } catch (e: NotFoundException) {
-                        // No QR code found; continue scanning.
+                        // No QR code found in this frame; ignore and keep scanning.
                     } catch (e: Exception) {
                         if (!deferred.isCompleted) {
                             deferred.complete(CaptureResult.Failure(e))
@@ -244,18 +238,12 @@ class CameraManager(
 
     // --- Private Helper Functions ---
 
-    // Helper to ensure initialization was done
-    private fun ensureInitialized() {
-        if (!isInitialized) {
-            throw IllegalStateException("CameraManager not initialized. Call initialize() before using.")
-        }
-    }
-
     private fun openCameraForUseCases(
         vararg useCases: UseCase,
         onBound: (ProcessCameraProvider) -> Unit
     ) {
         val provider = cameraProvider ?: return // Reuse existing instance
+
         provider.unbindAll()
         provider.bindToLifecycle(
             lifecycleOwner,
