@@ -8,6 +8,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import org.openpin.appframework.audioplayer.AudioPlayer
 import org.openpin.appframework.audioplayer.AudioPlayerConfig
 import org.openpin.appframework.audioplayer.LocalAudioPlayer
+import org.openpin.appframework.sensors.camera.CameraManager
+import org.openpin.appframework.sensors.microphone.MicrophoneManager
 import org.openpin.appframework.ui.config.UIConfig
 import org.openpin.appframework.ui.managers.FullScreenManager
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -18,6 +20,8 @@ abstract class PinActivity : ComponentActivity() {
     open val audioPlayerConfig: AudioPlayerConfig = AudioPlayerConfig()
 
     lateinit var audioPlayer: AudioPlayer
+    lateinit var camera: CameraManager
+    lateinit var microphone: MicrophoneManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

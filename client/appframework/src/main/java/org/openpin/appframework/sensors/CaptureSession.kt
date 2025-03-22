@@ -1,4 +1,4 @@
-package org.openpin.appframework.sensors.camera
+package org.openpin.appframework.sensors
 
 /**
  * A capture session interface.
