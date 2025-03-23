@@ -15,10 +15,17 @@ import androidx.compose.ui.graphics.Color
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.core.module.Module
+import org.koin.core.context.GlobalContext.get as getKoin
 import org.koin.dsl.module
 import org.openpin.appframework.audioplayer.AudioPlayer
 import org.openpin.appframework.audioplayer.AudioPlayerConfig
+import org.openpin.appframework.daemonbridge.gesture.GestureHandler
+import org.openpin.appframework.daemonbridge.gesture.GestureType
+import org.openpin.appframework.daemonbridge.manager.DaemonBridgeManager
+import org.openpin.appframework.daemonbridge.manager.DaemonIntentType
+import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.sensors.camera.CameraConfig
 import org.openpin.appframework.sensors.camera.CameraManager
 import org.openpin.appframework.sensors.microphone.MicrophoneConfig
@@ -65,13 +72,26 @@ abstract class PinActivity : ComponentActivity() {
         if (GlobalContext.getOrNull() == null) {
             startKoin {
                 androidContext(this@PinActivity)
-                modules(getPinModules())
+                modules(getModules())
             }
         }
-        onPinReady()
+        onReady()
     }
 
-    protected abstract fun onPinReady()
+    protected open fun onReady() {
+        if (audioPlayerConfig.enableVolumeGestures) {
+            val gestureHandler = getKoin().get<GestureHandler>()
+            val player = getKoin().get<AudioPlayer>()
+
+            // Touchpad is vertically flipped, this works for now
+            gestureHandler.subscribeGesture(1, GestureType.DRAG_UP) {
+                player.changeMasterVolume(-audioPlayerConfig.volumeGestureStepSize)
+            }
+            gestureHandler.subscribeGesture(1, GestureType.DRAG_DOWN) {
+                player.changeMasterVolume(audioPlayerConfig.volumeGestureStepSize)
+            }
+        }
+    }
 
     protected open fun onPermissionsDenied() {
         Log.e("PinActivity", "Required permissions denied.")
@@ -84,13 +104,28 @@ abstract class PinActivity : ComponentActivity() {
         }
     }
 
-    protected open fun getPinModules(): List<Module> {
+    protected open fun getModules(): List<Module> {
         val modules = mutableListOf<Module>()
 
         modules += module {
             single { this@PinActivity }
+
             single { audioPlayerConfig }
             single { AudioPlayer(get(), get()) }
+
+            single { GestureHandler() }
+            single { ProcessHandler() }
+
+            single(createdAtStart = true) {
+                val receiverMap = mapOf(
+                    DaemonIntentType.GESTURE to get<GestureHandler>(),
+                    DaemonIntentType.PROCESS_DONE to get<ProcessHandler>()
+                )
+                DaemonBridgeManager(
+                    context = get(),
+                    receiverMap = receiverMap,
+                )
+            }
         }
 
         if (Manifest.permission.CAMERA in appPermissions) {
@@ -116,5 +151,10 @@ abstract class PinActivity : ComponentActivity() {
                 content()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopKoin()
     }
 }

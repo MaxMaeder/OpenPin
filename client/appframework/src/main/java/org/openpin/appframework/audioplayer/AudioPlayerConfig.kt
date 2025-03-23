@@ -6,6 +6,8 @@ data class AudioPlayerConfig(
     val enableVolumeGestures: Boolean = true,
     val enableVolumeFeedback: Boolean = true,
 
+    val volumeGestureStepSize: Float = 0.1f,
+
     val masterVolume: Float = 1.0f,
 
     val speechVolume: Float = 1.0f,

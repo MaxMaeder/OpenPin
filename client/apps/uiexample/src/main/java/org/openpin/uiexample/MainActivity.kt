@@ -13,21 +13,9 @@ class MainActivity : PinActivity() {
         // debugShowHitboxes = true, // etc.
     )
 
+    override fun onReady() {
+        super.onReady()
 
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        //super.onPinReady()
-//        //super.onCreate(savedInstanceState)
-//        val navigationController = NavigationController().apply {
-//            init { MainView(navigationController = this) }
-//        }
-//        setGraphicsContent {
-//            AppContainer(navigationController = navigationController)
-//        }
-//    }
-
-    override fun onPinReady() {
-        //super.onCreate(savedInstanceState)
         val navigationController = NavigationController().apply {
             init { MainView(navigationController = this) }
         }
