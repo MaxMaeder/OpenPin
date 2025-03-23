@@ -47,6 +47,14 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
         entry.continuation.resume(entry.process)
     }
 
+    fun createTempFile(ext: String): File {
+        val fid = UUID.randomUUID().toString()
+        val file = fileSystem.get("processes/$fid.$ext")
+        file.parentFile?.mkdirs()
+        file.createNewFile()
+        return file
+    }
+
     suspend fun execute(process: ShellProcess): ShellProcess = withContext(Dispatchers.IO) {
         val pid = UUID.randomUUID().toString()
         process.pid = pid

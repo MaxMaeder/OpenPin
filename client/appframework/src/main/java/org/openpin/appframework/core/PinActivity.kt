@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.LifecycleOwner
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
@@ -44,6 +45,7 @@ abstract class PinActivity : ComponentActivity() {
 
     open val appPermissions: Set<String> =
         setOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
+    protected open val appModules: List<Module> = emptyList()
 
     private lateinit var permissionManager: PermissionManager
 
@@ -72,7 +74,7 @@ abstract class PinActivity : ComponentActivity() {
         if (GlobalContext.getOrNull() == null) {
             startKoin {
                 androidContext(this@PinActivity)
-                modules(getModules())
+                modules(getServiceModules() + appModules)
             }
         }
         onReady()
@@ -104,7 +106,7 @@ abstract class PinActivity : ComponentActivity() {
         }
     }
 
-    protected open fun getModules(): List<Module> {
+    protected open fun getServiceModules(): List<Module> {
         val modules = mutableListOf<Module>()
 
         modules += module {
@@ -131,6 +133,7 @@ abstract class PinActivity : ComponentActivity() {
         if (Manifest.permission.CAMERA in appPermissions) {
             modules += module {
                 single { cameraConfig }
+                single<LifecycleOwner> { this@PinActivity }
                 single { CameraManager(get(), get(), get()) }
             }
         }

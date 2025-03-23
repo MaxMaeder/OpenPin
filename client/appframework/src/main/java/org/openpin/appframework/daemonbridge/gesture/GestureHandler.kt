@@ -7,12 +7,6 @@ import java.io.Closeable
 
 class GestureHandler : DaemonIntentReceiver, Closeable {
 
-    data class GestureSubscription(
-        val fingerCount: Int,
-        val type: GestureType,
-        val callback: (GestureEvent) -> Unit
-    )
-
     private val subscriptions = mutableSetOf<GestureSubscription>()
 
     override fun setFileSystem(fileSystem: DaemonFileSystem) {

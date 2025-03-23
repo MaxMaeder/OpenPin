@@ -1,47 +1,24 @@
 package org.openpin.primaryapp
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import org.openpin.primaryapp.ui.theme.ClientTheme
+import org.openpin.appframework.core.PinActivity
+import org.koin.dsl.module
+import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.ext.android.getViewModel
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            ClientTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+class MainActivity : PinActivity() {
+
+    override val appModules = listOf(
+        module {
+            viewModel { GestureViewModel(get(), get(), get(), get(), get()) }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
     )
-}
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ClientTheme {
-        Greeting("Android")
+    private lateinit var gestureViewModel: GestureViewModel
+
+    override fun onReady() {
+        super.onReady()
+
+        gestureViewModel = getViewModel()
+        gestureViewModel.addListeners()
     }
 }

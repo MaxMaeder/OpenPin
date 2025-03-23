@@ -7,6 +7,8 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import org.openpin.appframework.R
+import java.io.File
+import java.io.FileInputStream
 
 class AudioPlayer(
     private val context: Context,
@@ -26,11 +28,13 @@ class AudioPlayer(
     }
 
     /**
-     * Plays audio from a given Uri.
+     * Plays audio from a given File.
      */
-    fun play(resource: Uri, type: AudioType, start: Boolean = true): PlaybackSession {
+    fun play(file: File, type: AudioType, start: Boolean = true): PlaybackSession {
         val mediaPlayer = MediaPlayer()
-        mediaPlayer.setDataSource(context, resource)
+        val fis = FileInputStream(file)
+        mediaPlayer.setDataSource(fis.fd)
+        fis.close()
         configureAndPrepare(mediaPlayer)
         applyVolume(mediaPlayer, type)
         val session = PlaybackSession(mediaPlayer)

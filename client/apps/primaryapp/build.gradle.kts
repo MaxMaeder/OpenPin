@@ -52,4 +52,13 @@ dependencies {
 
     // Add appFramework dependency
     implementation(project(":appframework"))
+
+
+    implementation("io.insert-koin:koin-core:3.5.6")
+
+    // Koin Android support
+    implementation("io.insert-koin:koin-android:3.5.6")
+
+    // Optional: Jetpack Compose support
+    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
 }

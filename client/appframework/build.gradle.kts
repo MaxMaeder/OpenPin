@@ -59,9 +59,8 @@ dependencies {
     // Koin Android support
     implementation("io.insert-koin:koin-android:3.5.6")
 
-    // Optional: ViewModel support
-    //implementation("io.insert-koin:koin-androidx-viewmodel:3.5.6")
-
     // Optional: Jetpack Compose support
     implementation("io.insert-koin:koin-androidx-compose:3.5.6")
+
+    implementation("com.google.code.gson:gson:2.12.1")
 }

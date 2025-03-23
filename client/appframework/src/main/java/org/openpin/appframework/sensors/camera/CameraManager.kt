@@ -1,9 +1,7 @@
 package org.openpin.appframework.sensors.camera
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.SurfaceTexture
 import android.net.Uri
 import android.os.Handler
@@ -37,8 +35,7 @@ import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.openpin.appframework.sensors.CaptureResult
-import org.openpin.appframework.sensors.CaptureSession
+import org.openpin.appframework.sensors.microphone.RecordSession
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

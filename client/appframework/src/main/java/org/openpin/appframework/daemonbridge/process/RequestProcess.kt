@@ -1,5 +1,8 @@
 package org.openpin.appframework.daemonbridge.process
 
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+
 class RequestProcess(
     url: String,
     method: String = "GET",
@@ -80,6 +83,14 @@ class RequestProcess(
 
         private fun encode(value: String): String {
             return java.net.URLEncoder.encode(value, "UTF-8")
+        }
+    }
+
+    inline fun <reified T> parseOutput(): T? {
+        return try {
+            Gson().fromJson(output, T::class.java)
+        } catch (e: JsonSyntaxException) {
+            null
         }
     }
 }
