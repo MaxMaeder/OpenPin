@@ -5,7 +5,6 @@ import android.content.Context.AUDIO_SERVICE
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.net.Uri
 import org.openpin.appframework.R
 import java.io.File
 import java.io.FileInputStream

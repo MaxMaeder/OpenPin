@@ -2,18 +2,42 @@ package org.openpin.appframework.daemonbridge.process
 
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import java.io.File
 
 class RequestProcess(
     url: String,
     method: String = "GET",
     headers: Map<String, String> = emptyMap(),
-    payload: String? = null,
+    payload: Payload? = null,
     payloadType: PayloadType = PayloadType.NONE,
     queryParams: Map<String, String> = emptyMap(),
     outputFile: String? = null
 ) : ShellProcess(
     buildCurlCommand(url, method, headers, payload, payloadType, queryParams, outputFile)
 ) {
+    sealed class Payload {
+        abstract fun toCurlArg(): String
+
+        data class FromString(val content: String) : Payload() {
+            override fun toCurlArg(): String {
+                // Escape double quotes and wrap the whole thing in single quotes
+                return "'${content.replace("'", "'\"'\"'")}'"
+            }
+        }
+
+        data class FromFile(val file: File) : Payload() {
+            override fun toCurlArg(): String {
+                return "@${file.absolutePath}"
+            }
+        }
+
+        data class RawCurlArg(val raw: String) : Payload() {
+            override fun toCurlArg(): String {
+                return raw
+            }
+        }
+    }
+
     enum class PayloadType {
         NONE,
         FORM,       // --data
@@ -28,12 +52,12 @@ class RequestProcess(
             url: String,
             method: String,
             headers: Map<String, String>,
-            payload: String?,
+            payload: Payload?,
             payloadType: PayloadType,
             queryParams: Map<String, String>,
             outputFile: String?
         ): String {
-            val cmd = mutableListOf("curl")
+            val cmd = mutableListOf("curl -sSf")
 
             // Method
             cmd.add("-X")
@@ -46,7 +70,7 @@ class RequestProcess(
             }
 
             // Payload (optional)
-            if (!payload.isNullOrEmpty()) {
+            if (payload != null) {
                 val flag = when (payloadType) {
                     PayloadType.FORM     -> "--data"
                     PayloadType.RAW      -> "--data-raw"
@@ -57,7 +81,7 @@ class RequestProcess(
 
                 if (flag != null) {
                     cmd.add(flag)
-                    cmd.add(payload)
+                    cmd.add(payload.toCurlArg())
                 }
             }
 

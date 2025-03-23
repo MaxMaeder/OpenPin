@@ -39,7 +39,7 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
         val entry = waiting.remove(pid) ?: return
 
         val outFile = fileSystem.get("processes/$pid-out.txt")
-        val errFile = fileSystem.get("processes/$pid-error.txt")
+        val errFile = fileSystem.get("processes/$pid-err.txt")
 
         entry.process.output = outFile.takeIf { it.exists() }?.readText().orEmpty()
         entry.process.error = errFile.takeIf { it.exists() }?.readText().orEmpty()
@@ -77,19 +77,8 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
     }
 
     fun release(process: ShellProcess) {
-        val pid = process.pid
-        activeProcesses.remove(pid)
+        activeProcesses.remove(process.pid)
         updateActiveProcessesFile()
-
-        listOf(
-            "processes/$pid-cmd.txt",
-            "processes/$pid-out.txt",
-            "processes/$pid-error.txt"
-        ).map { fileSystem.get(it) }.forEach { file ->
-            if (file.exists()) {
-                file.delete()
-            }
-        }
     }
 
     override fun close() {

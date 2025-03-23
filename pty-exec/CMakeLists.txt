@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.6)
+project(pty_exec C)
+
+add_executable(pty_exec pty_exec.c)
+
+if (DEFINED ANDROID_NDK AND DEFINED ANDROID_ABI)
+    message(STATUS "Building for Android: ABI=${ANDROID_ABI}, NDK=${ANDROID_NDK}")
+    set(CMAKE_SYSTEM_NAME Android)
+    set(CMAKE_SYSTEM_VERSION 23)
+    set(ANDROID_PLATFORM android-23)
+    set(CMAKE_ANDROID_ARCH_ABI ${ANDROID_ABI})
+    set(CMAKE_ANDROID_NDK ${ANDROID_NDK})
+    set(CMAKE_ANDROID_STL_TYPE c++_static)
+    set(CMAKE_TOOLCHAIN_FILE "${ANDROID_NDK}/build/cmake/android.toolchain.cmake")
+    add_definitions(-D__ANDROID_API__=23)
+endif()

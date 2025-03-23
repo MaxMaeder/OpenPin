@@ -1,12 +1,20 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
+val secrets = loadSecrets("MAPS_API_KEY")
+
 android {
     namespace = "org.openpin.primaryapp"
     compileSdk = 35
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "org.openpin.primaryapp"
@@ -14,6 +22,10 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+
+        secrets.forEach { (key, value) ->
+            buildConfigField("String", key, "\"$value\"")
+        }
     }
 
     buildTypes {
@@ -53,12 +65,21 @@ dependencies {
     // Add appFramework dependency
     implementation(project(":appframework"))
 
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 
-    implementation("io.insert-koin:koin-core:3.5.6")
+    implementation(libs.gson)
+}
 
-    // Koin Android support
-    implementation("io.insert-koin:koin-android:3.5.6")
+fun Project.loadSecrets(vararg keys: String): Map<String, String> {
+    val props = Properties()
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { props.load(it) }
+    }
 
-    // Optional: Jetpack Compose support
-    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
+    return keys.associateWith { key ->
+        props.getProperty(key) ?: error("Missing `$key` in local.properties")
+    }
 }

@@ -53,14 +53,9 @@ dependencies {
 
     implementation(libs.zxing.core)
 
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 
-    implementation("io.insert-koin:koin-core:3.5.6")
-
-    // Koin Android support
-    implementation("io.insert-koin:koin-android:3.5.6")
-
-    // Optional: Jetpack Compose support
-    implementation("io.insert-koin:koin-androidx-compose:3.5.6")
-
-    implementation("com.google.code.gson:gson:2.12.1")
+    implementation(libs.gson)
 }

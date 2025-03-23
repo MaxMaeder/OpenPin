@@ -1,6 +1,8 @@
 [versions]
 agp = "8.8.2"
 cameraxCore = "1.4.1"
+gson = "2.12.1"
+koin = "3.5.6"
 zxingCore = "3.4.1"
 kotlin = "2.0.0"
 coreKtx = "1.15.0"
@@ -20,6 +22,10 @@ androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraxCore" }
 androidx-camera-video = { module = "androidx.camera:camera-video", version.ref = "cameraxCore" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxingCore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

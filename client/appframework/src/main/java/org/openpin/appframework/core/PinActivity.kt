@@ -27,6 +27,10 @@ import org.openpin.appframework.daemonbridge.gesture.GestureType
 import org.openpin.appframework.daemonbridge.manager.DaemonBridgeManager
 import org.openpin.appframework.daemonbridge.manager.DaemonIntentType
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
+import org.openpin.appframework.devicestate.battery.BatteryManager
+import org.openpin.appframework.devicestate.identity.IdentityManager
+import org.openpin.appframework.devicestate.location.LocationConfig
+import org.openpin.appframework.devicestate.location.LocationManager
 import org.openpin.appframework.sensors.camera.CameraConfig
 import org.openpin.appframework.sensors.camera.CameraManager
 import org.openpin.appframework.sensors.microphone.MicrophoneConfig
@@ -42,6 +46,7 @@ abstract class PinActivity : ComponentActivity() {
     open val audioPlayerConfig: AudioPlayerConfig = AudioPlayerConfig()
     open val microphoneConfig: MicrophoneConfig = MicrophoneConfig()
     open val cameraConfig: CameraConfig = CameraConfig()
+    open val locationConfig: LocationConfig = LocationConfig()
 
     open val appPermissions: Set<String> =
         setOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA)
@@ -93,6 +98,11 @@ abstract class PinActivity : ComponentActivity() {
                 player.changeMasterVolume(audioPlayerConfig.volumeGestureStepSize)
             }
         }
+
+        if (locationConfig.scanInterval != null) {
+            val locationManager = getKoin().get<LocationManager>()
+            locationManager.start()
+        }
     }
 
     protected open fun onPermissionsDenied() {
@@ -112,6 +122,8 @@ abstract class PinActivity : ComponentActivity() {
         modules += module {
             single { this@PinActivity }
 
+            single { IdentityManager(get()) }
+
             single { audioPlayerConfig }
             single { AudioPlayer(get(), get()) }
 
@@ -128,6 +140,11 @@ abstract class PinActivity : ComponentActivity() {
                     receiverMap = receiverMap,
                 )
             }
+
+            single { locationConfig }
+            single { LocationManager(get(), get()) }
+
+            single { BatteryManager(get()) }
         }
 
         if (Manifest.permission.CAMERA in appPermissions) {
