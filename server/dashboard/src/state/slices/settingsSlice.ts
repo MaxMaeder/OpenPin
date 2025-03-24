@@ -28,6 +28,9 @@ export interface DeviceSettings {
   visionLlmPrompt: string;
   clearMessages: boolean;
   userSmsNumber?: string;
+  // Translate
+  myLanguage: string;
+  translateLanguage: string;
   // WiFi
   enableWifi: boolean;
   enableBluetooth: boolean;
@@ -51,6 +54,8 @@ const initialSettings: Omit<DeviceSettings, "id"> = {
   llmPrompt: "",
   visionLlmPrompt: "",
   clearMessages: false,
+  myLanguage: "en-US",
+  translateLanguage: "es-ES",
   enableWifi: false,
   enableBluetooth: false,
   enableGnss: true,

@@ -29,6 +29,7 @@ import {
   handleUpdateDevLocWiFi,
   parseUpdateDevLocWiFi,
 } from "./endpoints/updateDevLocWifi";
+import { handleTranslate } from "./endpoints/deviceComm/translate";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -57,6 +58,12 @@ app.post(
   "/api/dev/handle",
   parseDeviceReq,
   handleAssistant,
+  handleAssistantError
+);
+app.post(
+  "/api/dev/translate",
+  parseDeviceReq,
+  handleTranslate,
   handleAssistantError
 );
 app.post("/api/dev/update-status", parseDeviceReq, handleUpdateStatus);

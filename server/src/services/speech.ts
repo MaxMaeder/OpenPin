@@ -2,6 +2,7 @@ import * as MsftSpeech from "microsoft-cognitiveservices-speech-sdk";
 import { PassThrough } from "stream";
 import FormData from "form-data";
 import axios from "axios";
+import admin from "firebase-admin";
 
 import {
   MSFT_TTS_FORMAT,
@@ -9,7 +10,9 @@ import {
   MSFT_TTS_REGION,
   MSFT_TTS_VOICE,
   GROQ_SST_MODEL,
+  MSFT_TTS_MULTILINGUAL_VOICE,
 } from "../config";
+import firebaseKey from "../keys/firebaseKey";
 
 const whisperClient = axios.create({
   baseURL: "https://api.groq.com/openai/v1",
@@ -32,6 +35,67 @@ export const recognize = async (audioStream: PassThrough): Promise<string> => {
   return response.data.text;
 };
 
+const getGoogleClient = async () => {
+  const credential = admin.app().options.credential;
+  if (!credential) throw Error("No credential");
+  const token = await credential.getAccessToken();
+
+  const projectId = firebaseKey.projectId;
+
+  return axios.create({
+    baseURL: `https://speech.googleapis.com/v2/projects/${projectId}/locations/global/recognizers/_`,
+    headers: {
+      Authorization: `Bearer ${token.access_token}`,
+    },
+  });
+};
+
+export interface GoogleRecognizeResponse {
+  results: {
+    alternatives: {
+      transcript: string;
+      confidence?: number;
+    }[];
+    languageCode?: string;
+  }[];
+}
+
+export const googleRecognize = async (
+  gcsUri: string,
+  languageCodes: string[]
+) => {
+  const googleSpeechClient = await getGoogleClient();
+
+  const requestBody = {
+    config: {
+      languageCodes,
+      model: "latest_short",
+      autoDecodingConfig: {},
+    },
+    uri: gcsUri,
+  };
+
+  const response = await googleSpeechClient.post<GoogleRecognizeResponse>(
+    ":recognize",
+    requestBody
+  );
+
+  const { results } = response.data;
+
+  const transcript = results
+    ?.flatMap((result) => result.alternatives || [])
+    .map((alt) => alt.transcript?.trim())
+    .filter((t): t is string => Boolean(t))
+    .join(" ");
+
+  const detectedLanguage = results[0]?.languageCode;
+
+  return {
+    transcript: transcript || "",
+    languageCode: detectedLanguage,
+  };
+};
+
 export const getMsftSpeechConfig = () => {
   const speechConfig = MsftSpeech.SpeechConfig.fromSubscription(
     process.env.MSFT_SPEECH_KEY as string,
@@ -47,20 +111,29 @@ export const getMsftSpeechConfig = () => {
 };
 
 export const getSynthesizer = (
-  format?: MsftSpeech.SpeechSynthesisOutputFormat
+  format?: MsftSpeech.SpeechSynthesisOutputFormat,
+  languageCode?: string
 ) => {
   const config = getMsftSpeechConfig();
+
   if (format) {
     config.speechSynthesisOutputFormat = format;
   }
+
+  if (languageCode && languageCode != MSFT_TTS_LANGUAGE) {
+    config.speechSynthesisLanguage = languageCode;
+    config.speechSynthesisVoiceName = MSFT_TTS_MULTILINGUAL_VOICE;
+  }
+
   return new MsftSpeech.SpeechSynthesizer(config);
 };
 
 export const speak = async (
   text: string,
-  format?: MsftSpeech.SpeechSynthesisOutputFormat
+  format?: MsftSpeech.SpeechSynthesisOutputFormat,
+  languageCode?: string
 ): Promise<ArrayBuffer> => {
-  const synthesizer = getSynthesizer(format);
+  const synthesizer = getSynthesizer(format, languageCode);
 
   return new Promise((resolve, reject) => {
     synthesizer.speakTextAsync(

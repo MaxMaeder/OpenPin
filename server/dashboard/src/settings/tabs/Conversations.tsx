@@ -1,9 +1,18 @@
-import { Button, Grid, Input, Slider, Stack, TextInput } from "@mantine/core";
+import {
+  Button,
+  Grid,
+  Input,
+  Select,
+  Slider,
+  Stack,
+  TextInput,
+} from "@mantine/core";
 
 import AppTextarea from "../components/AppTextarea";
 import SettingsCol from "../components/SettingsCol";
 import ToggleButton from "../components/ToggleButton";
 import useBindSettings from "../useBindSettings";
+import { translateLanguages } from "../../assets/languages";
 
 const Conversations = () => {
   const bind = useBindSettings();
@@ -35,6 +44,16 @@ const Conversations = () => {
             label="User SMS Number"
             description={"The number your assistant will use to contact you"}
             {...bind("userSmsNumber")}
+          />
+          <Select
+            label="My Language"
+            data={translateLanguages}
+            {...bind("myLanguage")}
+          />
+          <Select
+            label="Translate Language"
+            data={translateLanguages}
+            {...bind("translateLanguage")}
           />
         </Stack>
       </SettingsCol>

@@ -41,6 +41,7 @@ const useBindSettings = () => {
         rawValue:
           | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
           | DeviceSettings[K]
+          | null
       ) => {
         let value = rawValue as DeviceSettings[K];
 

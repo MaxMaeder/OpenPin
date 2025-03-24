@@ -16,6 +16,7 @@ export const GROQ_SST_MODEL = "whisper-large-v3-turbo";
 export const MSFT_TTS_REGION = "eastus";
 export const MSFT_TTS_LANGUAGE = "en-US";
 export const MSFT_TTS_VOICE = "en-US-DavisNeural";
+export const MSFT_TTS_MULTILINGUAL_VOICE = "en-US-DavisMultilingualNeural";
 export const MSFT_TTS_FORMAT =
   SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
 
@@ -92,6 +93,8 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   llmPrompt: CHAT_COMP_PROMPT,
   visionLlmPrompt: CHAT_COMP_PROMPT,
   clearMessages: false,
+  myLanguage: "en-US",
+  translateLanguage: "es-ES",
   enableWifi: false,
   enableBluetooth: false,
   enableGnss: true,

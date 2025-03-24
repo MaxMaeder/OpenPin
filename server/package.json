@@ -23,6 +23,7 @@
     "firebase-admin": "^11.5.0",
     "fluent-ffmpeg": "^2.1.2",
     "fs-extra": "^11.2.0",
+    "google-auth-library": "^9.15.1",
     "groq-sdk": "^0.3.2",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",

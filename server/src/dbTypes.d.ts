@@ -42,6 +42,9 @@ export type DeviceSettings = {
   visionLlmPrompt: string;
   clearMessages: boolean;
   userSmsNumber?: string;
+  // Translate
+  myLanguage: string;
+  translateLanguage: string;
   // WiFi
   enableWifi: boolean;
   enableBluetooth: boolean;

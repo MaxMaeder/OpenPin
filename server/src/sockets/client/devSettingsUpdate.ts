@@ -40,6 +40,9 @@ const payloadSchema: ObjectSchema<DeviceSettingsPayload> = object({
   visionLlmPrompt: string(),
   clearMessages: boolean().isTrue(), // Can only clear, can't cancel
   userSmsNumber: string(),
+  // Translate
+  myLanguage: string(),
+  translateLanguage: string(),
   // WiFi
   enableWifi: boolean(),
   enableBluetooth: boolean(),
