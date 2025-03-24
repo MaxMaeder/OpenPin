@@ -1,0 +1,5 @@
+{
+  "watch": ["src"],
+  "ext": "ts,tsx",
+  "exec": "dotenv -e .env ts-node src/index.ts"
+}

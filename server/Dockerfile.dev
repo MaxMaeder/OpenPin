@@ -1,0 +1,5 @@
+# DEV IMAGE
+FROM node:20-slim
+
+# Pre-install ffmpeg once
+RUN apt-get update && apt-get install -y ffmpeg

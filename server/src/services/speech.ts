@@ -34,7 +34,7 @@ export const recognize = async (audioStream: PassThrough): Promise<string> => {
 
 export const getMsftSpeechConfig = () => {
   const speechConfig = MsftSpeech.SpeechConfig.fromSubscription(
-    process.env.SPEECH_KEY as string,
+    process.env.MSFT_SPEECH_KEY as string,
     MSFT_TTS_REGION
   );
 

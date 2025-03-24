@@ -1,0 +1,5 @@
+node_modules
+dashboard/node_modules
+lib
+dashboard/dist
+*.log

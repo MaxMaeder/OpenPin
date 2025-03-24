@@ -2,11 +2,10 @@
   "name": "functions",
   "scripts": {
     "build": "tsc",
-    "build-v": "tsc --version",
-    "start": "node lib/index.js",
-    "test-davis": "tsc --project tsconfig.dev.json && node --env-file=.env lib/davis/test.js",
-    "test-services": "tsc --project tsconfig.dev.json && node --env-file=.env lib/davis/test-services.js",
-    "test-local": "tsc && dotenv -e .env -- npm run start"
+    "start": "dotenv -e .env node lib/index.js",
+    "dev": "concurrently -k -n backend,dashboard -c blue,green \"npm:dev:backend\" \"npm:dev:dashboard\"",
+    "dev:backend": "nodemon",
+    "dev:dashboard": "npm --prefix dashboard run dev"
   },
   "engines": {
     "node": "20.x"
@@ -56,10 +55,14 @@
     "@types/tmp": "^0.2.6",
     "@typescript-eslint/eslint-plugin": "^5.12.0",
     "@typescript-eslint/parser": "^5.12.0",
+    "concurrently": "^9.1.2",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^8.9.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^3.0.0",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
     "typescript": "5.1.6"
   },
   "private": true
