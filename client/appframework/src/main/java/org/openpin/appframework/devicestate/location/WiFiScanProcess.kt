@@ -1,11 +1,10 @@
 package org.openpin.appframework.devicestate.location
 
-import android.util.Log
 import org.openpin.appframework.daemonbridge.process.ShellProcess
 
 class WiFiScanProcess : ShellProcess(
-    //command = "(cmd wifi list-scan-results && cmd wifi start-scan)"
-    command = "/data/local/tmp/pty_exec \"cmd wifi list-scan-results\""
+    //command = ""
+    command = "/data/local/tmp/pty_exec \"(cmd wifi list-scan-results && cmd wifi start-scan)\""
 ) {
     fun parseScanResults(): List<WiFiScanEntry> {
         val results = mutableListOf<WiFiScanEntry>()

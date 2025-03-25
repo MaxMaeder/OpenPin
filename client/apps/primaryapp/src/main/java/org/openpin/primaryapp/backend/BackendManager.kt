@@ -1,4 +1,4 @@
-package org.openpin.primaryapp.managers
+package org.openpin.primaryapp.backend
 
 import android.util.Log
 import com.google.gson.Gson
@@ -38,11 +38,12 @@ class BackendManager(
     private val locationManager: LocationManager,
     private val batteryManager: BatteryManager,
     private val identityManager: IdentityManager,
+    private val config: BackendConfig = BackendConfig(),
 ) {
-    suspend fun sendRequest(audioFile: File, imageFile: File?): File? {
+    suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): File? {
         val requestMetadata = RequestMetadata(
             audioSize = audioFile.length(),
-            audioFormat = "m4a",
+            audioFormat = "ogg",
             imageSize = imageFile?.length() ?: 0,
             deviceId = identityManager.identifier,
             audioBitrate = "64k",
@@ -68,16 +69,19 @@ class BackendManager(
         val responseFile = processHandler.createTempFile("response.raw")
 
         val requestProcess = RequestProcess(
-            url = "https://openpin.center/api/dev/handle",
+            url = "${config.baseUrl}/api/dev/$endpoint",
             method = "POST",
             payloadType = RequestProcess.PayloadType.BINARY,
             payload = RequestProcess.Payload.FromFile(requestFile),
-            outputFile = responseFile.absolutePath
+            outputFile = responseFile
         )
 
         val resultProcess = processHandler.execute(requestProcess)
         if (resultProcess.error.isNotBlank()) {
             Log.e("BackendHandler", "Error sending request: ${resultProcess.error}")
+            requestFile.delete()
+            responseFile.delete()
+            processHandler.release(requestProcess)
             return null
         }
 
@@ -105,6 +109,10 @@ class BackendManager(
                 input.copyTo(output)
             }
         }
+
+        requestFile.delete()
+        responseFile.delete()
+        processHandler.release(requestProcess)
 
         return mp3ResponseFile
     }

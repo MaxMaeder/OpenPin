@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val secrets = loadSecrets("MAPS_API_KEY")
+val secrets = loadSecrets("MAPS_API_KEY", "BACKEND_BASE_URL")
 
 android {
     namespace = "org.openpin.primaryapp"

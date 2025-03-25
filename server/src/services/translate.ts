@@ -44,7 +44,7 @@ export const translate = async (
     requestBody
   );
 
-  const result = response.data.translations?.[0];
+  const result = response.data.translations[0];
 
   return {
     translatedText: result?.translatedText || "",

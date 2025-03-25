@@ -5,7 +5,7 @@ import org.koin.dsl.module
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 import org.openpin.appframework.devicestate.location.LocationConfig
-import org.openpin.primaryapp.managers.BackendManager
+import org.openpin.primaryapp.backend.BackendManager
 import kotlin.time.Duration.Companion.seconds
 
 class MainActivity : PinActivity() {

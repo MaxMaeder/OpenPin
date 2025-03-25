@@ -11,7 +11,7 @@ class RequestProcess(
     payload: Payload? = null,
     payloadType: PayloadType = PayloadType.NONE,
     queryParams: Map<String, String> = emptyMap(),
-    outputFile: String? = null
+    outputFile: File? = null
 ) : ShellProcess(
     buildCurlCommand(url, method, headers, payload, payloadType, queryParams, outputFile)
 ) {
@@ -55,7 +55,7 @@ class RequestProcess(
             payload: Payload?,
             payloadType: PayloadType,
             queryParams: Map<String, String>,
-            outputFile: String?
+            outputFile: File?
         ): String {
             val cmd = mutableListOf("curl -sSf")
 
@@ -97,9 +97,9 @@ class RequestProcess(
             cmd.add("\"$fullUrl\"")
 
             // Output file (optional)
-            if (!outputFile.isNullOrEmpty()) {
+            if (outputFile != null) {
                 cmd.add("-o")
-                cmd.add(outputFile)
+                cmd.add(outputFile.absolutePath)
             }
 
             return cmd.joinToString(" ")

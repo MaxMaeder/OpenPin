@@ -13,10 +13,10 @@ import android.media.MediaRecorder
  */
 data class AudioCaptureConfig(
     val audioSource: Int = MediaRecorder.AudioSource.VOICE_RECOGNITION,
-    val outputFormat: Int = MediaRecorder.OutputFormat.MPEG_4,
-    val audioEncoder: Int = MediaRecorder.AudioEncoder.AAC,
-    val bitRate: Int = 128_000,
-    val sampleRate: Int = 44_100
+    val outputFormat: Int = MediaRecorder.OutputFormat.OGG,
+    val audioEncoder: Int = MediaRecorder.AudioEncoder.OPUS,
+    val bitRate: Int = 24_000,
+    val sampleRate: Int = 16_000
 )
 
 /**

@@ -13,7 +13,7 @@ import org.openpin.appframework.sensors.camera.CameraManager
 import org.openpin.appframework.sensors.microphone.MicrophoneManager
 import org.openpin.appframework.sensors.microphone.RecordSession
 import org.openpin.appframework.utils.withLoadingSounds
-import org.openpin.primaryapp.managers.BackendManager
+import org.openpin.primaryapp.backend.BackendManager
 import java.io.File
 
 class GestureViewModel(
@@ -26,6 +26,8 @@ class GestureViewModel(
 ) : ViewModel() {
     private val subscriptions = mutableListOf<GestureSubscription>()
 
+    private var isTranslating = false;
+
     private var imgFile: File? = null
     private var speechCapture: RecordSession? = null
 
@@ -36,9 +38,17 @@ class GestureViewModel(
             }
         }
         subscriptions += gestureHandler.subscribeGesture(1, GestureType.LONG_PRESS_DOWN) {
-            handleLongPressDown()
+            handleLongPressDown(1)
+        }
+        subscriptions += gestureHandler.subscribeGesture(2, GestureType.LONG_PRESS_DOWN) {
+            handleLongPressDown(2)
         }
         subscriptions += gestureHandler.subscribeGesture(1, GestureType.LONG_PRESS_UP) {
+            viewModelScope.launch {
+                handleLongPressUp()
+            }
+        }
+        subscriptions += gestureHandler.subscribeGesture(2, GestureType.LONG_PRESS_UP) {
             viewModelScope.launch {
                 handleLongPressUp()
             }
@@ -54,15 +64,13 @@ class GestureViewModel(
         audioPlayer.play(R.raw.shutter, AudioType.SOUND)
     }
 
-    private fun handleLongPressDown() {
-        speechCapture?.apply {
-            stop()
-            result.delete()
-        }
+    private fun handleLongPressDown(fingers: Int) {
+        discardSpeech()
+        isTranslating = fingers == 2
 
         audioPlayer.play(R.raw.record_start, AudioType.SOUND)
 
-        val speechFile = processHandler.createTempFile("m4a")
+        val speechFile = processHandler.createTempFile("ogg")
         speechCapture = microphoneManager.recordAudio(speechFile)
     }
 
@@ -70,11 +78,35 @@ class GestureViewModel(
         speechCapture?.stop()
         audioPlayer.play(R.raw.record_end, AudioType.SOUND)
 
+        if (isTranslating) {
+            discardImg()
+        }
+
+        val endpoint = if (isTranslating) "translate" else "handle"
+
         speechCapture?.let { capture ->
             val res = withLoadingSounds(audioPlayer) {
-                backendManager.sendRequest(capture.result, imgFile)
+                backendManager.sendVoiceRequest(endpoint, capture.result, imgFile)
             }
             res?.let { audioPlayer.play(it, AudioType.SPEECH) }
+
+            discardImg()
+            discardSpeech()
+        }
+    }
+
+    private fun discardImg() {
+        imgFile?.let {
+            it.delete()
+            imgFile = null
+        }
+    }
+
+    private fun discardSpeech() {
+        speechCapture?.let {
+            it.stop()
+            it.result.delete()
+            speechCapture = null
         }
     }
 
@@ -84,15 +116,7 @@ class GestureViewModel(
         subscriptions.forEach { gestureHandler.unsubscribe(it) }
         subscriptions.clear()
 
-        imgFile?.let {
-            it.delete()
-            imgFile = null
-        }
-
-        speechCapture?.let {
-            it.stop()
-            it.result.delete()
-            speechCapture = null
-        }
+        discardImg()
+        discardSpeech()
     }
 }

@@ -85,6 +85,8 @@ class LocationManager(
 
         } catch (e: Exception) {
             Log.e(TAG, "Geolocation API request failed: ${e.message}")
+        } finally {
+            processHandler.release(request)
         }
     }
 
