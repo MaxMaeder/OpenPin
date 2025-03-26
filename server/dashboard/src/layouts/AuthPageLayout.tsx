@@ -38,34 +38,3 @@ const AuthPageLayout = ({ title, children, links }: AuthPageLayoutProps) => {
 };
 
 export default AuthPageLayout;
-
-/*
-  return (
-    <BaseLayout title="Log In">
-      <Center h="100%">
-        <Stack align="center" gap="lg">
-          <Image src={Logo} w="150px" />
-          <Paper p="lg" withBorder>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Stack>
-                <TextInput
-                  w="300px"
-                  placeholder="Username"
-                  {...register("username", { required: true })}
-                />
-                <PasswordInput
-                  placeholder="Password"
-                  {...register("password", { required: true })}
-                />
-                <Button type="submit" loading={isAuthenticating}>
-                  Log In
-                </Button>
-                {errorMessage && <Text c="red">{errorMessage}</Text>}
-              </Stack>
-            </form>
-          </Paper>
-        </Stack>
-      </Center>
-    </BaseLayout>
-  );
-*/

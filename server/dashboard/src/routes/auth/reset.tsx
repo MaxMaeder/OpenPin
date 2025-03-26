@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Text, TextInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
@@ -11,7 +10,7 @@ type ResetFormInputs = {
   email: string;
 };
 
-const ResetPasswordRoute: React.FC = () => {
+const ResetPasswordRoute = () => {
   const navigate = useNavigate();
   const { register, handleSubmit } = useForm<ResetFormInputs>();
   const [sendPasswordResetEmail, sending, error] = useSendPasswordResetEmail(auth);

@@ -5,7 +5,7 @@ import { Server } from "socket.io";
 import { getFirestore } from "firebase-admin/firestore";
 import { handleDataReq } from "./client/dataReq";
 import { handleDevSettingsUpdate } from "./client/devSettingsUpdate";
-import { authUserSocket } from "../auth/jwt";
+import { authUserSocket } from "../auth";
 
 let io: Server | undefined;
 

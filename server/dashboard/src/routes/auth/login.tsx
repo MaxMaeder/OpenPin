@@ -1,4 +1,3 @@
-import React from 'react';
 import { Stack, Text, TextInput, PasswordInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
@@ -10,7 +9,7 @@ type LoginFormInputs = {
   password: string;
 };
 
-const LoginRoute: React.FC = () => {
+const LoginRoute = () => {
   const { register, handleSubmit } = useForm<LoginFormInputs>();
   const [signInWithEmailAndPassword, _, loading, error] =
     useSignInWithEmailAndPassword(auth);

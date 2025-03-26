@@ -7,7 +7,6 @@ import devSelectReducer from "./slices/devSelectSlice";
 import settingsReducer from "./slices/settingsSlice";
 import storage from "redux-persist/lib/storage";
 import { thunk } from "redux-thunk";
-import userReducer from "./slices/userSlice";
 
 const persistConfig = {
   key: "root",
@@ -16,7 +15,6 @@ const persistConfig = {
 };
 
 const rootReducer = combineReducers({
-  user: userReducer,
   comm: commReducer,
   settings: settingsReducer,
   data: dataReducer,

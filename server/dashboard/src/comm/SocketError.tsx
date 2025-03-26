@@ -1,14 +1,14 @@
 import { Button, Notification, Portal, Stack, Transition } from "@mantine/core";
 import { clearConnError, selectConnError } from "../state/slices/commSlice";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-
-import { logoutUser } from "../state/slices/userSlice";
+import { useSignOut } from "react-firebase-hooks/auth";
+import { auth } from "./firebase";
 
 const SocketError = () => {
   const dispatch = useAppDispatch();
+  const [signOut] = useSignOut(auth);
   const connError = useAppSelector(selectConnError);
 
-  const handleReLogin = () => dispatch(logoutUser());
   const handleDismissed = () => dispatch(clearConnError());
 
   return (
@@ -36,7 +36,7 @@ const SocketError = () => {
               We couldn't establish a connection with the server. You may need
               to log in again.
               <i>{connError}</i>
-              <Button onClick={handleReLogin}>Log In Again</Button>
+              <Button onClick={signOut}>Log In Again</Button>
             </Stack>
           </Notification>
         )}
