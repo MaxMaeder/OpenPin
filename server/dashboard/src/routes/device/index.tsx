@@ -10,6 +10,7 @@ import { selectDataById } from "../../state/slices/dataSlice";
 import { selectSelectedDevice } from "../../state/slices/devSelectSlice";
 import { selectSettingsById } from "../../state/slices/settingsSlice";
 import { useAppSelector } from "../../state/hooks";
+import DevicePageLayout from "./PageLayout";
 
 const DeviceRoute = () => {
   const deviceId = useAppSelector(selectSelectedDevice)!;
@@ -28,19 +29,21 @@ const DeviceRoute = () => {
           </Stack>
         </Center>
       ) : (
-        <DataLayout
-          leftSection={<CameraView imageName={deviceData.latestImage} />}
-          middleSection={
-            <TelemetryView data={deviceData} settings={deviceSettings} />
-          }
-          rightSection={
-            <LocationView
-              lat={deviceData.latitude}
-              lng={deviceData.longitude}
-              zoom={getMapZoom(deviceData.locationCertainty)}
-            />
-          }
-        />
+        <DevicePageLayout>
+          <DataLayout
+            leftSection={<CameraView imageName={deviceData.latestImage} />}
+            middleSection={
+              <TelemetryView data={deviceData} settings={deviceSettings} />
+            }
+            rightSection={
+              <LocationView
+                lat={deviceData.latitude}
+                lng={deviceData.longitude}
+                zoom={getMapZoom(deviceData.locationCertainty)}
+              />
+            }
+          />
+        </DevicePageLayout>
       )}
     </DashboardLayout>
   );

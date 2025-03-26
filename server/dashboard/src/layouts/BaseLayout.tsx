@@ -27,6 +27,7 @@ const BaseLayout = ({ title, children, ...props }: BaseLayoutProps) => {
 
   const boxStyle: MantineStyleProp = {
     height: "100%",
+    overflow: "auto",
     backgroundImage: "radial-gradient(#2F2F2F 0.5px, #171717 0.5px)",
     backgroundSize: "10px 10px",
   };
