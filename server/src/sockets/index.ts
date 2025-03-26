@@ -2,10 +2,10 @@ import { DEV_DATA_COL } from "../config";
 import { DeviceSettings } from "../dbTypes";
 import { Server as HttpServer } from "http";
 import { Server } from "socket.io";
-import { authJwtSocket } from "../auth/jwt";
 import { getFirestore } from "firebase-admin/firestore";
 import { handleDataReq } from "./client/dataReq";
 import { handleDevSettingsUpdate } from "./client/devSettingsUpdate";
+import { authUserSocket } from "../auth/jwt";
 
 let io: Server | undefined;
 
@@ -13,7 +13,7 @@ export const setupSocket = (server: HttpServer) => {
   io = new Server(server, {
     path: "/dash-link/",
   });
-  io.use(authJwtSocket);
+  io.use(authUserSocket);
 
   io.on("connection", (socket) => {
     // Called when new clients request all device data and settings

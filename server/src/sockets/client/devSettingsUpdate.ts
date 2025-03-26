@@ -64,7 +64,9 @@ class NotFoundError extends Error {
 export const handleDevSettingsUpdate =
   (socket: Socket) => async (payload: DeviceSettingsPayload) => {
     try {
+      console.log("HERE 2")
       await payloadSchema.validate(payload, { strict: true });
+      console.log("VAL")
 
       if (!(await doesDevExist(payload.id))) {
         throw new NotFoundError("Device does not exist");

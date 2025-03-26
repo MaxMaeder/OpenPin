@@ -9,7 +9,7 @@ import {
 
 import { addResponseUtils } from "./util/responseUtils";
 import admin from "firebase-admin";
-import { authJwtEndpoint } from "./auth/jwt";
+import { authUserEndpoint } from "./auth/jwt";
 import { createServer } from "http";
 import express from "express";
 import firebaseKey from "./keys/firebaseKey";
@@ -48,11 +48,15 @@ setupSocket(server);
 app.post("/api/dash/login", limitLogin, parseLogin, handleLogin);
 app.post(
   "/api/dash/firmware-upload",
-  authJwtEndpoint,
+  authUserEndpoint,
   parseUploadFirmware,
   handleUploadFirmware
 );
-app.get("/api/dash/media-download/:name", authJwtEndpoint, handleDownloadMedia);
+app.get(
+  "/api/dash/media-download/:name",
+  authUserEndpoint,
+  handleDownloadMedia
+);
 
 app.post(
   "/api/dev/handle",

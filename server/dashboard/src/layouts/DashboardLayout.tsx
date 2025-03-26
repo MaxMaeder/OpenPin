@@ -19,15 +19,17 @@ import Logo from "../assets/logo.svg";
 import Settings from "../settings";
 import SocketError from "../comm/SocketError";
 import { appConfirm } from "../modals";
-import { logoutUser } from "../state/slices/userSlice";
 import { selectDeviceNames } from "../state/slices/settingsSlice";
 import { useDisclosure } from "@mantine/hooks";
 import useIsMobile from "../util/useIsMobile";
 import { useMemo } from "react";
+import { auth } from "../comm/firebase";
+import { useSignOut } from "react-firebase-hooks/auth";
 
 const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const dispatch = useAppDispatch();
   const isMobile = useIsMobile();
+  const [signOut] = useSignOut(auth);
 
   const deviceNames = useAppSelector(selectDeviceNames);
 
@@ -51,7 +53,7 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const handleLogout = async () => {
     await appConfirm("Confirm Log Out", "Are you sure you want to log out?");
 
-    dispatch(logoutUser());
+    signOut();
   };
 
   return (

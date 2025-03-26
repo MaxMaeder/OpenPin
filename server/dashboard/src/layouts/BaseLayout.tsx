@@ -2,8 +2,8 @@ import { Box, BoxComponentProps, MantineStyleProp } from "@mantine/core";
 import { ReactNode, useEffect } from "react";
 
 import api from "../comm/api";
-import { selectAuthToken } from "../state/slices/userSlice";
-import { useAppSelector } from "../state/hooks";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../comm/firebase";
 
 export interface BaseLayoutProps extends BoxComponentProps {
   title: string;
@@ -15,10 +15,15 @@ const BaseLayout = ({ title, children, ...props }: BaseLayoutProps) => {
     document.title = `${title} - OpenPin`;
   }, [title]);
 
-  const authToken = useAppSelector(selectAuthToken);
+  const [user] = useAuthState(auth);
+
   useEffect(() => {
-    api.setAuthToken(authToken);
-  }, [authToken]);
+    if (!user) return;
+
+    (async () => {
+      api.setAuthToken(await user.getIdToken());
+    })()
+  }, [user]);
 
   const boxStyle: MantineStyleProp = {
     height: "100%",
