@@ -5,13 +5,12 @@ import PercentageSlider from "../components/PercentageSlider";
 import SettingsCol from "../components/SettingsCol";
 import ToggleButton from "../components/ToggleButton";
 import UpdateFreqSlider from "../components/UpdateFreqSlider";
-import { selectSelectedDevice } from "../../state/slices/devSelectSlice";
-import { useAppSelector } from "../../state/hooks";
 import useBindSettings from "../useBindSettings";
+import { useDeviceId } from "../../util/useDeviceId";
 
 const General = () => {
   const bind = useBindSettings();
-  const deviceId = useAppSelector(selectSelectedDevice);
+  const deviceId = useDeviceId();
 
   return (
     <Grid>

@@ -1,17 +1,13 @@
 import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 
-import LoginRoute from "./routes/auth/login.tsx";
-import ResetRoute from "./routes/auth/reset.tsx";
-import SignupRoute from "./routes/auth/signup.tsx";
-import NotFoundRoute from "./routes/notfound/index.tsx";
+import LoginRoute from "./routes/auth/Login.tsx";
+import ResetRoute from "./routes/auth/Reset.tsx";
+import SignupRoute from "./routes/auth/Signup.tsx";
+import NotFoundRoute from "./routes/NotFound/index.tsx";
 import { auth } from "./comm/firebase.ts";
 import { useAuthState } from "react-firebase-hooks/auth";
-import PageLayout from "./routes/device/PageLayout/index.tsx";
-import Overview from "./routes/device/tabs/Overview.tsx";
-import Captures from "./routes/device/tabs/Captures.tsx";
-import Notes from "./routes/device/tabs/Notes.tsx";
-import Messages from "./routes/device/tabs/Messages.tsx";
-import Settings from "./routes/device/tabs/Settings.tsx";
+import PageLayout from "./routes/Device/PageLayout/index.tsx";
+import SelectDeviceRoute from "./routes/SelectDevice/index.tsx";
 
 const AuthGuard = () => {
   const [user] = useAuthState(auth);
@@ -30,18 +26,15 @@ export const router = createBrowserRouter([
     path: "/",
     element: <AuthGuard />,
     children: [
-      { index: true, element: <Navigate to="/devices/overview" replace /> },
+      { index: true, element: <SelectDeviceRoute /> },
       {
-        path: "devices",
+        path: ":deviceId/:tab",
         element: <PageLayout />,
-        children: [
-          { index: true, element: <Navigate to="/devices/overview" replace /> },
-          { path: "overview", element: <Overview /> },
-          { path: "captures", element: <Captures /> },
-          { path: "notes", element: <Notes /> },
-          { path: "messages", element: <Messages /> },
-          { path: "settings", element: <Settings /> },
-        ],
+      },
+      // If only :deviceId is provided, redirect to default tab.
+      {
+        path: ":deviceId",
+        element: <Navigate to="overview" replace />,
       },
     ],
   },

@@ -7,8 +7,8 @@ import {
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 
 import _ from "lodash";
-import { selectSelectedDevice } from "../state/slices/devSelectSlice";
 import { useSocket } from "../comm/socket";
+import { useDeviceId } from "../util/useDeviceId";
 
 const isChangeEvent = (value: any): value is ChangeEvent => {
   return (value as ChangeEvent).target !== undefined;
@@ -19,7 +19,7 @@ const useBindSettings = () => {
   const { sendSettingsUpdate } = useSocket();
 
   // Return dummy binding if no device id
-  const deviceId = useAppSelector(selectSelectedDevice);
+  const deviceId = useDeviceId();
   if (!deviceId) throw new Error("Need to select a device to bind settings!");
 
   const deviceSettings = useAppSelector((state) =>

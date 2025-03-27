@@ -1,16 +1,15 @@
 import { useAppSelector } from "../../../state/hooks";
 import { selectDataById } from "../../../state/slices/dataSlice";
-import { selectSelectedDevice } from "../../../state/slices/devSelectSlice";
 import { selectSettingsById } from "../../../state/slices/settingsSlice";
 import { getMapZoom } from "../../../util/zoomUtil";
 import CameraView from "../CameraView";
 import DataLayout from "../DataLayout";
 import TelemetryView from "../TelemetryView";
 import LocationView from "../LocationView";
+import { useDeviceId } from "../../../util/useDeviceId";
 
 const Overview = () => {
-  const deviceId = useAppSelector(selectSelectedDevice)!;
-  if (!deviceId) return <></>;
+  const deviceId = useDeviceId()!;
 
   const deviceData = useAppSelector((state) => selectDataById(state, deviceId));
   const deviceSettings = useAppSelector((state) =>

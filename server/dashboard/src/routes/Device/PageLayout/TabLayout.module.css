@@ -21,10 +21,26 @@
   }
 }
 
+.animationContainer {
+  position: relative;
+  flex: 1;
+  overflow: hidden
+}
+
+.animatedContent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .contentContainer {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: start;
   flex: 1;
 }

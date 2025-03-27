@@ -17,10 +17,10 @@ import {
   setConnError,
   setConnected,
 } from "../state/slices/commSlice";
-import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { selectSelectedDevice } from "../state/slices/devSelectSlice";
+import { useAppDispatch } from "../state/hooks";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./firebase";
+import { useDeviceId } from "../util/useDeviceId";
 
 interface SocketContextProps {
   sendMessage: (event: string, message: any) => void;
@@ -36,7 +36,7 @@ interface SocketProviderProps {
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const dispatch = useAppDispatch();
   const [user] = useAuthState(auth);
-  const deviceId = useAppSelector(selectSelectedDevice);
+  const deviceId = useDeviceId();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {

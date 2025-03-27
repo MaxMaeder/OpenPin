@@ -4,15 +4,14 @@ import api, { ApiError } from "../../../comm/api";
 import { useCallback, useState } from "react";
 
 import { IconFile } from "@tabler/icons-react";
-import { selectSelectedDevice } from "../../../state/slices/devSelectSlice";
-import { useAppSelector } from "../../../state/hooks";
+import { useDeviceId } from "../../../util/useDeviceId";
 
 type FirmwareUpload = {
   file: File;
 };
 
 const UploadForm = () => {
-  const deviceId = useAppSelector(selectSelectedDevice)!;
+  const deviceId = useDeviceId()!;
 
   const [isLoading, setLoading] = useState(false);
   const {

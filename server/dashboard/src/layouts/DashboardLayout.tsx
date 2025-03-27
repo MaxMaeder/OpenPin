@@ -9,11 +9,7 @@ import {
 } from "@mantine/core";
 import BaseLayout, { BaseLayoutProps } from "./BaseLayout";
 import { IconLogout, IconSettings } from "@tabler/icons-react";
-import {
-  selectSelectedDevice,
-  setSelectedDevice,
-} from "../state/slices/devSelectSlice";
-import { useAppDispatch, useAppSelector } from "../state/hooks";
+import { useAppSelector } from "../state/hooks";
 
 import Logo from "../assets/logo.svg";
 import Settings from "../settings";
@@ -25,9 +21,11 @@ import useIsMobile from "../util/useIsMobile";
 import { useMemo } from "react";
 import { auth } from "../comm/firebase";
 import { useSignOut } from "react-firebase-hooks/auth";
+import { useNavigate } from "react-router-dom";
+import { useDeviceId } from "../util/useDeviceId";
 
 const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
-  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [signOut] = useSignOut(auth);
 
@@ -41,13 +39,13 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
       })),
     [deviceNames]
   );
-  const selectedDevice = useAppSelector(selectSelectedDevice);
+  const selectedDevice = useDeviceId();
 
   const [settingsOpened, { open: openSettings, close: closeSettings }] =
     useDisclosure(false);
 
   const handleDeviceSelected = (id: string | null) => {
-    if (id) dispatch(setSelectedDevice(id));
+    if (id) navigate(`/${id}/overview`);
   };
 
   const handleLogout = async () => {
