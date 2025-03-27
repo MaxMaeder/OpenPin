@@ -1,4 +1,4 @@
-import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
+import { Navigate, Outlet, createBrowserRouter, useLocation } from "react-router-dom";
 
 import LoginRoute from "./routes/auth/Login.tsx";
 import ResetRoute from "./routes/auth/Reset.tsx";
@@ -6,19 +6,26 @@ import SignupRoute from "./routes/auth/Signup.tsx";
 import NotFoundRoute from "./routes/NotFound/index.tsx";
 import { auth } from "./comm/firebase.ts";
 import { useAuthState } from "react-firebase-hooks/auth";
-import PageLayout from "./routes/Device/PageLayout/index.tsx";
+import DeviceRoute from "./routes/Device/index.tsx";
 import SelectDeviceRoute from "./routes/SelectDevice/index.tsx";
 
 const AuthGuard = () => {
   const [user] = useAuthState(auth);
+  const location = useLocation();
 
-  return user ? <Outlet /> : <Navigate to="/auth/login" replace />;
+  const redirectTo = `/auth/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`;
+
+  return user ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
 const GuestGuard = () => {
   const [user] = useAuthState(auth);
+  const location = useLocation();
 
-  return (!user) ? <Outlet /> : <Navigate to="/" replace />;
+  const params = new URLSearchParams(location.search);
+  const redirectTo = params.get("redirectTo") || "/";
+
+  return !user ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
 export const router = createBrowserRouter([
@@ -29,7 +36,7 @@ export const router = createBrowserRouter([
       { index: true, element: <SelectDeviceRoute /> },
       {
         path: ":deviceId/:tab",
-        element: <PageLayout />,
+        element: <DeviceRoute />,
       },
       // If only :deviceId is provided, redirect to default tab.
       {

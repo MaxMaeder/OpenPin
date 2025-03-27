@@ -1,14 +1,14 @@
 import { useParams } from "react-router-dom";
-import DashboardLayout from "../../../layouts/DashboardLayout";
-import TabLayout, { TabDefinition } from "./TabLayout";
-import Overview from "../tabs/Overview";
-import Captures from "../tabs/Captures";
-import Notes from "../tabs/Notes";
-import Messages from "../tabs/Messages";
-import Settings from "../tabs/Settings";
-import NotFound from "../../NotFound";
-import { selectDeviceNames } from "../../../state/slices/settingsSlice";
-import { useAppSelector } from "../../../state/hooks";
+import DashboardLayout from "src/layouts/DashboardLayout";
+import TabLayout, { TabDefinition } from "./TabLayout/TabLayout";
+import Overview from "./tabs/Overview";
+import Captures from "src/routes/Device/tabs/Captures";
+import Notes from "src/routes/Device/tabs/Notes";
+import Messages from "src/routes/Device/tabs/Messages";
+import Settings from "src/routes/Device/tabs/Settings";
+import NotFound from "src/routes/NotFound";
+import { selectDeviceNames } from "src/state/slices/settingsSlice";
+import { useAppSelector } from "src/state/hooks";
 
 const tabs: TabDefinition[] = [
   { label: "Overview", value: "overview", fullScreen: true, Component: Overview },

@@ -4,7 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import classes from "./TabLayout.module.css";
-import NotFound from "../../NotFound";
+import NotFound from "src/routes/NotFound";
+import useIsMobile from "src/util/useIsMobile";
 
 export interface TabDefinition {
   label: string;
@@ -21,6 +22,7 @@ interface TabLayoutProps {
 const TabLayout: React.FC<TabLayoutProps> = ({ tabs, animationDuration: duration = 0.15 }) => {
   const { deviceId, tab: tabParam } = useParams<{ deviceId: string; tab: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const activeTab = tabs.find(tab => tab.value === tabParam);
   if (!tabParam || !activeTab) return <NotFound />;
@@ -53,10 +55,11 @@ const TabLayout: React.FC<TabLayoutProps> = ({ tabs, animationDuration: duration
           value={activeTab.value}
           onChange={onTabChange}
           withItemsBorders={false}
+          orientation={isMobile ? "vertical" : "horizontal"}
         />
       </Box>
 
-      <Box className={classes.contentWrapper}>
+      <Box className={classes.animationContainer}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab.value}
@@ -64,7 +67,7 @@ const TabLayout: React.FC<TabLayoutProps> = ({ tabs, animationDuration: duration
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration }}
-            className={classes.animationContainer}
+            className={classes.animatedContent}
           >
             <Box className={clsx(classes.contentContainer, verticallyCentered && classes.contentCentered)}>
               <displayTab.Component />

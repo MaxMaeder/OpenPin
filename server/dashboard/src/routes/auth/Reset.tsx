@@ -2,8 +2,8 @@ import { Stack, Text, TextInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 import { useNavigate } from 'react-router-dom';
-import AuthPageLayout from '../../layouts/AuthPageLayout.tsx';
-import { auth } from '../../comm/firebase.ts';
+import AuthLayout from 'src/layouts/AuthLayout.tsx';
+import { auth } from 'src/comm/firebase.ts';
 import { notifications } from '@mantine/notifications';
 
 type ResetFormInputs = {
@@ -28,7 +28,7 @@ const ResetPasswordRoute = () => {
   };
 
   return (
-    <AuthPageLayout
+    <AuthLayout
       title="Reset Password"
       links={[{
         label: "Log In",
@@ -51,7 +51,7 @@ const ResetPasswordRoute = () => {
           {error && <Text c="red">{error.message}</Text>}
         </Stack>
       </form>
-    </AuthPageLayout>
+    </AuthLayout>
   );
 };
 

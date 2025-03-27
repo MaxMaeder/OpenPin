@@ -1,12 +1,12 @@
-import { useAppSelector } from "../../../state/hooks";
-import { selectDataById } from "../../../state/slices/dataSlice";
-import { selectSettingsById } from "../../../state/slices/settingsSlice";
-import { getMapZoom } from "../../../util/zoomUtil";
-import CameraView from "../CameraView";
-import DataLayout from "../DataLayout";
-import TelemetryView from "../TelemetryView";
-import LocationView from "../LocationView";
-import { useDeviceId } from "../../../util/useDeviceId";
+import { useAppSelector } from "src/state/hooks";
+import { selectDataById } from "src/state/slices/dataSlice";
+import { selectSettingsById } from "src/state/slices/settingsSlice";
+import { getMapZoom } from "src/util/zoomUtil";
+import CameraView from "./CameraView";
+import DataLayout from "./DataLayout";
+import TelemetryView from "./TelemetryView";
+import LocationView from "./LocationView";
+import { useDeviceId } from "src/util/useDeviceId";
 
 const Overview = () => {
   const deviceId = useDeviceId()!;

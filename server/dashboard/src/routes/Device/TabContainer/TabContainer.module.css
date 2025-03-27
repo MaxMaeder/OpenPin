@@ -1,0 +1,13 @@
+.tabContainer {
+  flex: 1;
+  max-width: 1000px;
+  width: 80%;
+  margin: 0 auto 2rem;
+}
+
+@media (max-width: 576px) {
+  .tabContainer {
+    width: 100%;
+    margin: 0 2rem 2rem;
+  }
+}

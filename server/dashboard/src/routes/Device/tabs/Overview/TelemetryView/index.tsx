@@ -1,9 +1,9 @@
 import { Flex, Stack, Text, Title } from "@mantine/core";
 import TelemetryTable, { TelemTableRow } from "./TelemertryTable";
-import { formatBattery, formatCoords, formatDate } from "../../../util/format";
+import { formatBattery, formatCoords, formatDate } from "src/util/format";
 
-import { DeviceData } from "../../../state/slices/dataSlice";
-import { DeviceSettings } from "../../../state/slices/settingsSlice";
+import { DeviceData } from "src/state/slices/dataSlice";
+import { DeviceSettings } from "src/state/slices/settingsSlice";
 // import { IconCamera } from "@tabler/icons-react";
 // import ToggleButton from "../../../settings/components/ToggleButton";
 // import useBindSettings from "../../../settings/useBindSettings";

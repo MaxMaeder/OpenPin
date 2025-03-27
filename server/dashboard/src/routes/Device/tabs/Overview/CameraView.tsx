@@ -1,7 +1,7 @@
 import { Center, Image, Stack, Text } from "@mantine/core";
 
 import { IconPhoto } from "@tabler/icons-react";
-import api from "../../comm/api";
+import api from "src/comm/api";
 
 interface CameraViewProps {
   imageName?: string;

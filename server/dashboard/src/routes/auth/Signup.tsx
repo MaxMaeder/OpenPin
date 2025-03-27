@@ -1,8 +1,8 @@
 import { Stack, Text, TextInput, PasswordInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
-import AuthPageLayout from '../../layouts/AuthPageLayout.tsx';
-import { auth } from '../../comm/firebase.ts';
+import AuthLayout from 'src/layouts/AuthLayout.tsx';
+import { auth } from 'src/comm/firebase.ts';
 
 type SignupFormInputs = {
   email: string;
@@ -20,7 +20,7 @@ const SignupRoute = () => {
   };
 
   return (
-    <AuthPageLayout
+    <AuthLayout
       title="Create Account"
       links={[{
         label: "Log In",
@@ -53,7 +53,7 @@ const SignupRoute = () => {
           {error && <Text c="red">{error.message}</Text>}
         </Stack>
       </form>
-    </AuthPageLayout>
+    </AuthLayout>
   );
 };
 
