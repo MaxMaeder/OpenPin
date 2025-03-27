@@ -1,7 +1,7 @@
 import { ActionIcon, Stack, Textarea, TextareaProps, rem } from "@mantine/core";
 import { IconArrowsDiagonal, IconMinimize } from "@tabler/icons-react";
 
-import { DeviceSettings } from "../../state/slices/settingsSlice";
+import { DeviceSettings } from "src/state/slices/settingsSlice";
 import { modals } from "@mantine/modals";
 import useBindSettings from "../useBindSettings";
 

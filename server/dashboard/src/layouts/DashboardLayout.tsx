@@ -8,15 +8,13 @@ import {
   Tooltip,
 } from "@mantine/core";
 import BaseLayout, { BaseLayoutProps } from "./BaseLayout";
-import { IconLogout, IconSettings } from "@tabler/icons-react";
+import { IconLogout } from "@tabler/icons-react";
 import { useAppSelector } from "../state/hooks";
 
 import Logo from "../assets/logo.svg";
-import Settings from "../settings";
 import SocketError from "../comm/SocketError";
 import { appConfirm } from "../modals";
 import { selectDeviceNames } from "../state/slices/settingsSlice";
-import { useDisclosure } from "@mantine/hooks";
 import useIsMobile from "../util/useIsMobile";
 import { useMemo } from "react";
 import { auth } from "../comm/firebase";
@@ -40,9 +38,6 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
     [deviceNames]
   );
   const selectedDevice = useDeviceId();
-
-  const [settingsOpened, { open: openSettings, close: closeSettings }] =
-    useDisclosure(false);
 
   const handleDeviceSelected = (id: string | null) => {
     if (id) navigate(`/${id}/overview`);
@@ -73,21 +68,6 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
                   onChange={handleDeviceSelected}
                   data={selectorDevices}
                 />
-                <Tooltip label="Settings">
-                  <ActionIcon
-                    variant="transparent"
-                    styles={{
-                      root: {
-                        backgroundColor: "transparent",
-                      },
-                    }}
-                    size="lg"
-                    disabled={!selectedDevice}
-                    onClick={openSettings}
-                  >
-                    <IconSettings />
-                  </ActionIcon>
-                </Tooltip>
                 <Tooltip label="Log Out">
                   <ActionIcon
                     variant="transparent"
@@ -104,7 +84,6 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
         <AppShell.Main id="dash-main" style={{ position: "relative" }} h="100%">
           <SocketError />
           {children}
-          <Settings opened={settingsOpened} onClose={closeSettings} />
         </AppShell.Main>
       </AppShell>
     </BaseLayout>

@@ -11,6 +11,7 @@ const PercentageSlider = (props: SliderProps) => (
     min={0}
     max={1}
     step={0.05}
+    mb="1.25rem"
     {...props}
   />
 );

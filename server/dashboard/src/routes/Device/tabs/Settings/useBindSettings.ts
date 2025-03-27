@@ -3,12 +3,12 @@ import {
   DeviceSettings,
   selectSettingsById,
   updateSettingsById,
-} from "../state/slices/settingsSlice";
-import { useAppDispatch, useAppSelector } from "../state/hooks";
+} from "src/state/slices/settingsSlice";
+import { useAppDispatch, useAppSelector } from "src/state/hooks";
 
 import _ from "lodash";
-import { useSocket } from "../comm/socket";
-import { useDeviceId } from "../util/useDeviceId";
+import { useSocket } from "src/comm/socket";
+import { useDeviceId } from "src/util/useDeviceId";
 
 const isChangeEvent = (value: any): value is ChangeEvent => {
   return (value as ChangeEvent).target !== undefined;
@@ -41,7 +41,6 @@ const useBindSettings = () => {
         rawValue:
           | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
           | DeviceSettings[K]
-          | null
       ) => {
         let value = rawValue as DeviceSettings[K];
 

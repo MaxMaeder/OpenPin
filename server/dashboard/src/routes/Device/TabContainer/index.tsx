@@ -9,7 +9,7 @@ interface TabContainerProps {
 
 const TabContainer: React.FC<TabContainerProps> = ({ paper = false, children }) => {
 
-  let Content = <Box p="md">{children}</Box>;
+  let Content = <Box p="lg">{children}</Box>;
   if (paper) {
     Content = <Paper withBorder shadow="md" h="100%">{Content}</Paper>
   }
