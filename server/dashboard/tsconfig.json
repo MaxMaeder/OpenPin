@@ -25,6 +25,6 @@
       "src/*": ["src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "src/modals/index.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

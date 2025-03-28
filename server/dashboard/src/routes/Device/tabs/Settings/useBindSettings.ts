@@ -14,12 +14,13 @@ const isChangeEvent = (value: any): value is ChangeEvent => {
   return (value as ChangeEvent).target !== undefined;
 };
 
-const useBindSettings = () => {
+const useBindSettings = (_deviceId?: string) => {
   const dispatch = useAppDispatch();
   const { sendSettingsUpdate } = useSocket();
 
-  // Return dummy binding if no device id
-  const deviceId = useDeviceId();
+  let deviceId = useDeviceId();
+
+  deviceId = deviceId ?? _deviceId;
   if (!deviceId) throw new Error("Need to select a device to bind settings!");
 
   const deviceSettings = useAppSelector((state) =>
@@ -28,7 +29,7 @@ const useBindSettings = () => {
 
   const updateRemoteSettings = useCallback(
     _.debounce(
-      (settings: Partial<DeviceSettings>) => sendSettingsUpdate(settings),
+      (settings: Partial<DeviceSettings>) => sendSettingsUpdate(deviceId, settings),
       1000
     ),
     [deviceSettings]

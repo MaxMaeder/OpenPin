@@ -1,7 +1,7 @@
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 
-const appAlert = (title: string, message: string) => {
+const openAlertModal = (title: string, message: string) => {
   return new Promise((resolve) => {
     modals.openConfirmModal({
       title,
@@ -16,7 +16,7 @@ const appAlert = (title: string, message: string) => {
   });
 };
 
-const appConfirm = (title: string, message: string) => {
+const openConfirmModal = (title: string, message: string) => {
   return new Promise((resolve, reject) => {
     modals.openConfirmModal({
       title,
@@ -28,4 +28,12 @@ const appConfirm = (title: string, message: string) => {
   });
 };
 
-export { appAlert, appConfirm };
+const openPairModal = () => {
+  modals.openContextModal({
+    modal: "pair",
+    title: "Pair Device",
+    innerProps: {}
+  });
+}
+
+export { openAlertModal, openConfirmModal, openPairModal };

@@ -17,6 +17,7 @@ import passport from "passport";
 import { setupSocket } from "./sockets";
 import upgradeHttp from "./util/upgradeHttp";
 import { handleTranslate } from "./endpoints/deviceComm/translate";
+import { handleGeneratePairQR } from "./endpoints/generatePairQR";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -37,6 +38,11 @@ app.get(
   authUserEndpoint,
   handleDownloadMedia
 );
+app.get(
+  "/api/dash/pair-qr.png",
+  authUserEndpoint,
+  handleGeneratePairQR
+)
 
 app.post(
   "/api/dev/handle",

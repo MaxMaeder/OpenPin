@@ -12,6 +12,7 @@ import { SocketProvider } from "./comm/socket.tsx";
 import { router } from "./routes.tsx";
 import { store } from "./state/store.ts";
 import { theme } from "./theme";
+import PairModal from "./modals/PairModal/index.tsx";
 
 export default function App() {
   return (
@@ -20,7 +21,7 @@ export default function App() {
         <SocketProvider>
           <MantineProvider defaultColorScheme="dark" theme={theme}>
             <Notifications />
-            <ModalsProvider>
+            <ModalsProvider modals={{ pair: PairModal }}>
               <RouterProvider router={router} />
             </ModalsProvider>
           </MantineProvider>

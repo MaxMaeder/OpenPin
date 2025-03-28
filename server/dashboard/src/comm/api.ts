@@ -64,6 +64,8 @@ const api = {
   },
   getMediaDownloadUrl: (mediaName: string) =>
     `/api/dash/media-download/${mediaName}?token=${authToken}`,
+  getPairQrUrl: (token: string) =>
+    `/api/dash/pair-qr.png?token=${token}`,
 };
 
 export default api;

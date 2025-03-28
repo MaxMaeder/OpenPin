@@ -8,10 +8,13 @@ import { auth } from "./comm/firebase.ts";
 import { useAuthState } from "react-firebase-hooks/auth";
 import DeviceRoute from "./routes/Device/index.tsx";
 import SelectDeviceRoute from "./routes/SelectDevice/index.tsx";
+import { Loader } from "@mantine/core";
 
 const AuthGuard = () => {
-  const [user] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const location = useLocation();
+
+  if (loading) return <Loader />
 
   const redirectTo = `/auth/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`;
 

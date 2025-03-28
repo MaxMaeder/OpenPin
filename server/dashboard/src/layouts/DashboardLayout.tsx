@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   AppShell,
+  Button,
   Flex,
   Group,
   Image,
@@ -8,12 +9,12 @@ import {
   Tooltip,
 } from "@mantine/core";
 import BaseLayout, { BaseLayoutProps } from "./BaseLayout";
-import { IconLogout } from "@tabler/icons-react";
+import { IconLogout, IconPlus } from "@tabler/icons-react";
 import { useAppSelector } from "../state/hooks";
 
 import Logo from "../assets/logo.svg";
 import SocketError from "../comm/SocketError";
-import { appConfirm } from "../modals";
+import { openConfirmModal, openPairModal } from "../modals";
 import { selectDeviceNames } from "../state/slices/settingsSlice";
 import useIsMobile from "../util/useIsMobile";
 import { useMemo } from "react";
@@ -21,6 +22,7 @@ import { auth } from "../comm/firebase";
 import { useSignOut } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { useDeviceId } from "../util/useDeviceId";
+import { bgStyle } from "src/assets/bgStyle";
 
 const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const navigate = useNavigate();
@@ -37,14 +39,18 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
       })),
     [deviceNames]
   );
+  const hasDevices = selectorDevices.length;
+
   const selectedDevice = useDeviceId();
+
+  // const 
 
   const handleDeviceSelected = (id: string | null) => {
     if (id) navigate(`/${id}/overview`);
   };
 
   const handleLogout = async () => {
-    await appConfirm("Confirm Log Out", "Are you sure you want to log out?");
+    await openConfirmModal("Confirm Log Out", "Are you sure you want to log out?");
 
     signOut();
   };
@@ -59,11 +65,17 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
             </Flex>
             <Flex align="center">
               <Group wrap="nowrap">
+                {!isMobile && (
+                  <Button onClick={openPairModal} leftSection={<IconPlus size={14} />}>
+                    Add Device
+                  </Button>
+                )}
                 <Select
                   w="200px"
                   allowDeselect={false}
                   withCheckIcon={false}
-                  placeholder="Choose device..."
+                  placeholder={hasDevices ? "Choose device..." : "No devices"}
+                  disabled={!hasDevices}
                   value={selectedDevice}
                   onChange={handleDeviceSelected}
                   data={selectorDevices}
@@ -81,7 +93,7 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
             </Flex>
           </Flex>
         </AppShell.Header>
-        <AppShell.Main id="dash-main" style={{ position: "relative" }} h="100%">
+        <AppShell.Main id="dash-main" style={{ display: "flex", position: "relative", ...bgStyle }}>
           <SocketError />
           {children}
         </AppShell.Main>

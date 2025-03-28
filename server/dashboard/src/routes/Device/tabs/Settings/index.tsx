@@ -1,15 +1,15 @@
 import { Input, Stack, TextInput } from "@mantine/core";
-import TabContainer from "../../TabContainer";
+import TabContainer from "../../components/TabContainer";
 import React from "react";
 import useBindSettings from "./useBindSettings";
 import { useDeviceId } from "src/util/useDeviceId";
-import ToggleButton from "./components/ToggleButton";
+import ToggleButton from "src/components/ToggleButton";
 import { translateLanguages } from "src/assets/languages";
-import AppTextarea from "./components/Textarea";
-import ContextSlider from "./components/ContextSlider";
+import AppTextarea from "src/routes/Device/tabs/Settings/components/Textarea";
+import ContextWindowSlider from "./components/ContextWindowSlider";
 import SectionCol from "./components/SectionColumn";
 import Section from "./components/Section";
-import Select from "./components/Select";
+import Select from "src/components/Select";
 
 const Settings: React.FC = () => {
   const bind = useBindSettings();
@@ -41,7 +41,7 @@ const Settings: React.FC = () => {
           <SectionCol>
             <Select label="LLM/Provider" disabled value="None" onChange={() => { }} />
             <Input.Wrapper label="Messages for Context Window">
-              <ContextSlider {...bind("messagesToKeep")} />
+              <ContextWindowSlider {...bind("messagesToKeep")} />
             </Input.Wrapper>
             <Input.Wrapper label="Clear Conversation History">
               <ToggleButton

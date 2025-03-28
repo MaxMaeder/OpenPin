@@ -4,6 +4,7 @@ import { ReactNode, useEffect } from "react";
 import api from "../comm/api";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../comm/firebase";
+import { bgStyle } from "src/assets/bgStyle";
 
 export interface BaseLayoutProps extends BoxComponentProps {
   title: string;
@@ -28,8 +29,7 @@ const BaseLayout = ({ title, children, ...props }: BaseLayoutProps) => {
   const boxStyle: MantineStyleProp = {
     height: "100%",
     overflow: "auto",
-    backgroundImage: "radial-gradient(#2F2F2F 0.5px, #171717 0.5px)",
-    backgroundSize: "10px 10px",
+    ...bgStyle
   };
 
   return (

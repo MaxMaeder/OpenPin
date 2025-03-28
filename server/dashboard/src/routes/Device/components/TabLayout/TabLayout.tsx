@@ -63,7 +63,7 @@ const TabLayout: React.FC<TabLayoutProps> = ({ tabs, animationDuration: duration
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab.value}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration }}

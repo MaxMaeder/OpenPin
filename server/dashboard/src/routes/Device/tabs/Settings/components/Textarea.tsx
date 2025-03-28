@@ -4,6 +4,8 @@ import { IconArrowsDiagonal, IconMinimize } from "@tabler/icons-react";
 import { DeviceSettings } from "src/state/slices/settingsSlice";
 import { modals } from "@mantine/modals";
 import useBindSettings from "../useBindSettings";
+import React from "react";
+import { useDeviceId } from "src/util/useDeviceId";
 
 type StringKeys<T> = {
   [K in keyof T]: T[K] extends string ? K : never;
@@ -13,10 +15,11 @@ type TextareaSettingsKey = Exclude<StringKeys<DeviceSettings>, undefined>;
 
 interface ModalContentProps {
   settingsKey: TextareaSettingsKey;
+  deviceId: string;
 }
 
-const ModalContent = ({ settingsKey }: ModalContentProps) => {
-  const bind = useBindSettings();
+const ModalContent: React.FC<ModalContentProps> = ({ settingsKey, deviceId }) => {
+  const bind = useBindSettings(deviceId);
 
   const style = {
     width: "80vw",
@@ -30,8 +33,11 @@ interface AppTextareaProps extends Omit<TextareaProps, "value" | "onChange"> {
   settingsKey: TextareaSettingsKey;
 }
 
-const AppTextarea = ({ label, settingsKey, ...props }: AppTextareaProps) => {
+const AppTextarea: React.FC<AppTextareaProps> = ({ label, settingsKey, ...props }) => {
   const bind = useBindSettings();
+  const deviceId = useDeviceId();
+
+  if (!deviceId) throw new Error("Need to select a device to use textarea!");
 
   const handleExpand = () => {
     modals.open({
@@ -40,7 +46,7 @@ const AppTextarea = ({ label, settingsKey, ...props }: AppTextareaProps) => {
       closeButtonProps: {
         icon: <IconMinimize stroke={1.5} />,
       },
-      children: <ModalContent settingsKey={settingsKey} />,
+      children: <ModalContent settingsKey={settingsKey} deviceId={deviceId} />,
     });
   };
 

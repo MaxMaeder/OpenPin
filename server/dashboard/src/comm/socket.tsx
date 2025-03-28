@@ -20,11 +20,10 @@ import {
 import { useAppDispatch } from "../state/hooks";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./firebase";
-import { useDeviceId } from "../util/useDeviceId";
 
 interface SocketContextProps {
   sendMessage: (event: string, message: any) => void;
-  sendSettingsUpdate: (message: Partial<DeviceSettings>) => void;
+  sendSettingsUpdate: (deviceId: string, message: Partial<DeviceSettings>) => void;
 }
 
 const SocketContext = createContext<SocketContextProps | null>(null);
@@ -36,7 +35,6 @@ interface SocketProviderProps {
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const dispatch = useAppDispatch();
   const [user] = useAuthState(auth);
-  const deviceId = useDeviceId();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -88,10 +86,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   }, []);
 
   const sendSettingsUpdate = useCallback(
-    (settings: Partial<DeviceSettings>) => {
+    (deviceId: string, settings: Partial<DeviceSettings>) => {
       sendMessage("client_dev_settings_update", { id: deviceId, ...settings });
     },
-    [deviceId]
+    []
   );
 
   return (
