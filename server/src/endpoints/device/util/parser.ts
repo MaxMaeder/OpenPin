@@ -3,7 +3,7 @@ import * as express from "express";
 import { InferType, boolean, number, object, string } from "yup";
 
 import { PassThrough } from "stream";
-import { DEFAULT_AUDIO_BITRATE, REQ_METADATA_SIZE } from "../../config";
+import { DEFAULT_AUDIO_BITRATE, REQ_METADATA_SIZE } from "src/config";
 
 const bitrateSchema = string()
   .matches(/^\d+k$/)

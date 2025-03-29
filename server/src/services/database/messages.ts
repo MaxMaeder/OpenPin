@@ -1,7 +1,7 @@
-import { DeviceMessages, Message } from "../dbTypes";
+import { DeviceMessages, Message } from "../../dbTypes";
 import { DocumentReference, getFirestore } from "firebase-admin/firestore";
 
-import { DEV_MSGS_COL } from "../config";
+import { DEV_MSGS_COL } from "../../config";
 
 export const getDeviceMsgsRef = (deviceId: string): DocumentReference =>
   getFirestore().collection(DEV_MSGS_COL).doc(deviceId);

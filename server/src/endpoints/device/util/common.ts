@@ -1,22 +1,21 @@
 import _ = require("lodash");
 
-import { DeviceData, DeviceSettings } from "../../dbTypes";
-import { LOW_BATTERY_PERCENT, UPDATE_FREQ_TIMES } from "../../config";
+import { DeviceData, DeviceSettings } from "../../../dbTypes";
+import { LOW_BATTERY_PERCENT, UPDATE_FREQ_TIMES } from "../../../config";
 import {
-  createDevIfNExists,
   getDeviceData,
-  getDeviceSettings,
   updateDeviceData,
-  updateDeviceSettings,
-} from "../../services/deviceStore";
-import { getCellTowerLocation } from "../../services/towerLocation";
+} from "../../../services/database/deviceData";
+import { getCellTowerLocation } from "../../../services/towerLocation";
 
 import { ParsedAssistantRequest } from "./parser";
-import { clearDeviceMsgs } from "../../services/messageStore";
-import genFileName from "../../util/genFileName";
+import { clearDeviceMsgs } from "../../../services/database/messages";
+import genFileName from "../../../util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { sendSettingsUpdate } from "../../sockets";
-import { updateDeviceLocation } from "../../services/location";
+import { sendSettingsUpdate } from "../../../sockets";
+import { updateDeviceLocation } from "../../../services/location";
+import { getDeviceSettings, updateDeviceSettings } from "../../../services/database/deviceSettings";
+import { doesUserHaveDevice } from "../../../services/database/userData";
 
 const UINT32_MAX = Math.pow(2, 32) - 1;
 
@@ -32,7 +31,8 @@ export const handleCommonDevData = async (
 }> => {
   const bucket = getStorage().bucket();
 
-  createDevIfNExists(deviceId);
+  if (!doesUserHaveDevice(req.userId, deviceId))
+    throw new Error("Device does not exist");
 
   const deviceSettings = await getDeviceSettings(deviceId);
   const deviceData = await getDeviceData(deviceId);

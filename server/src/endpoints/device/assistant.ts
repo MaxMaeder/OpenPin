@@ -1,9 +1,9 @@
 import * as speech from "../../services/speech";
 
-import { genCommonDevRes, handleCommonDevData } from "./common";
-import { getDeviceMsgs, updateDeviceMsgs } from "../../services/messageStore";
+import { genCommonDevRes, handleCommonDevData } from "./util/common";
+import { getDeviceMsgs, updateDeviceMsgs } from "../../services/database/messages";
 
-import { ParsedAssistantRequest } from "./parser";
+import { ParsedAssistantRequest } from "./util/parser";
 import { PassThrough } from "stream";
 import { VOICE_SAMPLES_PER_S } from "../../config";
 import { combineAudioComponents } from "../../services/audio";

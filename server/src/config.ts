@@ -1,6 +1,6 @@
 /* eslint-disable quotes */
 /* eslint-disable max-len */
-import { DeviceData, DeviceSettings } from "./dbTypes";
+import { DeviceData, DeviceSettings, UserData } from "./dbTypes";
 
 import { CompletionModel } from "./services/completions";
 import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
@@ -23,7 +23,8 @@ export const MSFT_TTS_FORMAT =
 export const DEV_MSGS_COL = "DeviceMessages";
 export const DEV_MSGS_NUM = 10;
 
-export const DEV_IDS_COL = "Devices";
+export const USER_DATA_COL = "Users"
+// export const DEV_LIST_COL = "Devices";
 export const DEV_DATA_COL = "DeviceData";
 export const DEV_SETTINGS_COL = "DeviceSettings";
 
@@ -74,6 +75,10 @@ export const LOW_BATTERY_PERCENT = 0.2;
 // How long after a more accurate location update before we should
 // update location with current but less accurate location
 export const LOCATION_WORSE_UPDATE_TIME = 10 * 60 * 1000;
+
+export const INIT_USER_DATA: UserData = {
+  deviceIds: []
+};
 
 export const INIT_DEVICE_DATA: DeviceData = {
   lastConnected: 0,

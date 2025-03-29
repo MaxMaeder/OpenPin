@@ -1,14 +1,13 @@
-import {
-  getDeviceData,
-  getDeviceIds,
-  getDeviceSettings,
-} from "../../services/deviceStore";
-
 import { Socket } from "socket.io";
+import { getDeviceData } from "../../services/database/deviceData";
+import { getDeviceSettings } from "../../services/database/deviceSettings";
+import { UserId } from "../../dbTypes";
+import { getUserDevices } from "../../services/database/userData";
 
 export const handleDataReq = (socket: Socket) => async () => {
-  console.log("HERE 1");
-  for (const devId of await getDeviceIds()) {
+  const userId = socket.data.userId as UserId;
+
+  for (const devId of await getUserDevices(userId)) {
     socket.emit("dev_data_update", {
       id: devId,
       ...(await getDeviceData(devId)),

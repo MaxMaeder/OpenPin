@@ -1,3 +1,5 @@
+import { FieldValue } from "firebase-admin/firestore";
+
 export type DeviceMessages = {
   msgs: Message[];
 };
@@ -5,6 +7,13 @@ export type DeviceMessages = {
 export type Message = {
   role: "system" | "assistant" | "user";
   content: string;
+};
+
+export type UserId = string;
+export type DeviceId = string;
+
+export type UserData = {
+  deviceIds: DeviceId[];
 };
 
 export type LocationSource = "gnss" | "wifi" | "cell" | "tower";
@@ -55,4 +64,8 @@ export type DeviceSettings = {
   // If we don't have null, cannot 'clear it out' on frontend after update
   firmwareUpdateFile?: string | null;
   uploadedFirmwareFiles: string[];
+};
+
+type FirestoreUpdate<T> = {
+  [P in keyof T]?: T[P] | FieldValue;
 };

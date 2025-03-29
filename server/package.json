@@ -18,6 +18,7 @@
     "date-fns": "^3.6.0",
     "date-fns-tz": "^3.1.3",
     "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
     "express-rate-limit": "^7.3.0",
     "express-sslify": "^1.2.0",
     "firebase-admin": "^11.5.0",
@@ -25,6 +26,7 @@
     "fs-extra": "^11.2.0",
     "google-auth-library": "^9.15.1",
     "groq-sdk": "^0.3.2",
+    "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "microsoft-cognitiveservices-speech-sdk": "^1.35.0",
@@ -40,6 +42,7 @@
     "string-strip-html": "^8.5.0",
     "tmp": "^0.2.3",
     "tmp-promise": "^3.0.3",
+    "tsconfig-paths": "^4.2.0",
     "wikipedia": "^2.1.2",
     "yup": "^1.3.3"
   },

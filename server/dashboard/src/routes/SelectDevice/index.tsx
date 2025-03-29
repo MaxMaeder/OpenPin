@@ -4,7 +4,7 @@ import DashboardLayout from "../../layouts/DashboardLayout";
 
 const SelectDevice: React.FC = () => (
   <DashboardLayout title="Select">
-    <Center h="100%">
+    <Center flex={1}>
       <Stack align="center">
         <Title>No Device Selected</Title>
         <Text>Select from Top Right</Text>

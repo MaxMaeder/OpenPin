@@ -1,16 +1,13 @@
-import { DeviceMetadata } from "../../src/endpoints/deviceComm/parser";
-import { DashUser } from "../../src/auth/users";
 import { PassThrough } from "stream";
+import { DeviceMetadata } from "../../src/endpoints/device/util/parser";
+import { UserId } from "../../src/dbTypes";
 
 declare module "express-serve-static-core" {
   interface Request {
     metadata: DeviceMetadata;
     imageBuffer: Buffer | undefined;
     audioStream: PassThrough;
-    user: DashUser;
+    userId: UserId;
   }
-  interface Response {
-    apiOk: (status: string) => void;
-    apiError: (code: number, error: string) => void;
-  }
+  interface Response { }
 }

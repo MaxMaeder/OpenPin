@@ -1,6 +1,7 @@
 import "source-map-support/register";
+import "tsconfig-paths/register";
+import "express-async-errors";
 
-import { addResponseUtils } from "./util/responseUtils";
 import admin from "firebase-admin";
 import { authUserEndpoint } from "./auth";
 import { createServer } from "http";
@@ -9,15 +10,16 @@ import firebaseKey from "./keys/firebaseKey";
 import {
   handleAssistant,
   handleAssistantError,
-} from "./endpoints/deviceComm/assistant";
-import { handleDownloadMedia } from "./endpoints/downloadMedia";
-import { handleUpdateStatus } from "./endpoints/deviceComm/updateStatus";
-import { parseDeviceReq } from "./endpoints/deviceComm/parser";
+} from "./endpoints/device/assistant";
+import { handleDownloadMedia } from "./endpoints/dashboard/downloadMedia";
+import { handleUpdateStatus } from "./endpoints/device/updateStatus";
+import { parseDeviceReq } from "./endpoints/device/util/parser";
 import passport from "passport";
 import { setupSocket } from "./sockets";
 import upgradeHttp from "./util/upgradeHttp";
-import { handleTranslate } from "./endpoints/deviceComm/translate";
-import { handleGeneratePairQR } from "./endpoints/generatePairQR";
+import { handleTranslate } from "./endpoints/device/translate";
+import { handleGeneratePairQR } from "./endpoints/dashboard/generatePairQR";
+import { handleExpressErrors } from "./util/errors";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -26,7 +28,6 @@ admin.initializeApp({
 
 const app = express();
 app.set("trust proxy", 1); // One proxy (google app engine)
-app.use(addResponseUtils);
 const server = createServer(app);
 
 app.use(passport.initialize());
@@ -63,6 +64,8 @@ app.use("/dash-assets", express.static("dashboard/dist/dash-assets"));
 app.get("*", upgradeHttp, (_, res) => {
   res.sendFile("index.html", { root: "dashboard/dist" });
 });
+
+app.use(handleExpressErrors);
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {

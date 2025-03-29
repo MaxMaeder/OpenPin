@@ -1,8 +1,8 @@
 import * as express from "express";
 
-import { genCommonDevRes, handleCommonDevData } from "./common";
+import { genCommonDevRes, handleCommonDevData } from "./util/common";
 
-import { ParsedAssistantRequest } from "./parser";
+import { ParsedAssistantRequest } from "./util/parser";
 
 export const handleUpdateStatus = async (
   req: ParsedAssistantRequest,

@@ -1,10 +1,10 @@
-import { ParsedAssistantRequest } from "./parser";
+import { ParsedAssistantRequest } from "./util/parser";
 import * as speech from "../../services/speech";
 import express from "express";
 import genFileName from "../../util/genFileName";
 import { getStorage } from "firebase-admin/storage";
 import { finished } from "stream/promises";
-import { genCommonDevRes, handleCommonDevData } from "./common";
+import { genCommonDevRes, handleCommonDevData } from "./util/common";
 import { translate } from "../../services/translate";
 
 // eslint-disable-next-line max-len
