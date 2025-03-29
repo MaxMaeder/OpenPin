@@ -16,6 +16,11 @@ export type UserData = {
   deviceIds: DeviceId[];
 };
 
+export type PairRequest = {
+  userId: UserId;
+  createdAt: Date;
+}
+
 export type LocationSource = "gnss" | "wifi" | "cell" | "tower";
 
 export type DeviceData = {

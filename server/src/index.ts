@@ -20,6 +20,7 @@ import upgradeHttp from "./util/upgradeHttp";
 import { handleTranslate } from "./endpoints/device/translate";
 import { handleGeneratePairQR } from "./endpoints/dashboard/generatePairQR";
 import { handleExpressErrors } from "./util/errors";
+import { handlePairDevice } from "./endpoints/device/pairDevice";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -45,6 +46,7 @@ app.get(
   handleGeneratePairQR
 )
 
+app.post("/api/dev/pair/:pairCode", handlePairDevice);
 app.post(
   "/api/dev/handle",
   parseDeviceReq,
