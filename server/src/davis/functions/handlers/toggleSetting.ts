@@ -2,8 +2,7 @@
 import { object, string } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
 import { DeviceData, DeviceSettings } from "../../../dbTypes";
-
-import { sendSettingsUpdate } from "../../../sockets";
+import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 
 type BooleanKeys<T> = {
   [K in keyof T]: T[K] extends boolean ? K : never;

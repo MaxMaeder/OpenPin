@@ -3,6 +3,7 @@ import createHttpError from "http-errors";
 import { PairRequest } from "src/dbTypes";
 import { usePairCode } from "src/services/database/pairRequests";
 import { addUserDevice } from "src/services/database/userData";
+import { sendNewDevDetails } from "src/sockets/msgProducers/devAdded";
 import { v4 as uuidv4 } from "uuid";
 
 export const handlePairDevice = async (req: Request, res: Response) => {
@@ -19,6 +20,7 @@ export const handlePairDevice = async (req: Request, res: Response) => {
   const deviceId = uuidv4();
 
   await addUserDevice(userId, deviceId);
+  await sendNewDevDetails(userId, deviceId);
 
   return res.status(200).send({
     deviceId

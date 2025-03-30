@@ -20,7 +20,7 @@ export const MSFT_TTS_MULTILINGUAL_VOICE = "en-US-DavisMultilingualNeural";
 export const MSFT_TTS_FORMAT =
   SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
 
-export const DEV_MSGS_COL = "DeviceMessages";
+export const DEV_MSGS_COL = "DeviceMessages2"; // Todo: fix this
 export const DEV_MSGS_NUM = 10;
 
 export const USER_DATA_COL = "Users"
@@ -28,6 +28,8 @@ export const PAIR_CODES_COL = "PairCodes"
 // export const DEV_LIST_COL = "Devices";
 export const DEV_DATA_COL = "DeviceData";
 export const DEV_SETTINGS_COL = "DeviceSettings";
+export const DEV_CAPTURES_COL = "DeviceCaptures";
+export const DEV_NOTES_COL = "DeviceNotes";
 
 // Max calls to chat completion service in one invocation of the assistant, "davis"
 export const CHAT_COMP_MAX_CALLS = 5;

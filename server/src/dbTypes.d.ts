@@ -1,13 +1,8 @@
 import { FieldValue } from "firebase-admin/firestore";
 
-export type DeviceMessages = {
-  msgs: Message[];
-};
-
-export type Message = {
-  role: "system" | "assistant" | "user";
-  content: string;
-};
+// export type DeviceMessages = {
+//   msgs: Message[];
+// };
 
 export type UserId = string;
 export type DeviceId = string;

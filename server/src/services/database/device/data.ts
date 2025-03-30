@@ -1,5 +1,5 @@
-import { DEV_DATA_COL, INIT_DEVICE_DATA } from "../../config";
-import { DeviceData, FirestoreUpdate } from "../../dbTypes";
+import { DEV_DATA_COL, INIT_DEVICE_DATA } from "src/config";
+import { DeviceData, FirestoreUpdate } from "src/dbTypes";
 import { DocumentReference, getFirestore } from "firebase-admin/firestore";
 
 export const getDeviceDataRef = (deviceId: string): DocumentReference =>

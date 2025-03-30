@@ -1,21 +1,21 @@
 import _ = require("lodash");
 
-import { DeviceData, DeviceSettings } from "../../../dbTypes";
-import { LOW_BATTERY_PERCENT, UPDATE_FREQ_TIMES } from "../../../config";
+import { DeviceData, DeviceSettings } from "src/dbTypes";
+import { LOW_BATTERY_PERCENT, UPDATE_FREQ_TIMES } from "src/config";
 import {
   getDeviceData,
   updateDeviceData,
-} from "../../../services/database/deviceData";
-import { getCellTowerLocation } from "../../../services/towerLocation";
+} from "src/services/database/device/data";
+import { getCellTowerLocation } from "src/services/towerLocation";
 
 import { ParsedAssistantRequest } from "./parser";
-import { clearDeviceMsgs } from "../../../services/database/messages";
-import genFileName from "../../../util/genFileName";
+import { clearDeviceMsgs } from "src/services/database/device/messages";
+import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { sendSettingsUpdate } from "../../../sockets";
-import { updateDeviceLocation } from "../../../services/location";
-import { getDeviceSettings, updateDeviceSettings } from "../../../services/database/deviceSettings";
-import { doesUserHaveDevice } from "../../../services/database/userData";
+import { updateDeviceLocation } from "src/services/location";
+import { getDeviceSettings, updateDeviceSettings } from "src/services/database/device/settings";
+import { doesUserHaveDevice } from "src/services/database/userData";
+import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 
 const UINT32_MAX = Math.pow(2, 32) - 1;
 

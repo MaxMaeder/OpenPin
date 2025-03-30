@@ -1,7 +1,7 @@
 import * as speech from "../../services/speech";
 
 import { genCommonDevRes, handleCommonDevData } from "./util/common";
-import { getDeviceMsgs, updateDeviceMsgs } from "../../services/database/messages";
+import { addDeviceMsg, DeviceMessage, getDeviceMsgs } from "../../services/database/device/messages";
 
 import { ParsedAssistantRequest } from "./util/parser";
 import { PassThrough } from "stream";
@@ -11,7 +11,20 @@ import express from "express";
 import ffmpeg from "fluent-ffmpeg";
 import genFileName from "../../util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { doDavis } from "../../davis";
+import { DavisMessage, doDavis } from "../../davis";
+
+export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
+  return [
+    {
+      role: "user",
+      content: deviceMsg.userMsg,
+    },
+    {
+      role: "assistant",
+      content: deviceMsg.assistantMsg,
+    },
+  ];
+}
 
 export const handleAssistant = async (
   req: ParsedAssistantRequest,
@@ -28,7 +41,6 @@ export const handleAssistant = async (
   console.log(req.metadata);
 
   const decodeStream = new PassThrough();
-  // const test = new PassThrough();
   ffmpeg()
     .input(req.audioStream)
     .inputFormat(req.metadata.audioFormat)
@@ -40,15 +52,6 @@ export const handleAssistant = async (
       console.error("An error processing input audio occurred: " + err.message);
       res.status(500).send({ error: "Error processing input audio" });
     });
-
-  // test.on("data", (data) => {
-  //   console.log(data.length);
-  // });
-
-  // test.on("end", async () => {
-  //   res.send("pee");
-  // });
-  // return;
 
   const audioFileStream = bucket
     .file(genFileName(deviceId, "wav"))
@@ -68,22 +71,26 @@ export const handleAssistant = async (
       const recognizedSpeech = await speech.recognize(audioInStream);
       console.log("Recognized: " + recognizedSpeech);
 
-      const msgs = await getDeviceMsgs(deviceId);
+      const { entries: msgs } = await getDeviceMsgs(deviceId);
+
+      const msgContext = msgs.flatMap(convToDavisMsg);
 
       const { assistantMessage, audioComponents } = await doDavis({
         deviceId,
         deviceData,
         deviceSettings,
-        msgContext: msgs,
+        msgContext,
         recognizedSpeech,
         imageBuffer: req.imageBuffer,
       });
 
-      updateDeviceMsgs(
-        deviceId,
-        recognizedSpeech,
-        req.imageBuffer,
-        assistantMessage,
+      // TODO: very hacky, no images
+      addDeviceMsg(
+        deviceId, 
+        {
+          userMsg: recognizedSpeech,
+          assistantMsg: assistantMessage,
+        },
         deviceSettings.messagesToKeep
       );
 

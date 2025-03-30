@@ -32,7 +32,7 @@ export const authUserEndpoint = async (
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken.uid;
+    req.userId = decodedToken.uid;
     return next();
   } catch (error: any) {
     throw createHttpError(401, "Unauthorized: " + error.message);

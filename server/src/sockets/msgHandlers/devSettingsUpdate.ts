@@ -6,7 +6,7 @@ import { ObjectSchema, array, boolean, number, object, string } from "yup";
 import { Socket } from "socket.io";
 import { UPDATE_FREQ_TIMES } from "../../config";
 import { doesUserHaveDevice } from "../../services/database/userData";
-import { updateDeviceSettings } from "../../services/database/deviceSettings";
+import { updateDeviceSettings } from "../../services/database/device/settings";
 
 interface DeviceSettingsPayload extends Partial<DeviceSettings> {
   id: string;
