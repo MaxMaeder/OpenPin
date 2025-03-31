@@ -24,7 +24,7 @@ export const handleTranslate = async (
 
   const gcsFileName = genFileName(deviceId, audioFormat);
   const gcsFile = bucket.file(gcsFileName);
-  const gcsUri = `gs://${bucket.name}/${gcsFileName}`;
+  const mediaId = `gs://${bucket.name}/${gcsFileName}`;
 
   const writeStream = gcsFile.createWriteStream();
 
@@ -36,7 +36,7 @@ export const handleTranslate = async (
     deviceSettings.translateLanguage,
   ];
 
-  const recognizedResult = await speech.googleRecognize(gcsUri, languagePool);
+  const recognizedResult = await speech.googleRecognize(mediaId, languagePool);
 
   console.log(recognizedResult);
 

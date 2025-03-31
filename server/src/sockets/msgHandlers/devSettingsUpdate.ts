@@ -1,12 +1,11 @@
 import _ = require("lodash");
 
-import { DeviceSettings, UserId, WifiNetwork } from "../../dbTypes";
+import { DeviceSettings, WifiNetwork } from "../../dbTypes";
 import { ObjectSchema, array, boolean, number, object, string } from "yup";
-
-import { Socket } from "socket.io";
 import { UPDATE_FREQ_TIMES } from "../../config";
-import { doesUserHaveDevice } from "../../services/database/userData";
 import { updateDeviceSettings } from "../../services/database/device/settings";
+import { sendSettingsUpdate } from "../msgBuilders/device";
+import { withAuthAndValidation } from "./common";
 
 interface DeviceSettingsPayload extends Partial<DeviceSettings> {
   id: string;
@@ -55,29 +54,13 @@ const payloadSchema: ObjectSchema<DeviceSettingsPayload> = object({
   uploadedFirmwareFiles: array().of(string().required()),
 });
 
-class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "NotFoundError";
-  }
-}
-
-export const handleDevSettingsUpdate =
-  (socket: Socket) => async (payload: DeviceSettingsPayload) => {
-    const userId = socket.data.userId as UserId;
-    
-    await payloadSchema.validate(payload, { strict: true });
+export const handleDevSettingsUpdate = withAuthAndValidation(
+  payloadSchema,
+  async (socket, payload) => {
     const deviceId = payload.id;
-    
-    if (!(await doesUserHaveDevice(userId, deviceId))) {
-      throw new NotFoundError("Device does not exist");
-    }
 
     const settings: Partial<DeviceSettings> = _.omit(payload, "id");
-    updateDeviceSettings(deviceId, settings);
+    await updateDeviceSettings(deviceId, settings);
 
-    socket.to(deviceId).emit("dev_settings_update", {
-      id: deviceId,
-      ...settings,
-    });
-  };
+    sendSettingsUpdate(deviceId, settings);
+  });

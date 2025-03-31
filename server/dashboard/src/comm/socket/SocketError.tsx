@@ -1,8 +1,8 @@
 import { Button, Notification, Portal, Stack, Transition } from "@mantine/core";
-import { clearConnError, selectConnError } from "../state/slices/commSlice";
-import { useAppDispatch, useAppSelector } from "../state/hooks";
+import { clearConnError, selectConnError } from "src/state/slices/commSlice";
+import { useAppDispatch, useAppSelector } from "src/state/hooks";
 import { useSignOut } from "react-firebase-hooks/auth";
-import { auth } from "./firebase";
+import { auth } from "src/comm/firebase";
 
 const SocketError = () => {
   const dispatch = useAppDispatch();

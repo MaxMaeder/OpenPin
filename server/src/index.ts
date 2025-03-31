@@ -69,6 +69,33 @@ app.get("*", upgradeHttp, (_, res) => {
 
 app.use(handleExpressErrors);
 
+// import { clearDeviceContent } from "./services/database/device/content";
+// import { addDeviceNote, getDeviceNotesRef } from "./services/database/device/notes";
+// // For example, you can define your test device ID.
+// const deviceId = 'a3cd78aa-463c-4d1e-ba37-2261910f0476';
+
+// (async () => {
+//   try {
+//     // First, clear all existing notes for the device.
+//     await clearDeviceContent(deviceId, getDeviceNotesRef);
+//     console.log(`Cleared all notes for device: ${deviceId}`);
+
+//     // Insert 30 random notes.
+//     for (let i = 0; i < 30; i++) {
+//       const note = {
+//         title: `Random Note ${i + 1}`,
+//         content: `This is the content for random note ${i + 1}.`
+//       };
+//       await addDeviceNote(deviceId, note);
+//       console.log(`Inserted note ${i + 1}`);
+//     }
+
+//     console.log('Successfully inserted 30 random notes.');
+//   } catch (error) {
+//     console.error('Error during test:', error);
+//   }
+// })();
+
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}...`);

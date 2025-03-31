@@ -31,6 +31,7 @@ export const handleCommonDevData = async (
 }> => {
   const bucket = getStorage().bucket();
 
+  // TODO: We do not have user ID here
   if (!doesUserHaveDevice(req.userId, deviceId))
     throw new Error("Device does not exist");
 

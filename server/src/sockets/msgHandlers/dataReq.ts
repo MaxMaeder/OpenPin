@@ -7,6 +7,6 @@ export const handleDataReq = (socket: Socket) => async () => {
   const userId = socket.data.userId as UserId;
 
   for (const devId of await getUserDevices(userId)) {
-    await sendFullDevDetails(devId)
+    await sendFullDevDetails(devId);
   }
 };

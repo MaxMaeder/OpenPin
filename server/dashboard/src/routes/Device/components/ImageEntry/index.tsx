@@ -4,11 +4,10 @@ import classes from "./ImageEntry.module.css";
 
 interface ImageEntryProps {
   src: string;
-  onDownload: () => void;
   onDelete: () => void;
 }
 
-const ImageEntry: React.FC<ImageEntryProps> = ({ src, onDownload, onDelete }) => (
+const ImageEntry: React.FC<ImageEntryProps> = ({ src, onDelete }) => (
   <Grid.Col span={{ xs: 12, sm: 6, lg: 4 }} pos="relative">
     <Menu shadow="md" width={200} position="bottom-end">
       <Menu.Target>
@@ -20,7 +19,9 @@ const ImageEntry: React.FC<ImageEntryProps> = ({ src, onDownload, onDelete }) =>
       <Menu.Dropdown>
         <Menu.Item
           leftSection={<IconDownload size={14} />}
-          onClick={onDownload}
+          component="a"
+          href={src}
+          download={true}
         >
           Download
         </Menu.Item>

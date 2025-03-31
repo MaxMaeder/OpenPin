@@ -61,7 +61,7 @@ export interface GoogleRecognizeResponse {
 }
 
 export const googleRecognize = async (
-  gcsUri: string,
+  mediaId: string,
   languageCodes: string[]
 ) => {
   const googleSpeechClient = await getGoogleClient();
@@ -72,7 +72,7 @@ export const googleRecognize = async (
       model: "latest_short",
       autoDecodingConfig: {},
     },
-    uri: gcsUri,
+    uri: mediaId,
   };
 
   const response = await googleSpeechClient.post<GoogleRecognizeResponse>(

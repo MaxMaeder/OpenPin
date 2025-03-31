@@ -8,7 +8,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from '@mantine/notifications';
 import { Provider as ReduxProvider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
-import { SocketProvider } from "./comm/socket.tsx";
+import { SocketProvider } from "./comm/socket/index.tsx";
 import { router } from "./routes.tsx";
 import { store } from "./state/store.ts";
 import { theme } from "./theme";

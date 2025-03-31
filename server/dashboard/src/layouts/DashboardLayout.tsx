@@ -13,7 +13,7 @@ import { IconLogout, IconPlus } from "@tabler/icons-react";
 import { useAppSelector } from "../state/hooks";
 
 import Logo from "../assets/logo.svg";
-import SocketError from "../comm/SocketError";
+import SocketError from "../comm/socket/SocketError";
 import { openConfirmModal, openPairModal } from "../modals";
 import { selectDeviceNames } from "../state/slices/settingsSlice";
 import useIsMobile from "../util/useIsMobile";
@@ -42,8 +42,6 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const hasDevices = selectorDevices.length;
 
   const selectedDevice = useDeviceId();
-
-  // const 
 
   const handleDeviceSelected = (id: string | null) => {
     if (id) navigate(`/${id}/overview`);

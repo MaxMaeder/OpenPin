@@ -7,7 +7,7 @@ type DeviceCaptureType = "image" | "video";
 
 export interface DeviceCapture extends DeviceContent {
   type: DeviceCaptureType;
-  gcsUri: string;
+  mediaId: string;
 }
 
 export const getDeviceCapturesRef = (deviceId: string): CollectionReference =>

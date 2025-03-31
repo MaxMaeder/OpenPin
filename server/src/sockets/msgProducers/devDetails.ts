@@ -4,7 +4,7 @@ import { getDeviceSettings } from "src/services/database/device/settings";
 import { 
   sendCapturesUpdate,
   sendDataUpdate,
-  sendMessagesUpdate,
+  sendMsgsUpdate,
   sendNotesUpdate,
   sendSettingsUpdate
 } from "../msgBuilders/device";
@@ -16,7 +16,7 @@ export const sendFullDevDetails = async (deviceId: DeviceId) => {
   sendDataUpdate(deviceId, await getDeviceData(deviceId));
   sendSettingsUpdate(deviceId, await getDeviceSettings(deviceId));
 
-  sendCapturesUpdate(deviceId, (await getDeviceCaptures(deviceId)).entries);
-  sendNotesUpdate(deviceId, (await getDeviceNotes(deviceId)).entries);
-  sendMessagesUpdate(deviceId, (await getDeviceMsgs(deviceId)).entries);
+  sendCapturesUpdate(deviceId, await getDeviceCaptures(deviceId));
+  sendNotesUpdate(deviceId, await getDeviceNotes(deviceId));
+  sendMsgsUpdate(deviceId, await getDeviceMsgs(deviceId));
 }

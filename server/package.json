@@ -40,6 +40,7 @@
     "source-map-support": "^0.5.21",
     "spotify-web-api-node": "^5.0.2",
     "string-strip-html": "^8.5.0",
+    "superjson": "^2.2.2",
     "tmp": "^0.2.3",
     "tmp-promise": "^3.0.3",
     "tsconfig-paths": "^4.2.0",

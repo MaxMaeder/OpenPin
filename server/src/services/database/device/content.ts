@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase-admin/firestore";
+
 export interface DeviceContent {
   date: Date; // Required for sorting and pagination
 }
@@ -24,7 +26,7 @@ export const getDeviceContent = async <T extends DeviceContent>(
     .limit(config.limit);
 
   if (config.startAfter) {
-    query = query.startAfter(config.startAfter);
+    query = query.startAfter(Timestamp.fromDate(config.startAfter));
   }
 
   const snapshot = await query.get();
@@ -33,10 +35,15 @@ export const getDeviceContent = async <T extends DeviceContent>(
     return { entries: [], nextStartAfter: undefined };
   }
 
-  const entries = snapshot.docs.map(doc => ({
-    ...(doc.data() as T),
-    id: doc.id,
-  }));
+  const entries = snapshot.docs.map(doc => {
+    const data = doc.data() as T;
+  
+    return {
+      ...data,
+      date: (data.date as unknown as Timestamp).toDate(),
+      id: doc.id,
+    };
+  });
   const nextStartAfter = entries.length > 0 ? entries[entries.length - 1].date : undefined;
 
   return { entries, nextStartAfter };
