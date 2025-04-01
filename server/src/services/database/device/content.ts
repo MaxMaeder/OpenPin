@@ -13,7 +13,13 @@ export type WithId<T> = T & { id: string };
 
 export interface PaginatedResult<T> {
   entries: WithId<T>[];
-  nextStartAfter?: Date;
+
+  // Next start after will always be specified in responses from DB,
+  // either a Date or null if no more records exist
+  //
+  // However, PaginatedResult can also be used in cases (ex: sending partial updates to client via socket),
+  // where we don't know the date which the data starts after. In these cases it should be undefined.
+  nextStartAfter?: Date | null;
 }
 
 export const getDeviceContent = async <T extends DeviceContent>(
@@ -32,7 +38,7 @@ export const getDeviceContent = async <T extends DeviceContent>(
   const snapshot = await query.get();
 
   if (snapshot.empty) {
-    return { entries: [], nextStartAfter: undefined };
+    return { entries: [], nextStartAfter: null };
   }
 
   const entries = snapshot.docs.map(doc => {
@@ -44,7 +50,7 @@ export const getDeviceContent = async <T extends DeviceContent>(
       id: doc.id,
     };
   });
-  const nextStartAfter = entries.length > 0 ? entries[entries.length - 1].date : undefined;
+  const nextStartAfter = entries.length > 0 ? entries[entries.length - 1].date : null;
 
   return { entries, nextStartAfter };
 };
@@ -54,34 +60,35 @@ export const addDeviceContent = async <T extends DeviceContent>(
   data: Omit<T, 'date'>,
   addRef: (deviceId: string) => FirebaseFirestore.CollectionReference,
   maxEntries?: number
-): Promise<void> => {
+): Promise<WithId<T>> => {
   const collectionRef = addRef(deviceId);
 
-  // Add the new entry with current timestamp
-  await collectionRef.add({
+  // Create the new entry including the current timestamp
+  const newData = {
     ...data,
     date: new Date(),
-  });
+  };
 
-  // If no pruning is needed, stop here
-  if (!maxEntries) return;
+  // Add the new entry to Firestore and get its DocumentReference
+  const docRef = await collectionRef.add(newData);
 
-  // Fetch all entries ordered by date descending (newest first)
-  const snapshot = await collectionRef
-    .orderBy('date', 'desc')
-    .get();
+  // If pruning is requested, fetch and delete the oldest extras
+  if (maxEntries) {
+    const snapshot = await collectionRef.orderBy('date', 'desc').get();
+    const allDocs = snapshot.docs;
 
-  const allDocs = snapshot.docs;
+    if (allDocs.length > maxEntries) {
+      const docsToDelete = allDocs.slice(maxEntries);
+      const batch = collectionRef.firestore.batch();
 
-  // If we exceed the max, delete the oldest
-  if (allDocs.length > maxEntries) {
-    const docsToDelete = allDocs.slice(maxEntries); // Oldest extras
-    const batch = collectionRef.firestore.batch();
+      docsToDelete.forEach(doc => batch.delete(doc.ref));
 
-    docsToDelete.forEach(doc => batch.delete(doc.ref));
-
-    await batch.commit();
+      await batch.commit();
+    }
   }
+
+  // Return the inserted entry along with its generated document ID
+  return { id: docRef.id, ...newData } as WithId<T>;
 };
 
 export const deleteDeviceContent = async (

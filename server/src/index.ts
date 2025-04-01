@@ -9,18 +9,18 @@ import express from "express";
 import firebaseKey from "./keys/firebaseKey";
 import {
   handleAssistant,
-  handleAssistantError,
-} from "./endpoints/device/assistant";
+} from "./endpoints/device/voice/assistant";
 import { handleDownloadMedia } from "./endpoints/dashboard/downloadMedia";
-import { handleUpdateStatus } from "./endpoints/device/updateStatus";
-import { parseDeviceReq } from "./endpoints/device/util/parser";
+// import { handleUpdateStatus } from "./endpoints/device/updateStatus";
+import { parseDeviceReq } from "./endpoints/device/voice/parser";
 import passport from "passport";
 import { setupSocket } from "./sockets";
 import upgradeHttp from "./util/upgradeHttp";
-import { handleTranslate } from "./endpoints/device/translate";
+import { handleTranslate } from "./endpoints/device/voice/translate";
 import { handleGeneratePairQR } from "./endpoints/dashboard/generatePairQR";
 import { handleExpressErrors } from "./util/errors";
 import { handlePairDevice } from "./endpoints/device/pairDevice";
+import { handleUploadCapture, parseUploadCapture } from "./endpoints/device/uploadCapture";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -50,16 +50,19 @@ app.post("/api/dev/pair/:pairCode", handlePairDevice);
 app.post(
   "/api/dev/handle",
   parseDeviceReq,
-  handleAssistant,
-  handleAssistantError
+  handleAssistant
 );
 app.post(
   "/api/dev/translate",
   parseDeviceReq,
-  handleTranslate,
-  handleAssistantError
+  handleTranslate
 );
-app.post("/api/dev/update-status", parseDeviceReq, handleUpdateStatus);
+app.post(
+  "/api/dev/upload-capture",
+  parseUploadCapture,
+  handleUploadCapture
+);
+// app.post("/api/dev/update-status", parseDeviceReq, handleUpdateStatus);
 
 app.use("/favicon.svg", express.static("dashboard/dist/favicon.svg"));
 app.use("/dash-assets", express.static("dashboard/dist/dash-assets"));

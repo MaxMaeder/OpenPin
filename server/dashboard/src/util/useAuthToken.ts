@@ -1,59 +1,53 @@
 import { useEffect, useState } from 'react';
-import { useIdToken as useFirebaseUser } from 'react-firebase-hooks/auth';
-import { getIdToken, Auth, User } from 'firebase/auth';
+import { Auth, onIdTokenChanged, User } from 'firebase/auth';
 
 type AuthTokenState = {
-  user: User | null | undefined;
+  user: User | null;
   idToken: string | null;
   loading: boolean;
-  error: Error | undefined;
+  error?: Error;
 };
 
 const useAuthToken = (auth: Auth): AuthTokenState => {
-  const [user, loadingUser, errorUser] = useFirebaseUser(auth);
+  const [user, setUser] = useState<User | null>(auth.currentUser);
   const [idToken, setIdToken] = useState<string | null>(null);
-  const [loadingToken, setLoadingToken] = useState(true);
-  const [tokenError, setTokenError] = useState<Error | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | undefined>();
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (!user) {
-      setIdToken(null);
-      setLoadingToken(false);
-      return;
-    }
-
-    setLoadingToken(true);
-
-    getIdToken(user)
-      .then((token) => {
-        if (isMounted) {
-          setIdToken(token);
-          setTokenError(undefined);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
+    // Subscribe to token changes via onIdTokenChanged.
+    const unsubscribe = onIdTokenChanged(
+      auth,
+      async (user) => {
+        console.log("New ID Token")
+        setUser(user);
+        if (user) {
+          try {
+            // Fetch the token
+            const token = await user.getIdToken();
+            setIdToken(token);
+            setError(undefined);
+          } catch (err) {
+            setError(err as Error);
+            setIdToken(null);
+          }
+        } else {
           setIdToken(null);
-          setTokenError(err);
         }
-      })
-      .finally(() => {
-        if (isMounted) setLoadingToken(false);
-      });
+        setLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
+      }
+    );
 
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
-  }, [user]);
+  }, [auth]);
 
-  return {
-    user,
-    idToken,
-    loading: loadingUser || loadingToken,
-    error: errorUser || tokenError,
-  };
-}
+  return { user, idToken, loading, error };
+};
 
 export default useAuthToken;

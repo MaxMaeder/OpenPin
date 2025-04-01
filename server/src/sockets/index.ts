@@ -20,6 +20,7 @@ import { getDevRID, getUserRID } from "./roomIDs";
 import superjson from "superjson";
 import { SuperJSONValue } from "superjson/dist/types";
 import { 
+  handleDeleteCaptureReq,
   handleDeleteMsgsReq,
   handleDeleteNoteReq,
   handleMoreCapturesReq,
@@ -44,7 +45,7 @@ export const setupSocket = (server: HttpServer) => {
       addListener(socket, CLIENT_MORE_NOTES_REQ, handleMoreNotesReq(socket));
       addListener(socket, CLIENT_MORE_MSGS_REQ, handleMoreMsgsReq(socket));
 
-      addListener(socket, CLIENT_DEL_CAPTURE_REQ, handleDeleteNoteReq(socket));
+      addListener(socket, CLIENT_DEL_CAPTURE_REQ, handleDeleteCaptureReq(socket));
       addListener(socket, CLIENT_DEL_NOTE_REQ, handleDeleteNoteReq(socket));
       addListener(socket, CLIENT_DEL_MSG_REQ, handleDeleteMsgsReq(socket));
 

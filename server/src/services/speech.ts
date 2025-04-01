@@ -25,9 +25,9 @@ export const getAudioStream = (): PassThrough => {
   return new PassThrough();
 };
 
-export const recognize = async (audioStream: PassThrough): Promise<string> => {
+export const recognize = async (audioBuffer: Buffer): Promise<string> => {
   const formData = new FormData();
-  formData.append("file", audioStream, "audio.wav");
+  formData.append("file", audioBuffer, "audio.ogg");
   formData.append("model", GROQ_SST_MODEL);
 
   const response = await whisperClient.post("/audio/transcriptions", formData);

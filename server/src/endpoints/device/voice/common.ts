@@ -14,8 +14,9 @@ import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
 import { updateDeviceLocation } from "src/services/location";
 import { getDeviceSettings, updateDeviceSettings } from "src/services/database/device/settings";
-import { doesUserHaveDevice } from "src/services/database/userData";
 import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
+import { doesDeviceExist } from "src/services/database/device/list";
+import createHttpError = require("http-errors");
 
 const UINT32_MAX = Math.pow(2, 32) - 1;
 
@@ -31,9 +32,8 @@ export const handleCommonDevData = async (
 }> => {
   const bucket = getStorage().bucket();
 
-  // TODO: We do not have user ID here
-  if (!doesUserHaveDevice(req.userId, deviceId))
-    throw new Error("Device does not exist");
+  if (!(await doesDeviceExist(deviceId)))
+    throw createHttpError(404, "Device does not exist");
 
   const deviceSettings = await getDeviceSettings(deviceId);
   const deviceData = await getDeviceData(deviceId);

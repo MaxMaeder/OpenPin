@@ -10,11 +10,15 @@ import { openConfirmModal } from "src/modals";
 import NoContentPlaceholder from "../../components/NoContentPlaceholder";
 import MessageEntry from "./MessageEntry";
 import { IconList } from "@tabler/icons-react";
+import api from "src/comm/api";
+import useAuthToken from "src/util/useAuthToken";
+import { auth } from "src/comm/firebase";
 
 const Messages: React.FC = () => {
   const dispatch = useAppDispatch();
   const socket = useSocket();
 
+  const { idToken } = useAuthToken(auth);
   const deviceId = useDeviceId()!;
 
   const messages = useAppSelector((state) =>
@@ -39,16 +43,23 @@ const Messages: React.FC = () => {
         (<NoContentPlaceholder Icon={IconList} contentName="messages" />) :
         (
           <Stack gap="xl">
-            {messages.map((message) => (
-              <MessageEntry
-                key={message.id}
-                date={message.date}
-                userMsg={message.userMsg}
-                assistantMsg={message.assistantMsg}
-                imageSrc={message.userImgId}
-                onDelete={handleDelete(message.id)}
-              />
-            ))}
+            {messages.map((message) => {
+              let imgSrc: string | undefined;
+              if (idToken && message.userImgId) {
+                imgSrc = api.getMediaDownloadUrl(idToken, message.userImgId);
+              }
+
+              return (
+                <MessageEntry
+                  key={message.id}
+                  date={message.date}
+                  userMsg={message.userMsg}
+                  assistantMsg={message.assistantMsg}
+                  imageSrc={imgSrc}
+                  onDelete={handleDelete(message.id)}
+                />
+              );
+            })}
             <FetchMoreButton disabled={!hasMore} onClick={handleFetchMore} />
           </Stack>
         )}

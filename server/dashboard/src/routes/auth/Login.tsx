@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
 import { auth } from 'src/comm/firebase.ts';
+import { emailValidation } from './common';
 
 type LoginFormInputs = {
   email: string;
@@ -10,8 +11,12 @@ type LoginFormInputs = {
 };
 
 const LoginRoute = () => {
-  const { register, handleSubmit } = useForm<LoginFormInputs>();
-  const [signInWithEmailAndPassword, _, loading, error] =
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormInputs>();
+  const [signInWithEmailAndPassword, _, loading, fbError] =
     useSignInWithEmailAndPassword(auth);
 
   const onSubmit = (data: LoginFormInputs) => {
@@ -34,17 +39,19 @@ const LoginRoute = () => {
           <TextInput
             label="Email"
             placeholder="you@example.com"
-            {...register('email', { required: true })}
+            error={errors.email?.message}
+            {...register('email', emailValidation)}
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
+            error={errors.password?.message}
             {...register('password', { required: true })}
           />
           <Button type="submit" loading={loading} mt="xs">
             Log In
           </Button>
-          {error && <Text c="red">{error.message}</Text>}
+          {fbError && <Text c="red">{fbError.message}</Text>}
         </Stack>
       </form>
     </AuthLayout>

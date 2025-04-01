@@ -18,7 +18,8 @@ export interface DeviceContentState<T extends DeviceContent> {
   // The adapter stores entries in serialized form.
   entries: EntityState<Serialized<T>, string>;
   // Pagination cursor stored as ISO string.
-  nextStartAfter?: string;
+  // Will be null if no more entries
+  nextStartAfter?: string | null;
 }
 
 // The overall state maps device IDs to their content state.
@@ -30,7 +31,7 @@ export type DeviceContentMapState<T extends DeviceContent> = {
 export interface PaginatedData<T extends DeviceContent> {
   id: string; // Device ID.
   entries: T[];
-  nextStartAfter?: Date;
+  nextStartAfter?: Date | null;
 }
 
 export function createContentSlice<T extends DeviceContent>(
@@ -69,9 +70,13 @@ export function createContentSlice<T extends DeviceContent>(
         // captures/notes/messages entries, managed using createEntityAdapter
         // With data/settings slices, each device was an 'Entity' and we had one state
         state[deviceId].entries = adapter.upsertMany(state[deviceId].entries, serializedEntries);
-        state[deviceId].nextStartAfter = nextStartAfter
+
+        // Only update nextStartAfter if specified in payload (so is Date or null).
+        if (nextStartAfter !== undefined) {
+          state[deviceId].nextStartAfter = nextStartAfter
           ? nextStartAfter.toISOString()
-          : undefined;
+          : null
+        }
       },
       removeContentForDevice(
         state,
@@ -119,7 +124,7 @@ export function createContentSlice<T extends DeviceContent>(
       deviceId: string
     ): boolean => {
       if (!state[sliceName] || !state[sliceName][deviceId]) return false;
-      return state[sliceName][deviceId].nextStartAfter !== undefined;
+      return state[sliceName][deviceId].nextStartAfter;
     },
   };
 

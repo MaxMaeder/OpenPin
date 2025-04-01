@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
 import { auth } from 'src/comm/firebase.ts';
+import { emailValidation } from './common';
 
 type SignupFormInputs = {
   email: string;
@@ -11,13 +12,20 @@ type SignupFormInputs = {
 };
 
 const SignupRoute = () => {
-  const { register, handleSubmit } = useForm<SignupFormInputs>();
-  const [createUserWithEmailAndPassword, _, loading, error] =
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<SignupFormInputs>();
+  const [createUserWithEmailAndPassword, _, loading, fbError] =
     useCreateUserWithEmailAndPassword(auth);
 
   const onSubmit = (data: SignupFormInputs) => {
     createUserWithEmailAndPassword(data.email, data.password);
   };
+
+  const password = watch('password');
 
   return (
     <AuthLayout
@@ -35,22 +43,35 @@ const SignupRoute = () => {
           <TextInput
             label="Email"
             placeholder="you@example.com"
-            {...register('email', { required: true })}
+            error={errors.email?.message}
+            {...register('email', emailValidation)}
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
-            {...register('password', { required: true })}
+            error={errors.password?.message}
+            {...register('password', {
+              required: true,
+              pattern: {
+                value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
+                message: 'Password must contain a number and be at least 8 characters.',
+              }
+            })}
           />
           <PasswordInput
             label="Confirm Password"
             placeholder="Confirm your password"
-            {...register('confirmPassword', { required: true })}
+            error={errors.confirmPassword?.message}
+            {...register('confirmPassword', {
+              required: true,
+              validate: (value) =>
+                value === password || 'Passwords do not match',
+            })}
           />
           <Button type="submit" loading={loading} mt="xs">
             Create Account
           </Button>
-          {error && <Text c="red">{error.message}</Text>}
+          {fbError && <Text c="red">{fbError.message}</Text>}
         </Stack>
       </form>
     </AuthLayout>

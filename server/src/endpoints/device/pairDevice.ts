@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import createHttpError from "http-errors";
 import { PairRequest } from "src/dbTypes";
+import { createDevice } from "src/services/database/device/list";
 import { usePairCode } from "src/services/database/pairRequests";
 import { addUserDevice } from "src/services/database/userData";
 import { sendNewDevDetails } from "src/sockets/msgProducers/devAdded";
@@ -19,6 +20,8 @@ export const handlePairDevice = async (req: Request, res: Response) => {
   const userId = pairRequest.userId;
   const deviceId = uuidv4();
 
+  await createDevice(deviceId);
+  
   await addUserDevice(userId, deviceId);
   await sendNewDevDetails(userId, deviceId);
 

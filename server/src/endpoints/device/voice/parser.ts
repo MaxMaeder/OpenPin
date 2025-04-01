@@ -2,7 +2,6 @@ import * as express from "express";
 
 import { InferType, boolean, number, object, string } from "yup";
 
-import { PassThrough } from "stream";
 import { DEFAULT_AUDIO_BITRATE, REQ_METADATA_SIZE } from "src/config";
 
 const bitrateSchema = string()
@@ -26,7 +25,7 @@ export type DeviceMetadata = InferType<typeof metadataSchema>;
 export interface ParsedAssistantRequest extends express.Request {
   metadata: DeviceMetadata;
   imageBuffer: Buffer | undefined;
-  audioStream: PassThrough;
+  audioBuffer: Buffer;
 }
 
 const getBodyBuffer = async (req: express.Request): Promise<Buffer> => {
@@ -51,11 +50,11 @@ export const parseDeviceReq = async (
     const buffer = await getBodyBuffer(req);
     console.log("Body size", buffer.length);
 
-    let rawJsonData = new Uint8Array(buffer, 0, REQ_METADATA_SIZE);
+    let rawJsonData = Buffer.from(buffer, 0, REQ_METADATA_SIZE);
 
     const endIndex = rawJsonData.indexOf(0); // Use the ASCII value of '\0'
     if (endIndex != -1) {
-      rawJsonData = rawJsonData.slice(0, endIndex);
+      rawJsonData = rawJsonData.subarray(0, endIndex);
     }
     const jsonStr = new TextDecoder().decode(rawJsonData);
 
@@ -69,13 +68,10 @@ export const parseDeviceReq = async (
       );
     }
 
-    req.audioStream = new PassThrough();
-    req.audioStream.end(
-      buffer.subarray(
-        req.metadata.imageSize + REQ_METADATA_SIZE,
-        req.metadata.audioSize + req.metadata.imageSize + REQ_METADATA_SIZE
-      )
-    );
+    req.audioBuffer = buffer.subarray(
+      req.metadata.imageSize + REQ_METADATA_SIZE,
+      req.metadata.audioSize + req.metadata.imageSize + REQ_METADATA_SIZE
+    )
 
     next();
   } catch (error) {

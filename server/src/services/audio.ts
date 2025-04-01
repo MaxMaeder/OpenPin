@@ -5,11 +5,13 @@ import { FileResult, file } from "tmp-promise";
 import { PassThrough } from "stream";
 import ffmpeg from "fluent-ffmpeg";
 import { writeFile } from "fs-extra";
+import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
 
 export type AudioFormat = "mp3" | "m4a";
 
 export interface AudioComponent {
   type: "buffer" | "speech";
+  filter?: ffmpeg.FilterSpecification;
 }
 
 export interface ProcessedAudioComponent extends AudioComponent {
@@ -24,12 +26,12 @@ export interface AudioBufferComponent extends AudioComponent {
   type: "buffer";
   buffer: Buffer;
   format: AudioFormat;
-  filter?: ffmpeg.FilterSpecification;
 }
 
 export interface AudioSpeechComponent extends AudioComponent {
   type: "speech";
   text: string;
+  languageCode?: string;
 }
 
 const defaultFilter: ffmpeg.FilterSpecification = {
@@ -48,7 +50,11 @@ const processAudioComponent = async (
   if (component.type === "speech") {
     const speechComponent = component as AudioSpeechComponent;
 
-    buffer = Buffer.from(await speech.speak(speechComponent.text));
+    buffer = Buffer.from(await speech.speak(
+      speechComponent.text,
+      SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3,
+      component.languageCode
+    ));
     format = "mp3";
   } else {
     const bufferComponent = component as AudioBufferComponent;
@@ -59,7 +65,7 @@ const processAudioComponent = async (
 
   await writeFile(tmpFile.path, buffer);
 
-  const filter = (component as AudioBufferComponent).filter || defaultFilter;
+  const filter = component.filter || defaultFilter;
   filter.outputs = `filtered-${index}`;
 
   return {
@@ -101,13 +107,15 @@ interface CombineAudioComponentsConfig {
   spacing: number;
 }
 
-export const combineAudioComponents = async (
+export const assembleAudioComponents = async (
   components: InputAudioComponent[],
   config: CombineAudioComponentsConfig
 ) => {
   const processedComponents = await Promise.all(
     components.map(processAudioComponent)
   );
+
+  console.log("Audio components processed.")
 
   const silenceFile = await generateSilence(config.spacing);
 

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
 import { auth } from 'src/comm/firebase.ts';
 import { notifications } from '@mantine/notifications';
+import { emailValidation } from './common';
 
 type ResetFormInputs = {
   email: string;
@@ -12,8 +13,13 @@ type ResetFormInputs = {
 
 const ResetPasswordRoute = () => {
   const navigate = useNavigate();
-  const { register, handleSubmit } = useForm<ResetFormInputs>();
-  const [sendPasswordResetEmail, sending, error] = useSendPasswordResetEmail(auth);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ResetFormInputs>();
+  const [sendPasswordResetEmail, sending, fbError] = useSendPasswordResetEmail(auth);
 
   const onSubmit = async (data: ResetFormInputs) => {
     const success = await sendPasswordResetEmail(data.email);
@@ -43,12 +49,13 @@ const ResetPasswordRoute = () => {
           <TextInput
             label="Email"
             placeholder="you@example.com"
-            {...register('email', { required: true })}
+            error={errors.email?.message}
+            {...register('email', emailValidation)}
           />
           <Button type="submit" loading={sending} mt="xs">
             Reset Password
           </Button>
-          {error && <Text c="red">{error.message}</Text>}
+          {fbError && <Text c="red">{fbError.message}</Text>}
         </Stack>
       </form>
     </AuthLayout>
