@@ -15,14 +15,7 @@ export const withAuthAndValidation = <T extends AnyObject>(
   return (socket: Socket) => async (payload: unknown) => {
     const userId = socket.data.userId as string;
 
-    // TODO: these errors crash node
-
-    let validatedPayload: T;
-    try {
-      validatedPayload = await schema.validate(payload, { strict: true }) as T;
-    } catch {
-      throw new Error("Failed to validate message payload")
-    }
+    let validatedPayload = await schema.validate(payload, { strict: true }) as T;
 
     const hasAccess = await doesUserHaveDevice(userId, validatedPayload.id);
     if (!hasAccess) {
