@@ -39,8 +39,9 @@ const getCompletion = async (
     }).chat.completions.create({
       messages: msgs,
       model: model.name,
-      tools,
     });
+
+    console.log(JSON.stringify(res, null, 2));
 
     return parseResponse(res);
   } else {
@@ -49,7 +50,6 @@ const getCompletion = async (
     }).chat.completions.create({
       messages: msgs as Array<CompletionCreateParams.Message>,
       model: model.name,
-      tools,
     });
 
     return parseResponse(res as ChatCompletion);
