@@ -9,7 +9,6 @@ import { getDeviceData, updateDeviceData } from "src/services/database/device/da
 import { doesDeviceExist } from "src/services/database/device/list";
 import { sendCapturesUpdate, sendDataUpdate } from "src/sockets/msgBuilders/device";
 import genFileName from "src/util/genFileName";
-import { v4 as uuidv4 } from "uuid";
 import * as yup from "yup";
 
 const captureFileFilter = (
@@ -106,9 +105,8 @@ export const handleUploadCapture = async (req: Request, res: Response) => {
   const { fileExt, contentType, captureType } = inferFileType(req.file.originalname);
 
   const bucket = getStorage().bucket();
-  const captureId = uuidv4();
 
-  const fileName = genFileName(captureId, fileExt);
+  const fileName = genFileName(deviceId, fileExt);
   const file = bucket.file(fileName);
   await file.save(req.file.buffer, {
     contentType,

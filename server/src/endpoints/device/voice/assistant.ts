@@ -62,25 +62,25 @@ export const handleAssistant = async (
         imageBuffer: req.imageBuffer,
       });
 
-      const contextMsg: Omit<DeviceMessage, "date"> = {
+      const msgDraft: Omit<DeviceMessage, "date"> = {
         userMsg: recognizedSpeech,
         assistantMsg: assistantMessage
       };
 
       if (req.imageBuffer) {
-        contextMsg.userImgId = deviceData.latestImage;
+        msgDraft.userImgId = deviceData.latestImage;
       }
 
       // Save conversation context
-      const newMsg = await addDeviceMsg(
+      const msgEntry = await addDeviceMsg(
         deviceId,
-        contextMsg,
+        msgDraft,
         deviceSettings.messagesToKeep
       );
 
       sendMsgsUpdate(deviceId, {
         entries: [
-          newMsg
+          msgEntry
         ]
       });
 
