@@ -1,8 +1,15 @@
-import { Center, Loader } from "@mantine/core";
+import { Center, Loader, Stack, Title } from "@mantine/core";
 
-const LoadingPlaceholder: React.FC = () => (
-  <Center h="100%" w="100%">
-    <Loader />
+interface LoadingPlaceholderProps {
+  message?: string;
+};
+
+const LoadingPlaceholder: React.FC<LoadingPlaceholderProps> = ({ message }) => (
+  <Center flex={1}>
+    <Stack align="center">
+      <Loader color="white" size="xl" />
+      {message && <Title order={2}>{message}</Title>}
+    </Stack>
   </Center>
 );
 

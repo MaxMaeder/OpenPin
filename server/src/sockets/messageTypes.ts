@@ -1,4 +1,6 @@
 export const CLIENT_DATA_REQ = "client_data_req";
+export const CLIENT_DATA_REQ_DONE = "client_data_req_done";
+
 export const CLIENT_DEV_SETTINGS_UPDATE = "client_dev_settings_update";
 
 export const CLIENT_MORE_CAPTURES_REQ = "client_more_captures_req";

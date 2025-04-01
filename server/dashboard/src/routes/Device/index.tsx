@@ -9,6 +9,10 @@ import Settings from "./tabs/Settings";
 import NotFound from "src/routes/NotFound";
 import { selectDeviceNames } from "src/state/slices/settingsSlice";
 import { useAppSelector } from "src/state/hooks";
+import { selectIsLoaded } from "src/state/slices/commSlice";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "src/comm/firebase";
+import LoadingPlaceholder from "src/components/LoadingPlaceholder";
 
 const tabs: TabDefinition[] = [
   { label: "Overview", value: "overview", fullScreen: true, Component: Overview },
@@ -21,15 +25,22 @@ const tabs: TabDefinition[] = [
 const PageLayout: React.FC = () => {
   const { deviceId } = useParams<{ deviceId: string }>();
 
-  const deviceNames = useAppSelector(selectDeviceNames);
+  const [user] = useAuthState(auth);
 
-  if (!deviceId || !deviceNames[deviceId]) {
+  const deviceNames = useAppSelector(selectDeviceNames);
+  const isLoaded = useAppSelector(selectIsLoaded);
+
+  const displayTabs = user && isLoaded;
+
+  if (!deviceId || (displayTabs && !deviceNames[deviceId])) {
     return <NotFound />;
   }
 
   return (
-    <DashboardLayout title={deviceNames[deviceId]}>
-      <TabLayout tabs={tabs} />
+    <DashboardLayout title={deviceNames[deviceId] || "Loading..."}>
+      {displayTabs ?
+        (<TabLayout tabs={tabs} />) :
+        (<LoadingPlaceholder message="Loading Device" />)}
     </DashboardLayout>
   );
 };

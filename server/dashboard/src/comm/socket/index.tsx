@@ -15,11 +15,13 @@ import {
   clearConnError,
   setConnError,
   setConnected,
+  setLoading,
 } from "../../state/slices/commSlice";
 import { useAppDispatch } from "../../state/hooks";
 import superjson from "superjson";
 import {
   CLIENT_DATA_REQ,
+  CLIENT_DATA_REQ_DONE,
   CLIENT_DEV_SETTINGS_UPDATE,
   DEV_CAPTURES_UPDATE,
   DEV_DATA_UPDATE,
@@ -64,7 +66,9 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     socket.on("connect", () => {
       dispatch(setConnected(true));
       dispatch(clearConnError());
+
       socket.emit(CLIENT_DATA_REQ, "{}");
+      dispatch(setLoading(true));
     });
 
     socket.on("disconnect", () => {
@@ -84,6 +88,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       };
       socket.on(event, handleEvent);
     };
+
+    addListener(CLIENT_DATA_REQ_DONE, () => {
+      dispatch(setLoading(false));
+    })
 
     addListener(DEV_DATA_UPDATE, (data: DeviceData) => {
       dispatch(upsertDataById(data));
