@@ -10,6 +10,10 @@ import ContextWindowSlider from "./components/ContextWindowSlider";
 import SectionCol from "./components/SectionColumn";
 import Section from "./components/Section";
 import Select from "src/components/Select";
+import VoiceSpeedSlider from "./components/VoiceSpeedSlider";
+import VolumeBoostSlider from "./components/VolumeBoostSlider";
+import { languageModels } from "src/assets/languageModels";
+import { assistantVoices } from "src/assets/voices";
 
 const Settings: React.FC = () => {
   const bind = useBindSettings();
@@ -39,10 +43,23 @@ const Settings: React.FC = () => {
         </Section>
         <Section title="Assistant">
           <SectionCol>
-            <Select label="LLM/Provider" disabled value="None" onChange={() => { }} />
+            <Select
+              label="Language Model"
+              data={languageModels}
+              {...bind("llmName")}
+            />
+            <Select
+              label="Vision Language Model"
+              data={languageModels}
+              {...bind("visionLlmName")}
+            />
             <Input.Wrapper label="Messages for Context Window">
               <ContextWindowSlider {...bind("messagesToKeep")} />
             </Input.Wrapper>
+          </SectionCol>
+          <SectionCol>
+            <AppTextarea label="LLM Prompt" settingsKey="llmPrompt" />
+            <AppTextarea label="Vision LLM Prompt" settingsKey="visionLlmPrompt" />
             <Input.Wrapper label="Clear Conversation History">
               <ToggleButton
                 inactiveLabel="Clear History"
@@ -53,10 +70,6 @@ const Settings: React.FC = () => {
               />
             </Input.Wrapper>
           </SectionCol>
-          <SectionCol>
-            <AppTextarea label="LLM Prompt" settingsKey="llmPrompt" />
-            <AppTextarea label="Vision LLM Prompt" settingsKey="visionLlmPrompt" />
-          </SectionCol>
         </Section>
         <Section title="Translate">
           <SectionCol>
@@ -65,6 +78,12 @@ const Settings: React.FC = () => {
               data={translateLanguages}
               {...bind("myLanguage")}
             />
+            <Input.Wrapper
+              label="Volume Boost"
+              description="Volume can be boosted so the other speaker can hear more clearly"
+            >
+              <VolumeBoostSlider mt="0.25rem" {...bind("translateVolumeBoost")} />
+            </Input.Wrapper>
           </SectionCol>
           <SectionCol>
             <Select
@@ -72,6 +91,20 @@ const Settings: React.FC = () => {
               data={translateLanguages}
               {...bind("translateLanguage")}
             />
+          </SectionCol>
+        </Section>
+        <Section title="Voice">
+          <SectionCol>
+            <Select
+              label="Voice Name"
+              data={assistantVoices}
+              {...bind("voiceName")}
+            />
+          </SectionCol>
+          <SectionCol>
+            <Input.Wrapper label="Voice Speed">
+              <VoiceSpeedSlider {...bind("voiceSpeed")} />
+            </Input.Wrapper>
           </SectionCol>
         </Section>
       </Stack>

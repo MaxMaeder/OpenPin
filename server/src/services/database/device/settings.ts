@@ -1,6 +1,7 @@
 import { DocumentReference, getFirestore } from "firebase-admin/firestore";
-import { DEV_SETTINGS_COL, INIT_DEVICE_SETTINGS } from "src/config";
-import { DeviceSettings, FirestoreUpdate } from "src/dbTypes";
+import { DEV_SETTINGS_COL } from "src/config";
+import { DeviceSettings, INIT_DEVICE_SETTINGS } from "src/config/deviceSettings";
+import { FirestoreUpdate } from "src/dbTypes";
 
 export const getDeviceSettingsRef = (deviceId: string): DocumentReference =>
   getFirestore().collection(DEV_SETTINGS_COL).doc(deviceId);

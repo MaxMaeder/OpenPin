@@ -1,6 +1,6 @@
 import { Slider, SliderProps } from "@mantine/core";
 
-const ContextWindowSlider: React.FC<SliderProps> = (...props) => (
+const ContextWindowSlider: React.FC<SliderProps> = ({ ...props }) => (
   <Slider
     name="msgsToKeep"
     label={null}

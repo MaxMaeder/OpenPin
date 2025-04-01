@@ -1,4 +1,4 @@
-import { DeviceData, DeviceSettings } from "../dbTypes";
+import { DeviceData } from "../dbTypes";
 import { getLocalTime } from "../services/maps";
 import { doChatCompletion } from "../services/completions";
 import { formatInTimeZone } from "date-fns-tz";
@@ -6,6 +6,7 @@ import { functions, FunctionHandlerError } from "./functions";
 import { InputAudioComponent } from "../services/audio";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { CHAT_COMP_MAX_CALLS } from "../config";
+import { DeviceSettings } from "src/config/deviceSettings";
 
 export type DavisMessage = {
   role: "system" | "assistant" | "user";

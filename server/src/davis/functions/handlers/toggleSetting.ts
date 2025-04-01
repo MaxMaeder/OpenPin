@@ -1,8 +1,9 @@
 /* eslint-disable indent */
 import { object, string } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
-import { DeviceData, DeviceSettings } from "../../../dbTypes";
+import { DeviceData } from "../../../dbTypes";
 import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
+import { DeviceSettings } from "src/config/deviceSettings";
 
 type BooleanKeys<T> = {
   [K in keyof T]: T[K] extends boolean ? K : never;

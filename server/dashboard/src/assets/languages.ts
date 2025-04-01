@@ -9,4 +9,4 @@ export const translateLanguages = [
   { value: "ko-KR", label: "Korean" },
   { value: "zh-CN", label: "Chinese (Simplified)" },
   { value: "hi-IN", label: "Hindi (India)" },
-];
+] as const;

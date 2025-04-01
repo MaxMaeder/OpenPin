@@ -35,37 +35,6 @@ export type WifiNetwork = {
   password?: string;
 };
 
-export type DeviceSettings = {
-  // General
-  displayName?: string;
-  hologramId?: string;
-  captureImage: boolean;
-  deviceDisabled: boolean;
-  updateFreq: number;
-  lowBattUpdateFreq: number;
-  speakerVol: number;
-  lightLevel: number;
-  // Conversation History
-  messagesToKeep: number;
-  llmPrompt: string;
-  visionLlmPrompt: string;
-  clearMessages: boolean;
-  userSmsNumber?: string;
-  // Translate
-  myLanguage: string;
-  translateLanguage: string;
-  // WiFi
-  enableWifi: boolean;
-  enableBluetooth: boolean;
-  enableGnss: boolean;
-  wifiNetworks: WifiNetwork[];
-  // Firmware
-  doFirmwareUpdate: boolean;
-  // If we don't have null, cannot 'clear it out' on frontend after update
-  firmwareUpdateFile?: string | null;
-  uploadedFirmwareFiles: string[];
-};
-
 type FirestoreUpdate<T> = {
   [P in keyof T]?: T[P] | FieldValue;
 };

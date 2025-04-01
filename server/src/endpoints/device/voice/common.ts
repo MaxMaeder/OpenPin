@@ -1,12 +1,11 @@
 import _ = require("lodash");
 
-import { DeviceData, DeviceSettings } from "src/dbTypes";
-import { LOW_BATTERY_PERCENT, UPDATE_FREQ_TIMES } from "src/config";
+import { DeviceData } from "src/dbTypes";
+import { LOW_BATTERY_PERCENT } from "src/config";
 import {
   getDeviceData,
   updateDeviceData,
 } from "src/services/database/device/data";
-import { getCellTowerLocation } from "src/services/towerLocation";
 
 import { ParsedAssistantRequest } from "./parser";
 import { clearDeviceMsgs } from "src/services/database/device/messages";
@@ -17,8 +16,7 @@ import { getDeviceSettings, updateDeviceSettings } from "src/services/database/d
 import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 import { doesDeviceExist } from "src/services/database/device/list";
 import createHttpError = require("http-errors");
-
-const UINT32_MAX = Math.pow(2, 32) - 1;
+import { DeviceSettings } from "src/config/deviceSettings";
 
 // Update DB, etc. with data from request
 // Call genCommonDevRes() to actually write changes to DB
@@ -39,13 +37,6 @@ export const handleCommonDevData = async (
   const deviceData = await getDeviceData(deviceId);
 
   deviceData.lastConnected = _.now();
-
-  if (req.metadata.didWifiDisconnect) {
-    sendSettingsUpdate(deviceId, {
-      enableWifi: false,
-    });
-    deviceSettings.enableWifi = false;
-  }
 
   if (req.imageBuffer) {
     const imageName = genFileName(deviceId, "jpeg");
@@ -73,20 +64,6 @@ export const handleCommonDevData = async (
       },
       "gnss"
     );
-  } else {
-    const { hologramId } = deviceSettings;
-    if (hologramId) {
-      try {
-        updateDeviceLocation(
-          deviceData,
-          await getCellTowerLocation(hologramId),
-          "tower"
-        );
-      } catch (error) {
-        // It's ok to ignore error; Hologram just doesn't have location
-        console.log(error);
-      }
-    }
   }
 
   if (deviceSettings.clearMessages) {
@@ -100,18 +77,7 @@ export const handleCommonDevData = async (
   return { deviceData, deviceSettings };
 };
 
-const isDevLowBatt = (data: DeviceData) => data.battery < LOW_BATTERY_PERCENT;
-
-const getNextDevUpdate = (
-  isLowPower: boolean,
-  settings: DeviceSettings
-): number => {
-  const updateFreq = isLowPower
-    ? settings.lowBattUpdateFreq
-    : settings.updateFreq;
-
-  return Math.min(UPDATE_FREQ_TIMES[updateFreq], UINT32_MAX);
-};
+export const isDevLowBatt = (data: DeviceData) => data.battery < LOW_BATTERY_PERCENT;
 
 const formatDevRes = (json: Record<string, unknown>) => {
   // Step 1: Stringify the JSON object
@@ -139,26 +105,9 @@ export const genCommonDevRes = async (
   deviceData: DeviceData,
   deviceSettings: DeviceSettings
 ): Promise<Uint8Array> => {
-  const isLowBatt = isDevLowBatt(deviceData);
-
   const resData = {
-    nextUpdate: getNextDevUpdate(isLowBatt, deviceSettings),
     disabled: deviceSettings.deviceDisabled,
-    doUpdate: deviceSettings.doFirmwareUpdate,
-    takePic: deviceSettings.captureImage,
-    wifi: deviceSettings.enableWifi,
-    bt: deviceSettings.enableBluetooth,
-    gnss: deviceSettings.enableGnss,
-    spkVol: deviceSettings.speakerVol,
-    lLevel: deviceSettings.lightLevel,
   };
-
-  if (deviceSettings.captureImage) {
-    deviceSettings.captureImage = false;
-    sendSettingsUpdate(deviceId, {
-      captureImage: false,
-    });
-  }
 
   updateDeviceData(deviceId, deviceData);
   updateDeviceSettings(deviceId, deviceSettings);

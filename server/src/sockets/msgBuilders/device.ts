@@ -1,4 +1,4 @@
-import { DeviceData, DeviceId, DeviceSettings } from "src/dbTypes";
+import { DeviceData, DeviceId } from "src/dbTypes";
 import { sendToRoom } from "..";
 import { 
   DEV_CAPTURES_UPDATE,
@@ -12,6 +12,7 @@ import { DeviceNote } from "src/services/database/device/notes";
 import { PaginatedResult } from "src/services/database/device/content";
 import { DeviceMessage } from "src/services/database/device/messages";
 import { DeviceCapture } from "src/services/database/device/captures";
+import { DeviceSettings } from "src/config/deviceSettings";
 
 export const sendDataUpdate = (
   id: DeviceId,

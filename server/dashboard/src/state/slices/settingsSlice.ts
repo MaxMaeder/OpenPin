@@ -5,63 +5,52 @@ import {
 } from "@reduxjs/toolkit";
 
 import { RootState } from "../store";
+import { languageModels } from "src/assets/languageModels";
+import { translateLanguages } from "src/assets/languages";
+import { assistantVoices } from "src/assets/voices";
 
-export interface WifiNetwork {
-  ssid: string;
-  password?: string;
-}
+export type LanguageModel = typeof languageModels[number]["value"];
+export type TranslateLanguage = typeof translateLanguages[number]["value"];
+export type AssistantVoice = typeof assistantVoices[number]["value"];
 
 export interface DeviceSettings {
   id: string;
   // General
   displayName?: string;
-  hologramId?: string;
-  captureImage: boolean;
   deviceDisabled: boolean;
-  updateFreq: number;
-  lowBattUpdateFreq: number;
-  speakerVol: number;
-  lightLevel: number;
-  // Conversation History
-  messagesToKeep: number;
+  // Assistant
+  llmName: LanguageModel;
+  visionLlmName: LanguageModel;
   llmPrompt: string;
   visionLlmPrompt: string;
+  messagesToKeep: number;
   clearMessages: boolean;
-  userSmsNumber?: string;
   // Translate
-  myLanguage: string;
-  translateLanguage: string;
-  // WiFi
-  enableWifi: boolean;
-  enableBluetooth: boolean;
-  enableGnss: boolean;
-  wifiNetworks: WifiNetwork[];
-  // Firmware
-  doFirmwareUpdate: boolean;
-  // If we don't have null, cannot 'clear it out' on frontend after update
-  firmwareUpdateFile?: string | null;
-  uploadedFirmwareFiles: string[];
+  myLanguage: TranslateLanguage;
+  translateLanguage: TranslateLanguage;
+  translateVolumeBoost: number;
+  // Voice
+  voiceName: AssistantVoice;
+  voiceSpeed: number;
 }
 
 const initialSettings: Omit<DeviceSettings, "id"> = {
-  captureImage: false,
+  // General
   deviceDisabled: false,
-  updateFreq: 2,
-  lowBattUpdateFreq: 3,
-  speakerVol: 0.8,
-  lightLevel: 0,
-  messagesToKeep: 20,
+  // Assistant
+  llmName: "llama-3-2-90b",
+  visionLlmName: "llama-3-2-90b",
   llmPrompt: "",
   visionLlmPrompt: "",
+  messagesToKeep: 20,
   clearMessages: false,
+  // Translate
   myLanguage: "en-US",
   translateLanguage: "es-ES",
-  enableWifi: false,
-  enableBluetooth: false,
-  enableGnss: true,
-  wifiNetworks: [],
-  doFirmwareUpdate: false,
-  uploadedFirmwareFiles: [],
+  translateVolumeBoost: 1.5,
+  // Voice
+  voiceName: "davis",
+  voiceSpeed: 1.2
 };
 
 export const settingsAdapter = createEntityAdapter<DeviceSettings>();

@@ -1,38 +1,41 @@
-/* eslint-disable quotes */
-/* eslint-disable max-len */
-import { DeviceData, DeviceSettings, UserData } from "./dbTypes";
+export const LANGUAGE_MODELS = [
+  { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+  { value: "gpt-4o", label: "GPT-4o" },
+  { value: "llama-3-2-11b", label: "Llama 3.2 11B" },
+  { value: "llama-3-2-90b", label: "Llama 3.2 90B" },
+  { value: "gemini-2-0-flash-lite", label: "Gemini 2.0 Flash Lite" },
+  { value: "gemini-2-0-flash", label: "Gemini 2.0 Flash" },
+  { value: "gemini-2-5-pro", label: "Gemini 2.5 Pro" },
+  { value: "claude-3-5", label: "Claude 3.5 Sonnet" },
+  { value: "claude-3-7", label: "Claude 3.7 Sonnet" }
+] as const;
 
-import { CompletionModel } from "./services/completions";
-import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
+export type LanguageModel = typeof LANGUAGE_MODELS[number]["value"];
 
-export const REQ_METADATA_SIZE = 512;
+export const TRANSLATE_LANGUAGES = [
+  { value: "en-US", label: "English (United States)" },
+  { value: "es-ES", label: "Spanish (Spain)" },
+  { value: "fr-FR", label: "French (France)" },
+  { value: "de-DE", label: "German" },
+  { value: "it-IT", label: "Italian" },
+  { value: "pt-BR", label: "Portuguese (Brazil)" },
+  { value: "ja-JP", label: "Japanese" },
+  { value: "ko-KR", label: "Korean" },
+  { value: "zh-CN", label: "Chinese (Simplified)" },
+  { value: "hi-IN", label: "Hindi (India)" },
+] as const;
 
-export const VOICE_SAMPLES_PER_S = 8000;
-export const VOICE_BITS_PER_SAMPLE = 16;
-export const VOICE_NUM_CHANNELS = 1;
+export type TranslateLanguage = typeof TRANSLATE_LANGUAGES[number]["value"];
 
-export const GROQ_SST_MODEL = "whisper-large-v3-turbo";
+export const ASSISTANT_VOICES = [
+  { value: "davis", label: "The Davis Voice" },
+  { value: "andrew", label: "Andrew" },
+  { value: "derek", label: "Derek" },
+  { value: "nancy", label: "Nancy" },
+  { value: "jenny", label: "Jenny" }
+] as const;
 
-export const MSFT_TTS_REGION = "eastus";
-export const MSFT_TTS_LANGUAGE = "en-US";
-export const MSFT_TTS_VOICE = "en-US-DavisNeural";
-export const MSFT_TTS_MULTILINGUAL_VOICE = "en-US-DavisMultilingualNeural";
-export const MSFT_TTS_FORMAT =
-  SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
-
-export const DEV_MSGS_COL = "DeviceMessages2"; // Todo: fix this
-export const DEV_MSGS_NUM = 10;
-
-export const USER_DATA_COL = "Users"
-export const PAIR_CODES_COL = "PairCodes"
-export const DEV_LIST_COL = "Devices";
-export const DEV_DATA_COL = "DeviceData";
-export const DEV_SETTINGS_COL = "DeviceSettings";
-export const DEV_CAPTURES_COL = "DeviceCaptures";
-export const DEV_NOTES_COL = "DeviceNotes";
-
-// Max calls to chat completion service in one invocation of the assistant, "davis"
-export const CHAT_COMP_MAX_CALLS = 5;
+export type AssistantVoice = typeof ASSISTANT_VOICES[number]["value"];
 
 export const CHAT_COMP_PROMPT = `
 You are the user's assistant running from an AI Pin, and your name is Davis. Keep your responses concise and informal. 
@@ -61,66 +64,42 @@ Example prompt: What's my status? Answer: you are near 8026 Appleton Rd, the wea
 Example prompt: <speech unintelligible> Answer: Sorry, I couldn't hear you, can you repeat that?
 `;
 
-export const CHAT_COMP_MODEL: CompletionModel = {
-  provider: "openai",
-  name: "gpt-3.5-turbo",
-};
-export const CHAT_COMP_IMG_MODEL: CompletionModel = {
-  provider: "openai",
-  name: "gpt-4o",
-};
+export interface DeviceSettings {
+  // General
+  displayName?: string;
+  deviceDisabled: boolean;
+  // Assistant
+  llmName: LanguageModel;
+  visionLlmName: LanguageModel;
+  llmPrompt: string;
+  visionLlmPrompt: string;
+  messagesToKeep: number;
+  clearMessages: boolean;
+  // Translate
+  myLanguage: TranslateLanguage;
+  translateLanguage: TranslateLanguage;
+  translateVolumeBoost: number;
+  // Voice
+  voiceName: AssistantVoice;
+  voiceSpeed: number;
+}
 
-export const TEST_TEXT =
-  "This is a test of the audio pipeline. This is the end of the test.";
-
-export const LOW_BATTERY_PERCENT = 0.2;
-
-// How long after a more accurate location update before we should
-// update location with current but less accurate location
-export const LOCATION_WORSE_UPDATE_TIME = 10 * 60 * 1000;
-
-export const INIT_USER_DATA: UserData = {
-  deviceIds: []
-};
-
-export const INIT_DEVICE_DATA: DeviceData = {
-  lastConnected: 0,
-  latitude: 0,
-  longitude: 0,
-  battery: 0,
-};
 
 export const INIT_DEVICE_SETTINGS: DeviceSettings = {
-  captureImage: false,
+  // General
   deviceDisabled: false,
-  updateFreq: 2,
-  lowBattUpdateFreq: 3,
-  speakerVol: 0.8,
-  lightLevel: 0,
-  messagesToKeep: 20,
+  // Assistant
+  llmName: "llama-3-2-90b",
+  visionLlmName: "llama-3-2-90b",
   llmPrompt: CHAT_COMP_PROMPT,
   visionLlmPrompt: CHAT_COMP_PROMPT,
+  messagesToKeep: 20,
   clearMessages: false,
+  // Translate
   myLanguage: "en-US",
   translateLanguage: "es-ES",
-  enableWifi: false,
-  enableBluetooth: false,
-  enableGnss: true,
-  wifiNetworks: [],
-  doFirmwareUpdate: false,
-  uploadedFirmwareFiles: [],
+  translateVolumeBoost: 1.5,
+  // Voice
+  voiceName: "davis",
+  voiceSpeed: 1.2
 };
-
-export const UPDATE_FREQ_TIMES = [
-  10 * 1000, // 10s
-  30 * 1000, // 30s
-  60 * 1000, // 1m
-  5 * 60 * 1000, // 5m
-  10 * 60 * 1000, // 10m
-  60 * 60 * 1000, // 1h
-  Math.pow(2, 32) - 1, // never
-];
-
-export const AUDIO_CONCAT_SPACING = 0.5; // Seconds between audio clips
-
-export const DEFAULT_AUDIO_BITRATE = "16k";

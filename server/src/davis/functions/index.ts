@@ -1,10 +1,9 @@
 import { FunctionDefinition } from "openai/resources";
-import { DeviceData, DeviceSettings } from "../../dbTypes";
+import { DeviceData } from "../../dbTypes";
 
 import { InputAudioComponent } from "../../services/audio";
 import { handlePlayMusic } from "./handlers/playMusic";
 import { handleGetWeather } from "./handlers/getWeather";
-import { handleToggleSetting } from "./handlers/toggleSetting";
 import { handleGetLocation } from "./handlers/getLocation";
 import { handleSearchWeb } from "./handlers/searchWeb";
 import { handleGetNearbyPlaces } from "./handlers/getNearbyPlaces";
@@ -12,6 +11,7 @@ import { handleGetDirections } from "./handlers/getDirections";
 import { handleGetStockQuote } from "./handlers/getStockQuote";
 import { handleGetWolframResponse } from "./handlers/getWolframResponse";
 import { handleSearchWikipedia } from "./handlers/searchWikipedia";
+import { DeviceSettings } from "src/config/deviceSettings";
 
 export interface FunctionHandlerResponse {
   returnValue: string;
@@ -83,29 +83,29 @@ export const functions: Array<DavisFunction> = [
     },
     handler: handleGetWeather,
   },
-  {
-    availableOnce: true,
-    definition: {
-      name: "toggle_wifi",
-      description: "Turn's the device's WiFi on/off",
-      parameters: {
-        type: "object",
-        properties: {
-          transformation: {
-            type: "string",
-            description:
-              "How to change the state of the WiFi. Either 'on', 'off' " +
-              "or 'toggle' to turn WiFi on if off, off if on.",
-          },
-        },
-        required: ["transformation"],
-      },
-    },
-    handler: handleToggleSetting("enableWifi", "WiFi", [
-      "turned on",
-      "turned off",
-    ]),
-  },
+  // {
+  //   availableOnce: true,
+  //   definition: {
+  //     name: "toggle_wifi",
+  //     description: "Turn's the device's WiFi on/off",
+  //     parameters: {
+  //       type: "object",
+  //       properties: {
+  //         transformation: {
+  //           type: "string",
+  //           description:
+  //             "How to change the state of the WiFi. Either 'on', 'off' " +
+  //             "or 'toggle' to turn WiFi on if off, off if on.",
+  //         },
+  //       },
+  //       required: ["transformation"],
+  //     },
+  //   },
+  //   handler: handleToggleSetting("enableWifi", "WiFi", [
+  //     "turned on",
+  //     "turned off",
+  //   ]),
+  // },
   {
     definition: {
       name: "get_location",

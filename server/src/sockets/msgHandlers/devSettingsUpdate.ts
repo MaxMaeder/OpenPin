@@ -1,57 +1,34 @@
 import _ = require("lodash");
 
-import { DeviceSettings, WifiNetwork } from "../../dbTypes";
-import { ObjectSchema, array, boolean, number, object, string } from "yup";
-import { UPDATE_FREQ_TIMES } from "../../config";
+import { ObjectSchema, boolean, number, object, string } from "yup";
 import { updateDeviceSettings } from "../../services/database/device/settings";
 import { sendSettingsUpdate } from "../msgBuilders/device";
 import { withAuthAndValidation } from "./common";
+import { ASSISTANT_VOICES, AssistantVoice, DeviceSettings, LANGUAGE_MODELS, LanguageModel, TRANSLATE_LANGUAGES, TranslateLanguage } from "src/config/deviceSettings";
 
 interface DeviceSettingsPayload extends Partial<DeviceSettings> {
   id: string;
 }
 
-const percentageSchema = number().min(0).max(1);
-
-const updateFreqSchema = number()
-  .integer()
-  .min(0)
-  .max(UPDATE_FREQ_TIMES.length - 1);
-
-const wifiNetworkSchema: ObjectSchema<WifiNetwork> = object({
-  ssid: string().max(32).required(),
-  password: string().max(63),
-});
-
 const payloadSchema: ObjectSchema<DeviceSettingsPayload> = object({
   id: string().required(),
   // General
   displayName: string(),
-  hologramId: string(),
-  captureImage: boolean(),
   deviceDisabled: boolean(),
-  updateFreq: updateFreqSchema,
-  lowBattUpdateFreq: updateFreqSchema,
-  speakerVol: percentageSchema,
-  lightLevel: percentageSchema,
-  // Conversation History
+  // Assistant
   messagesToKeep: number().integer().min(0).max(50),
+  llmName: string().oneOf(Object.keys(LANGUAGE_MODELS) as LanguageModel[]),
+  visionLlmName: string().oneOf(Object.keys(LANGUAGE_MODELS) as LanguageModel[]),
   llmPrompt: string(),
   visionLlmPrompt: string(),
   clearMessages: boolean().isTrue(), // Can only clear, can't cancel
-  userSmsNumber: string(),
   // Translate
-  myLanguage: string(),
-  translateLanguage: string(),
-  // WiFi
-  enableWifi: boolean(),
-  enableBluetooth: boolean(),
-  enableGnss: boolean(),
-  wifiNetworks: array().of(wifiNetworkSchema).max(10),
-  // Firmware
-  doFirmwareUpdate: boolean(),
-  firmwareUpdateFile: string(),
-  uploadedFirmwareFiles: array().of(string().required()),
+  myLanguage: string().oneOf(Object.keys(TRANSLATE_LANGUAGES) as TranslateLanguage[]),
+  translateLanguage: string().oneOf(Object.keys(TRANSLATE_LANGUAGES) as TranslateLanguage[]),
+  translateVolumeBoost: number().min(1).max(2),
+  // Voice
+  voiceName: string().oneOf(Object.keys(ASSISTANT_VOICES) as AssistantVoice[]),
+  voiceSpeed: number().min(0.5).max(1.5)
 });
 
 export const handleDevSettingsUpdate = withAuthAndValidation(
