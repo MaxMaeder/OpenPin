@@ -40,12 +40,12 @@ class BackendManager(
     private val identityManager: IdentityManager,
     private val config: BackendConfig = BackendConfig(),
 ) {
-    suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): File? {
+    suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
         val requestMetadata = RequestMetadata(
             audioSize = audioFile.length(),
             audioFormat = "ogg",
             imageSize = imageFile?.length() ?: 0,
-            deviceId = identityManager.identifier,
+            deviceId = "a3cd78aa-463c-4d1e-ba37-2261910f0476", //identityManager.identifier,
             audioBitrate = "64k",
             battery = batteryManager.status.percentage,
             latitude = locationManager.latestLocation?.location?.lat,
@@ -102,19 +102,17 @@ class BackendManager(
         Log.i("BackendHandler", "Received response metadata: $responseMetadata")
 
         // Strip 512-byte header and return the mp3 portion
-        val mp3ResponseFile = processHandler.createTempFile("response.mp3")
-        responseFile.inputStream().use { input ->
-            mp3ResponseFile.outputStream().use { output ->
-                input.skip(512)
-                input.copyTo(output)
-            }
+        val audioBytes = responseFile.inputStream().use { input ->
+            input.skip(512)
+            input.readBytes()
         }
 
+        // Clean up temporary files:
         requestFile.delete()
         responseFile.delete()
         processHandler.release(requestProcess)
 
-        return mp3ResponseFile
+        return audioBytes
     }
 
 }

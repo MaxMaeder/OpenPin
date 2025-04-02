@@ -5,14 +5,27 @@ import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 
 /**
+ * Configuration for post-processing an image.
+ *
+ * @property newWidth The target width.
+ * @property newHeight The target height.
+ */
+data class PostProcessConfig(
+    val newWidth: Int,
+    val newHeight: Int
+)
+
+/**
  * Configuration for image capture.
  *
  * @property captureMode The mode used to prioritize either latency or quality when capturing an image.
  * @property jpegQuality Optional JPEG quality setting (1-100).
+ * @property postProcessConfig Optional post-processing settings.
  */
 data class ImageCaptureConfig(
     val captureMode: Int = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY,
     val jpegQuality: Int? = null,
+    val postProcessConfig: PostProcessConfig? = null
 )
 
 /**

@@ -1,4 +1,4 @@
-package org.openpin.appframework.audioplayer
+package org.openpin.appframework.media
 
 enum class AudioType {
     SPEECH,

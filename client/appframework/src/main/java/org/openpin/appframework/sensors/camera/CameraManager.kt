@@ -6,6 +6,7 @@ import android.graphics.SurfaceTexture
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.Surface
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraSelector
@@ -66,13 +67,6 @@ class CameraManager
 
     // --- Public Methods ---
 
-    /**
-     * Captures a still image.
-     *
-     * @param outputFile Where the image will be saved.
-     * @param captureConfig Optional config override; if null, uses cameraConfig.defaultImageCaptureConfig.
-     * @return A [CaptureResult] with the [Uri] on success or an exception on failure.
-     */
     suspend fun captureImage(
         outputFile: File,
         captureConfig: ImageCaptureConfig? = null
@@ -88,6 +82,25 @@ class CameraManager
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                         val uri = output.savedUri ?: Uri.fromFile(outputFile)
+
+                        config.postProcessConfig?.let { ppConfig ->
+                            Log.e("Camera", "DID CAPTURE!")
+                            try {
+                                val quality = config.jpegQuality ?: 90
+                                PostProcessor.resizeJpegFile(
+                                    inputFile = outputFile,
+                                    outputFile = outputFile, // Overwrite the same file.
+                                    newWidth = ppConfig.newWidth,
+                                    newHeight = ppConfig.newHeight,
+                                    quality = quality
+                                )
+                            } catch (e: Exception) {
+                                if (cont.isActive) cont.resume(CaptureResult.Failure(e))
+                                provider.unbindAll()
+                                return
+                            }
+                        }
+
                         if (cont.isActive) cont.resume(CaptureResult.Success(uri))
                         provider.unbindAll()
                     }
@@ -266,6 +279,7 @@ class CameraManager
 
     private fun buildImageCapture(config: ImageCaptureConfig): ImageCapture {
         val builder = ImageCapture.Builder()
+            .setTargetRotation(Surface.ROTATION_270)
             .setCaptureMode(config.captureMode)
         config.jpegQuality?.let { builder.setJpegQuality(it) }
         return builder.build()

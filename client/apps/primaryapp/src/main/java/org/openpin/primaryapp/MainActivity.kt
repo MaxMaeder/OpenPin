@@ -18,7 +18,7 @@ class MainActivity : PinActivity() {
     override val appModules = listOf(
         module {
             single { BackendManager(get(), get(), get(), get()) }
-            viewModel { GestureViewModel(get(), get(), get(), get(), get(), get()) }
+            viewModel { GestureViewModel(get(), get(), get(), get(), get(), get(), get()) }
         }
     )
 

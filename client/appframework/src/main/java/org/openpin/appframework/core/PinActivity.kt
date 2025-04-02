@@ -1,5 +1,6 @@
 package org.openpin.appframework.core
 
+import SoundPlayer
 import android.Manifest
 import android.os.Bundle
 import android.util.Log
@@ -20,10 +21,8 @@ import org.koin.core.context.stopKoin
 import org.koin.core.module.Module
 import org.koin.core.context.GlobalContext.get as getKoin
 import org.koin.dsl.module
-import org.openpin.appframework.audioplayer.AudioPlayer
-import org.openpin.appframework.audioplayer.AudioPlayerConfig
+import org.openpin.appframework.media.soundplayer.SoundPlayerConfig
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
-import org.openpin.appframework.daemonbridge.gesture.GestureType
 import org.openpin.appframework.daemonbridge.manager.DaemonBridgeManager
 import org.openpin.appframework.daemonbridge.manager.DaemonIntentType
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
@@ -31,6 +30,10 @@ import org.openpin.appframework.devicestate.battery.BatteryManager
 import org.openpin.appframework.devicestate.identity.IdentityManager
 import org.openpin.appframework.devicestate.location.LocationConfig
 import org.openpin.appframework.devicestate.location.LocationManager
+import org.openpin.appframework.media.AudioType
+import org.openpin.appframework.media.speechplayer.SpeechPlayer
+import org.openpin.appframework.media.volume.VolumeConfig
+import org.openpin.appframework.media.volume.VolumeManager
 import org.openpin.appframework.sensors.camera.CameraConfig
 import org.openpin.appframework.sensors.camera.CameraManager
 import org.openpin.appframework.sensors.microphone.MicrophoneConfig
@@ -43,7 +46,8 @@ import org.openpin.appframework.ui.locals.LocalUIConfig
 abstract class PinActivity : ComponentActivity() {
 
     open val uiConfig: UIConfig = UIConfig()
-    open val audioPlayerConfig: AudioPlayerConfig = AudioPlayerConfig()
+    open val volumeConfig: VolumeConfig = VolumeConfig()
+    open val soundPlayerConfig: SoundPlayerConfig = SoundPlayerConfig()
     open val microphoneConfig: MicrophoneConfig = MicrophoneConfig()
     open val cameraConfig: CameraConfig = CameraConfig()
     open val locationConfig: LocationConfig = LocationConfig()
@@ -86,19 +90,6 @@ abstract class PinActivity : ComponentActivity() {
     }
 
     protected open fun onReady() {
-        if (audioPlayerConfig.enableVolumeGestures) {
-            val gestureHandler = getKoin().get<GestureHandler>()
-            val player = getKoin().get<AudioPlayer>()
-
-            // Touchpad is vertically flipped, this works for now
-            gestureHandler.subscribeGesture(1, GestureType.DRAG_UP) {
-                player.changeMasterVolume(-audioPlayerConfig.volumeGestureStepSize)
-            }
-            gestureHandler.subscribeGesture(1, GestureType.DRAG_DOWN) {
-                player.changeMasterVolume(audioPlayerConfig.volumeGestureStepSize)
-            }
-        }
-
         if (locationConfig.scanInterval != null) {
             val locationManager = getKoin().get<LocationManager>()
             locationManager.start()
@@ -124,9 +115,6 @@ abstract class PinActivity : ComponentActivity() {
 
             single { IdentityManager(get()) }
 
-            single { audioPlayerConfig }
-            single { AudioPlayer(get(), get()) }
-
             single { GestureHandler() }
             single { ProcessHandler() }
 
@@ -138,6 +126,25 @@ abstract class PinActivity : ComponentActivity() {
                 DaemonBridgeManager(
                     context = get(),
                     receiverMap = receiverMap,
+                )
+            }
+
+            single { soundPlayerConfig }
+            single { SoundPlayer(get(), get()) }
+
+            single { SpeechPlayer(get()) }
+
+            single { volumeConfig }
+            single(createdAtStart = true) {
+                val sourceMap = mapOf(
+                    AudioType.SOUND to get<SoundPlayer>(),
+                    AudioType.SPEECH to get<SpeechPlayer>()
+                )
+                VolumeManager(
+                    context = get(),
+                    config = get(),
+                    gestureHandler = get(),
+                    audioSources = sourceMap
                 )
             }
 

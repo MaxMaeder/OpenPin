@@ -1,6 +1,7 @@
 package org.openpin.appframework.ui.hosts
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import org.openpin.appframework.ui.controllers.MagneticTargetsController
 import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.appframework.ui.locals.LocalContentColor
+import org.openpin.appframework.ui.locals.LocalContextMenuState
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
 import org.openpin.appframework.ui.locals.LocalMagneticTargetsController
 import org.openpin.appframework.ui.locals.LocalPointerPositionState
@@ -44,12 +46,15 @@ fun AppContainer(navigationController: NavigationController) {
 
     val focusedTargetId by remember { derivedStateOf { magneticTargetsController.focusedTargetId(pointerPositionState.value) } }
 
+    val contextMenuState = remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+
     CompositionLocalProvider(
         LocalPointerPositionState provides pointerPositionState,
         LocalPointerPressed provides pointerPressed,
         LocalFocusedTargetId provides focusedTargetId,
         LocalMagneticTargetsController provides magneticTargetsController,
-        LocalContentColor provides LocalUIConfig.current.contentColor
+        LocalContentColor provides LocalUIConfig.current.contentColor,
+        LocalContextMenuState provides contextMenuState
     ) {
         Box(
             modifier = Modifier
@@ -57,17 +62,33 @@ fun AppContainer(navigationController: NavigationController) {
                 .focusRequester(focusRequester)
                 .focusable()
                 .onPreviewKeyEvent { keyEvent ->
-                    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.H) {
-                        navigationController.pop()
-                        true
-                    } else false
+                    Log.e("KEY", "Type: ${keyEvent.type}, Key: ${keyEvent.key}")
+                    when {
+                        keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.H -> {
+                            navigationController.pop()
+                            true
+                        }
+                        keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Z -> {
+                            // Check the shared state for a context menu.
+                            contextMenuState.value?.let { menu ->
+                                navigationController.push { menu() }
+                                true
+                            } ?: false
+                        }
+                        else -> false
+                    }
                 }
                 .pointerInput(Unit) {
                     awaitPointerEventScope {
                         while (true) {
                             val event = awaitPointerEvent()
                             event.changes.firstOrNull()?.let { change ->
+                                //val newPos = change.position
+
                                 val newPos = change.position
+                                val pressure = change.pressure
+
+                                Log.e("POINTER", "Position: $newPos, Pressure: $pressure")
 //                                if (kotlin.math.abs(newPos.x - pointerPositionState.value.x) > 1f ||
 //                                    kotlin.math.abs(newPos.y - pointerPositionState.value.y) > 1f
 //                                ) {

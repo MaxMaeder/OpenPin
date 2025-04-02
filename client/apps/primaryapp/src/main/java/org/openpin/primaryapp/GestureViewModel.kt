@@ -1,18 +1,22 @@
 package org.openpin.primaryapp
 
+import SoundPlayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.openpin.appframework.audioplayer.AudioPlayer
-import org.openpin.appframework.audioplayer.AudioType
+import org.openpin.appframework.media.speechplayer.SpeechPlayer
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
 import org.openpin.appframework.daemonbridge.gesture.GestureSubscription
 import org.openpin.appframework.daemonbridge.gesture.GestureType
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
+import org.openpin.appframework.media.soundplayer.SystemSound
 import org.openpin.appframework.sensors.camera.CameraManager
+import org.openpin.appframework.sensors.camera.ImageCaptureConfig
+import org.openpin.appframework.sensors.camera.PostProcessConfig
 import org.openpin.appframework.sensors.microphone.MicrophoneManager
 import org.openpin.appframework.sensors.microphone.RecordSession
-import org.openpin.appframework.utils.withLoadingSounds
+import org.openpin.appframework.media.soundplayer.withLoadingSounds
 import org.openpin.primaryapp.backend.BackendManager
 import java.io.File
 
@@ -21,9 +25,18 @@ class GestureViewModel(
     private val gestureHandler: GestureHandler,
     private val cameraManager: CameraManager,
     private val microphoneManager: MicrophoneManager,
-    private val audioPlayer: AudioPlayer,
+    private val speechPlayer: SpeechPlayer,
+    private val soundPlayer: SoundPlayer,
     private val backendManager: BackendManager
 ) : ViewModel() {
+    private val visionCameraConfig = ImageCaptureConfig(
+        jpegQuality = 20,
+        postProcessConfig = PostProcessConfig(
+            newWidth = 960,
+            newHeight = 720,
+        )
+    )
+
     private val subscriptions = mutableListOf<GestureSubscription>()
 
     private var isTranslating = false;
@@ -59,16 +72,16 @@ class GestureViewModel(
         imgFile?.delete()
 
         imgFile = processHandler.createTempFile("jpg")
-        cameraManager.captureImage(imgFile!!)
+        cameraManager.captureImage(imgFile!!, visionCameraConfig)
 
-        audioPlayer.play(R.raw.shutter, AudioType.SOUND)
+        soundPlayer.play(SystemSound.SHUTTER.key)
     }
 
     private fun handleLongPressDown(fingers: Int) {
         discardSpeech()
         isTranslating = fingers == 2
 
-        audioPlayer.play(R.raw.record_start, AudioType.SOUND)
+        soundPlayer.play(SystemSound.RECORD_START.key)
 
         val speechFile = processHandler.createTempFile("ogg")
         speechCapture = microphoneManager.recordAudio(speechFile)
@@ -76,7 +89,7 @@ class GestureViewModel(
 
     private suspend fun handleLongPressUp() {
         speechCapture?.stop()
-        audioPlayer.play(R.raw.record_end, AudioType.SOUND)
+        soundPlayer.play(SystemSound.RECORD_END.key)
 
         if (isTranslating) {
             discardImg()
@@ -85,10 +98,10 @@ class GestureViewModel(
         val endpoint = if (isTranslating) "translate" else "handle"
 
         speechCapture?.let { capture ->
-            val res = withLoadingSounds(audioPlayer) {
+            val res = withLoadingSounds(soundPlayer) {
                 backendManager.sendVoiceRequest(endpoint, capture.result, imgFile)
             }
-            res?.let { audioPlayer.play(it, AudioType.SPEECH) }
+            res?.let { speechPlayer.play(it) }
 
             discardImg()
             discardSpeech()

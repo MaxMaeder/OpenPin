@@ -1,5 +1,6 @@
 package org.openpin.appframework.ui.components
 
+import SoundPlayer
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
@@ -19,8 +20,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import org.koin.compose.koinInject
-import org.openpin.appframework.audioplayer.AudioPlayer
-import org.openpin.appframework.audioplayer.AudioType
+import org.openpin.appframework.media.AudioType
 import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId
@@ -42,7 +42,7 @@ fun MagneticTarget(
     onClick: () -> Unit = {},
     content: @Composable (isFocused: Boolean, isActive: Boolean, magnetOffset: Offset, scaleFactor: Float) -> Unit
 ) {
-    val audioPlayer = koinInject<AudioPlayer>()
+    val soundPlayer = koinInject<SoundPlayer>()
 
     val audioFeedbackConfig = LocalUIConfig.current.audioFeedbackConfig
 
@@ -74,7 +74,7 @@ fun MagneticTarget(
             val currentlyActive = isFocused && pointerPressed
             if (!pointerPressed && wasActive) {
                 if (audioFeedbackConfig.onClickSound != null) {
-                    audioPlayer.play(audioFeedbackConfig.onClickSound, AudioType.SOUND)
+                    soundPlayer.play(audioFeedbackConfig.onClickSound)
                 }
 
                 onClick()
@@ -85,7 +85,7 @@ fun MagneticTarget(
         LaunchedEffect(isFocused) {
             if (isFocused) {
                 if (audioFeedbackConfig.onFocusSound != null) {
-                    audioPlayer.play(audioFeedbackConfig.onFocusSound, AudioType.SOUND)
+                    soundPlayer.play(audioFeedbackConfig.onFocusSound)
                 }
 
                 onFocus()
