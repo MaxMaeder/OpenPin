@@ -40,6 +40,29 @@ class BackendManager(
     private val identityManager: IdentityManager,
     private val config: BackendConfig = BackendConfig(),
 ) {
+    suspend fun sendUploadRequest(captureFile: File) {
+        val payload = RequestProcess.Payload.Multipart(
+            mapOf(
+                "deviceId" to "a3cd78aa-463c-4d1e-ba37-2261910f0476",
+                "file" to captureFile
+            )
+        )
+
+        val req = RequestProcess(
+            url = "${config.baseUrl}/api/dev/upload-capture",
+            method = "POST",
+            payload = payload,
+            payloadType = RequestProcess.PayloadType.MULTIPART
+        )
+        val reqProcess = processHandler.execute(req)
+
+        if (reqProcess.error.isNotBlank()) {
+            Log.e("BackendHandler", "Error sending request: ${reqProcess.error} ${reqProcess.output}")
+        }
+
+        processHandler.release(req)
+    }
+
     suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
         val requestMetadata = RequestMetadata(
             audioSize = audioFile.length(),

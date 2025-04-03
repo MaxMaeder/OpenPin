@@ -1,14 +1,13 @@
 package org.openpin.primaryapp
 
+import GestureInterpreter
 import SoundPlayer
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.openpin.appframework.media.speechplayer.SpeechPlayer
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
-import org.openpin.appframework.daemonbridge.gesture.GestureSubscription
-import org.openpin.appframework.daemonbridge.gesture.GestureType
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.media.soundplayer.SystemSound
 import org.openpin.appframework.sensors.camera.CameraManager
@@ -37,35 +36,50 @@ class GestureViewModel(
         )
     )
 
-    private val subscriptions = mutableListOf<GestureSubscription>()
-
     private var isTranslating = false;
 
     private var imgFile: File? = null
     private var speechCapture: RecordSession? = null
 
+    private val gestureInterpreter = GestureInterpreter(
+        gestureHandler = gestureHandler,
+        onTakePhoto = {
+            Log.e("GestureInterpreter", "onTakePhoto")
+            viewModelScope.launch {
+                handleCapturePhoto()
+            }
+        },
+        onTakeVideoStart = {
+            Log.e("GestureInterpreter", "onTakeVideoStart")
+        },
+        onAssistantStartAction = { action ->
+            Log.e("GestureInterpreter", "onStartAssistantVoiceInput: $action")
+        },
+        onAssistantStopAction = {
+            Log.e("GestureInterpreter", "onStopAssistantVoiceInput:")
+        },
+        onTranslateStartAction = {
+            Log.e("GestureInterpreter", "onStartTranslateVoiceInput")
+        },
+        onTranslateStopAction = {
+            Log.e("GestureInterpreter", "onStopTranslateVoiceInput")
+        },
+        onCancelAction = {
+            Log.e("GestureInterpreter", "onCancelAction")
+        },
+        scope = viewModelScope
+    )
+
     fun addListeners() {
-        subscriptions += gestureHandler.subscribeGesture(1, GestureType.TAP) {
-            viewModelScope.launch {
-                handleTap()
-            }
-        }
-        subscriptions += gestureHandler.subscribeGesture(1, GestureType.LONG_PRESS_DOWN) {
-            handleLongPressDown(1)
-        }
-        subscriptions += gestureHandler.subscribeGesture(2, GestureType.LONG_PRESS_DOWN) {
-            handleLongPressDown(2)
-        }
-        subscriptions += gestureHandler.subscribeGesture(1, GestureType.LONG_PRESS_UP) {
-            viewModelScope.launch {
-                handleLongPressUp()
-            }
-        }
-        subscriptions += gestureHandler.subscribeGesture(2, GestureType.LONG_PRESS_UP) {
-            viewModelScope.launch {
-                handleLongPressUp()
-            }
-        }
+        gestureInterpreter.subscribeGestures()
+    }
+
+    private suspend fun handleCapturePhoto() {
+        val imgCapture = processHandler.createTempFile("jpeg")
+        cameraManager.captureImage(imgCapture)
+        soundPlayer.play(SystemSound.SHUTTER.key)
+
+        backendManager.sendUploadRequest(imgCapture)
     }
 
     private suspend fun handleTap() {
@@ -126,8 +140,7 @@ class GestureViewModel(
     override fun onCleared() {
         super.onCleared()
 
-        subscriptions.forEach { gestureHandler.unsubscribe(it) }
-        subscriptions.clear()
+        gestureInterpreter.clear()
 
         discardImg()
         discardSpeech()

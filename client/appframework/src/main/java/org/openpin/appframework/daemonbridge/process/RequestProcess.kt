@@ -20,14 +20,26 @@ class RequestProcess(
 
         data class FromString(val content: String) : Payload() {
             override fun toCurlArg(): String {
-                // Escape double quotes and wrap the whole thing in single quotes
-                return "'${content.replace("'", "'\"'\"'")}'"
+                return escape(content)
             }
         }
 
         data class FromFile(val file: File) : Payload() {
             override fun toCurlArg(): String {
                 return "@${file.absolutePath}"
+            }
+        }
+
+        data class Multipart(val fields: Map<String, Any>) : Payload() {
+            override fun toCurlArg(): String {
+                return fields.entries.joinToString(" ") { (key, value) ->
+                    val arg = when (value) {
+                        is File -> "$key=@${value.absolutePath}"
+                        is String -> "$key=${value}"
+                        else -> throw IllegalArgumentException("Unsupported multipart field type: ${value::class}")
+                    }
+                    "--form ${escape(arg)}"
+                }
             }
         }
 
@@ -75,7 +87,7 @@ class RequestProcess(
                     PayloadType.FORM     -> "--data"
                     PayloadType.RAW      -> "--data-raw"
                     PayloadType.BINARY   -> "--data-binary"
-                    PayloadType.MULTIPART-> "--form"
+                    PayloadType.MULTIPART-> "" // --form inserted before each field already
                     else                 -> null
                 }
 
@@ -103,6 +115,10 @@ class RequestProcess(
             }
 
             return cmd.joinToString(" ")
+        }
+
+        fun escape(value: String): String {
+            return "'${value.replace("'", "'\"'\"'")}'"
         }
 
         private fun encode(value: String): String {
