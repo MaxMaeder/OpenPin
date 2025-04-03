@@ -10,8 +10,8 @@ class GestureInterpreter(
     private val gestureHandler: GestureHandler,
     private val config: InterpreterConfig = InterpreterConfig(),
     // One-shot actions:
-    private val onTakePhoto: () -> Unit,
-    private val onTakeVideoStart: () -> Unit,
+    private val onCapturePhoto: () -> Unit,
+    private val onCaptureVideoStart: () -> Unit,
     // Transactional actions:
     private val onTranslateStartAction: () -> Unit,
     private val onTranslateStopAction: () -> Unit,
@@ -73,7 +73,7 @@ class GestureInterpreter(
             val now = System.currentTimeMillis()
             if (lastTapTime != null && now - lastTapTime!! <= config.doubleTapMaxInterval) {
                 if (currentGestureTwoFinger) {
-                    onTakePhoto()
+                    onCapturePhoto()
                 }
                 lastTapTime = null
                 currentGestureTwoFinger = false
@@ -105,7 +105,7 @@ class GestureInterpreter(
                 // Tap+hold gesture.
                 if (currentGestureTwoFinger) {
                     // Two-finger tap+hold → Video action (one-shot).
-                    onTakeVideoStart()
+                    onCaptureVideoStart()
                     activeAction = null
                 } else {
                     // One-finger tap+hold → Assistant with vision.
@@ -128,7 +128,7 @@ class GestureInterpreter(
                 }
             }
             lastTapTime = null
-            // Do not reset currentGestureTwoFinger here; wait for release.
+            currentGestureTwoFinger = false
         }
     }
 
@@ -149,7 +149,6 @@ class GestureInterpreter(
             }
         }
         activeAction = null
-        currentGestureTwoFinger = false
     }
 
     private fun startActionTimeoutJob() {

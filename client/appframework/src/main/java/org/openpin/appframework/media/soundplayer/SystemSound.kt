@@ -10,9 +10,15 @@ enum class SystemSound(val key: String, val resId: Int) {
     LOADING3("loading3", R.raw.loading3),
     LOADING4("loading4", R.raw.loading4),
     LOADING5("loading5", R.raw.loading5),
-    RECORD_END("record_end", R.raw.record_end),
-    RECORD_START("record_start", R.raw.record_start),
+    FAILED("failed", R.raw.failed),
+    ASSISTANT_START("assistant_start", R.raw.assistant_start),
+    TRANSLATE_START("translate_start", R.raw.translate_start),
+    VISION("vision", R.raw.vision),
+    INPUT_END("input_end", R.raw.input_end),
     SHUTTER("shutter", R.raw.shutter),
+    VIDEO_START("video_start", R.raw.video_start),
+    VIDEO_END("video_end", R.raw.video_end),
+    CAPTURE_FAILED("capture_failed", R.raw.capture_failed),
     VOLUME_CHANGE("volume_change", R.raw.volume_change);
 
     companion object {
