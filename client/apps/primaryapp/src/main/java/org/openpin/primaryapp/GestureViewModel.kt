@@ -40,9 +40,12 @@ class GestureViewModel(
             newHeight = 720,
         )
     )
+    private val minVoiceInputLen = 1000
 
     private var speechCapture: RecordSession? = null
     private var videoCaptureSession: CaptureSession<Uri>? = null
+
+    private var voiceInputStart: Long = 0
 
     private enum class State {
         IDLE,
@@ -167,6 +170,8 @@ class GestureViewModel(
         gestureInterpreter.setMode(InterpreterMode.DISABLED)
         state = State.VOICE_INPUT
 
+        voiceInputStart = System.currentTimeMillis()
+
         if (isTranslating) {
             soundPlayer.play(SystemSound.TRANSLATE_START.key)
         } else {
@@ -180,6 +185,13 @@ class GestureViewModel(
     private suspend fun handleEndVoiceInput(isTranslating: Boolean, useVision: Boolean) {
         speechCapture?.stop()
         soundPlayer.play(SystemSound.INPUT_END.key)
+
+        if (System.currentTimeMillis() - voiceInputStart < minVoiceInputLen) {
+            discardSpeech()
+            gestureInterpreter.setMode(InterpreterMode.NORMAL)
+            state = State.IDLE
+            return
+        }
 
         state = State.VOICE_THINKING
 

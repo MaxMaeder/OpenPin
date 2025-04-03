@@ -23,6 +23,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
+import org.openpin.appframework.ui.controllers.HandDepthController
 import org.openpin.appframework.ui.controllers.MagneticTargetsController
 import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.appframework.ui.locals.LocalContentColor
@@ -37,6 +38,9 @@ import org.openpin.appframework.ui.locals.LocalUIConfig
 @Composable
 fun AppContainer(navigationController: NavigationController) {
     val magneticTargetsController = remember { MagneticTargetsController() }
+
+    val handDepthConfig = LocalUIConfig.current.handDepthConfig
+    val handDepthController = remember { HandDepthController(handDepthConfig) }
 
     val pointerPositionState = remember { mutableStateOf(Offset.Zero) }
     var pointerPressed by remember { mutableStateOf(false) }
@@ -69,7 +73,7 @@ fun AppContainer(navigationController: NavigationController) {
                             true
                         }
                         keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.Z -> {
-                            // Check the shared state for a context menu.
+                            // Trigger context menu manually (for testing)
                             contextMenuState.value?.let { menu ->
                                 navigationController.push { menu() }
                                 true
@@ -83,18 +87,20 @@ fun AppContainer(navigationController: NavigationController) {
                         while (true) {
                             val event = awaitPointerEvent()
                             event.changes.firstOrNull()?.let { change ->
-                                //val newPos = change.position
-
                                 val newPos = change.position
-                                val pressure = change.pressure
+                                // Here, the sensor-reported pressure is interpreted as hand depth.
+                                val handDepth = change.pressure
 
-                                Log.e("POINTER", "Position: $newPos, Pressure: $pressure")
-//                                if (kotlin.math.abs(newPos.x - pointerPositionState.value.x) > 1f ||
-//                                    kotlin.math.abs(newPos.y - pointerPositionState.value.y) > 1f
-//                                ) {
-                                    pointerPositionState.value = newPos
-//                                }
+                                pointerPositionState.value = newPos
                                 pointerPressed = change.pressed
+
+                                // Check for a significant change in hand depth.
+                                if (handDepthController.update(handDepth)) {
+                                    // If a depth spike is detected, open the context menu.
+                                    contextMenuState.value?.let { menu ->
+                                        navigationController.push { menu() }
+                                    }
+                                }
                             }
                         }
                     }

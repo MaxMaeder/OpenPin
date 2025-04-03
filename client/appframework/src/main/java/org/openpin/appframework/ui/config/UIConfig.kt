@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 
 data class UIConfig(
     val navigationHost: NavigationHostConfig = NavigationHostConfig(),
+    val handDepthConfig: HandDepthConfig = HandDepthConfig(),
 
     val textButton: TextButtonConfig = TextButtonConfig(),
     val iconButton: IconButtonConfig = IconButtonConfig(),
