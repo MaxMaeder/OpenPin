@@ -84,7 +84,6 @@ class CameraManager
                         val uri = output.savedUri ?: Uri.fromFile(outputFile)
 
                         config.postProcessConfig?.let { ppConfig ->
-                            Log.e("Camera", "DID CAPTURE!")
                             try {
                                 val quality = config.jpegQuality ?: 90
                                 PostProcessor.resizeJpegFile(

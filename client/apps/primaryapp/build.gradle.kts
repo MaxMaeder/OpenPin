@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val secrets = loadSecrets("MAPS_API_KEY", "BACKEND_BASE_URL")
+// val secrets = loadSecrets("MAPS_API_KEY", "BACKEND_BASE_URL")
 
 android {
     namespace = "org.openpin.primaryapp"
@@ -23,9 +23,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        secrets.forEach { (key, value) ->
-            buildConfigField("String", key, "\"$value\"")
-        }
+//        secrets.forEach { (key, value) ->
+//            buildConfigField("String", key, "\"$value\"")
+//        }
     }
 
     buildTypes {

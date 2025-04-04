@@ -10,7 +10,7 @@ kotlin {
     androidNativeArm64("native") {  // Target ARM64 Android devices
         binaries {
             executable {
-                entryPoint = "org.OpenPin.Daemon.main"
+                entryPoint = "org.openpin.daemon.main"
             }
         }
     }

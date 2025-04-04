@@ -220,20 +220,25 @@ class GestureViewModel(
         val endpoint = if (isTranslating) "translate" else "handle"
 
         speechCapture?.let { capture ->
-            val res = withLoadingSounds(soundPlayer) {
-                backendManager.sendVoiceRequest(endpoint, capture.result, imgFile)
+            try {
+                val res = withLoadingSounds(soundPlayer) {
+                    backendManager.sendVoiceRequest(endpoint, capture.result, imgFile)
+                }
+
+                res?.let {
+                    gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
+                    state = State.VOICE_RESPONDING
+
+                    speechPlayer.play(it)
+                    speechPlayer.awaitPlaybackCompletion()
+                }
+            } catch (err: Exception) {
+                Log.e("Assistant", "Failed to complete voice request: ${err.message}")
+                soundPlayer.play(SystemSound.FAILED.key)
+            } finally {
+                imgFile?.delete()
+                discardSpeech()
             }
-
-            res?.let {
-                gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
-                state = State.VOICE_RESPONDING
-
-                speechPlayer.play(it)
-                speechPlayer.awaitPlaybackCompletion()
-            }
-
-            imgFile?.delete()
-            discardSpeech()
         }
 
         gestureInterpreter.setMode(InterpreterMode.NORMAL)

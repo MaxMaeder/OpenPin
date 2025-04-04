@@ -52,8 +52,10 @@ class LocationManager(
             val results = scan.parseScanResults()
             latestScanResults = results
 
-            if (config.mapsApiKey != null) {
-                resolveLocation(results)
+            if (config.locationResolver != null) {
+                latestLocation = config.locationResolver.invoke(results)
+            } else if (config.mapsApiKey != null) {
+                latestLocation = resolveLocationMaps(results)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Scan or location resolution failed: ${e.message}")
@@ -62,8 +64,8 @@ class LocationManager(
         }
     }
 
-    private suspend fun resolveLocation(entries: List<WiFiScanEntry>) {
-        if (entries.isEmpty()) return
+    private suspend fun resolveLocationMaps(entries: List<WiFiScanEntry>): ResolvedLocation? {
+        if (entries.isEmpty()) return null
 
         val payload = buildLocationPayload(entries)
         val request = RequestProcess(
@@ -82,11 +84,13 @@ class LocationManager(
                 throw RuntimeException("Geolocation API returned error: ${request.error}")
             }
 
-            latestLocation = Gson().fromJson(request.output, ResolvedLocation::class.java)
-            Log.i(TAG, "Location resolved: $latestLocation")
+            val location = Gson().fromJson(request.output, ResolvedLocation::class.java)
+            Log.i(TAG, "Location resolved: $location")
 
+            return location
         } catch (e: Exception) {
             Log.e(TAG, "Geolocation API request failed: ${e.message}")
+            return null
         } finally {
             processHandler.release(request)
         }

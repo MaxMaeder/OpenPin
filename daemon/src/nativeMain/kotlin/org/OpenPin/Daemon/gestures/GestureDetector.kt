@@ -1,13 +1,9 @@
-package org.OpenPin.Daemon
+package org.openpin.daemon.gestures
 
 import kotlin.math.abs
 import kotlinx.coroutines.*
-
-enum class GestureType {
-    TAP, LONG_PRESS_DOWN, LONG_PRESS_UP, DRAG_UP, DRAG_DOWN, DRAG_LEFT, DRAG_RIGHT
-}
-
-data class GestureEvent(val fingerCount: Int, val type: GestureType)
+import org.openpin.daemon.input.InputEvent
+import org.openpin.daemon.util.SystemUtils
 
 class GestureDetector(
     private val longPressThreshold: Long = 300L,

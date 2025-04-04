@@ -1,4 +1,4 @@
-package org.OpenPin.Daemon
+package org.openpin.daemon.input
 
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.refTo
@@ -6,9 +6,6 @@ import kotlinx.cinterop.toKString
 import platform.posix.fgets
 import platform.posix.pclose
 import platform.posix.popen
-
-// Data class representing an input event.
-data class InputEvent(val type: String, val code: String, val value: String)
 
 // Encapsulates the logic to parse log lines and read events.
 class InputEventReader(private val inputDevice: String = "/dev/input/event1") {

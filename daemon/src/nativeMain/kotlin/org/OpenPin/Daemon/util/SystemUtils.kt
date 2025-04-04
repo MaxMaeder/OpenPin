@@ -1,4 +1,4 @@
-package org.OpenPin.Daemon
+package org.openpin.daemon.util
 
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
@@ -10,7 +10,18 @@ object SystemUtils {
     @Suppress("DEPRECATION")
     fun getMillis(): Long = getTimeMillis()
 
-    // Utility function: read the entire text content of a file.
+    // Execute a command via popen() and return its exit code.
+    @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+    fun executeCommand(command: String): Int {
+        val fp = popen(command, "r") ?: throw Exception("popen() failed for command: $command")
+        val exitCode = pclose(fp)
+        if (exitCode == -1) {
+            throw Exception("Error while closing command: $command")
+        }
+        return (exitCode shr 8) and 0xFF
+    }
+
+    // Read the entire text content of a file.
     @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
     fun readFile(path: String): String {
         // Open the file for reading.

@@ -7,6 +7,8 @@ import org.openpin.appframework.daemonbridge.process.RequestProcess
 import org.openpin.appframework.devicestate.battery.BatteryManager
 import org.openpin.appframework.devicestate.identity.IdentityManager
 import org.openpin.appframework.devicestate.location.LocationManager
+import org.openpin.appframework.devicestate.location.ResolvedLocation
+import org.openpin.appframework.devicestate.location.WiFiScanEntry
 import org.openpin.primaryapp.configuration.ConfigKey
 import org.openpin.primaryapp.configuration.ConfigurationManager
 import java.io.File
@@ -45,6 +47,8 @@ class BackendManager(
     private val batteryManager: BatteryManager,
     private val configurationManager: ConfigurationManager,
 ) {
+    private val gson = Gson()
+
     fun isPaired(): Boolean {
         return configurationManager.exists(ConfigKey.BACKEND_BASE_URL) &&
                 configurationManager.exists(ConfigKey.DEVICE_ID)
@@ -71,17 +75,68 @@ class BackendManager(
         val reqProcess = processHandler.execute(req)
 
         if (reqProcess.error.isNotBlank()) {
-            Log.e("BackendHandler", "Error sending request: ${reqProcess.error} ${reqProcess.output}")
+            Log.e(
+                "BackendHandler",
+                "Error sending request: ${reqProcess.error} ${reqProcess.output}"
+            )
         }
 
         val pairDetails = try {
-            Gson().fromJson(reqProcess.output, PairDetails::class.java)
+            gson.fromJson(reqProcess.output, PairDetails::class.java)
         } catch (e: Exception) {
             Log.e("BackendHandler", "Failed to parse pair details", e)
             null
         }
 
         return pairDetails
+    }
+
+    suspend fun sendLocateRequest(entries: List<WiFiScanEntry>): ResolvedLocation {
+        val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
+        val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
+
+        val wifiAccessPoints = entries.map {
+            mapOf(
+                "macAddress" to it.bssid,
+                "signalStrength" to it.rssi,
+                "channel" to convertFreqToChannel(it.frequency)
+            )
+        }
+
+        val payload = gson.toJson(
+            mapOf(
+                "deviceId" to deviceId,
+                "wifiAccessPoints" to wifiAccessPoints
+            )
+        )
+
+        val req = RequestProcess(
+            url = "$baseUrl/api/dev/locate",
+            method = "POST",
+            headers = mapOf("Content-Type" to "application/json"),
+            payload = RequestProcess.Payload.FromString(payload),
+            payloadType = RequestProcess.PayloadType.RAW
+        )
+
+        try {
+            processHandler.execute(req)
+
+            if (req.error.isNotEmpty()) {
+                throw RuntimeException("Geolocation API returned error: ${req.error}")
+            }
+
+            return gson.fromJson(req.output, ResolvedLocation::class.java)
+        } finally {
+            processHandler.release(req)
+        }
+    }
+
+    private fun convertFreqToChannel(freq: Int): Int {
+        return when (freq) {
+            in 2412..2484 -> (freq - 2407) / 5
+            in 5170..5825 -> (freq - 5000) / 5
+            else -> -1
+        }
     }
 
     suspend fun sendUploadRequest(captureFile: File) {
@@ -104,13 +159,17 @@ class BackendManager(
         val reqProcess = processHandler.execute(req)
 
         if (reqProcess.error.isNotBlank()) {
-            Log.e("BackendHandler", "Error sending request: ${reqProcess.error} ${reqProcess.output}")
+            Log.e(
+                "BackendHandler",
+                "Error sending request: ${reqProcess.error} ${reqProcess.output}"
+            )
         }
 
         processHandler.release(req)
     }
 
     suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
+        // Todo: better error handling
         val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
         val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
 
@@ -125,7 +184,6 @@ class BackendManager(
             longitude = locationManager.latestLocation?.location?.lng
         )
 
-        val gson = Gson()
         val headerString = gson.toJson(requestMetadata) + "\u0000"
         val headerBytes = headerString.toByteArray(Charsets.UTF_8)
         val paddedHeader = ByteArray(512)
@@ -164,11 +222,15 @@ class BackendManager(
             input.read(metadataBuffer)
         }
 
-        val responseMetadataJson = metadataBuffer.toString(Charsets.UTF_8).trimEnd('\u0000', '\u0001', '\n')
+        val responseMetadataJson =
+            metadataBuffer.toString(Charsets.UTF_8).trimEnd('\u0000', '\u0001', '\n')
         val responseMetadata = try {
             gson.fromJson(responseMetadataJson, ResponseMetadata::class.java)
         } catch (e: Exception) {
             Log.e("BackendHandler", "Failed to parse response metadata: $responseMetadataJson", e)
+            requestFile.delete()
+            responseFile.delete()
+            processHandler.release(requestProcess)
             null
         }
 

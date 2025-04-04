@@ -1,17 +1,12 @@
-package org.OpenPin.Daemon
+package org.openpin.daemon.processes
 
 import kotlinx.coroutines.*
-import platform.posix.*
-
-// Callback interface for process completion.
-interface ProcessCallback {
-    fun onProcessFinished(uuid: String)
-}
+import org.openpin.daemon.util.SystemUtils
 
 // The ProcessManager monitors the active-processes file and manages process tasks.
 class ProcessManager(
     private val directory: String,
-    private val checkIntervalMillis: Long = 50,
+    private val updateInterval: Long = 50,
     private val callback: ProcessCallback
 ) {
     // Set of currently active UUIDs.
@@ -50,8 +45,8 @@ class ProcessManager(
                     println("Error while monitoring: ${e.message}")
                 }
                 val elapsed = SystemUtils.getMillis() - startTime
-                if (elapsed < checkIntervalMillis) {
-                    delay(checkIntervalMillis - elapsed)
+                if (elapsed < updateInterval) {
+                    delay(updateInterval - elapsed)
                 }
             }
         }
@@ -69,7 +64,7 @@ class ProcessManager(
             val fullCommand = "$command > \"$outFilePath\" 2> \"$errFilePath\""
             println("Executing command for uuid $uuid: $fullCommand")
             // Execute the command using popen() and wait for it to finish.
-            val exitCode = executeCommand(fullCommand)
+            val exitCode = SystemUtils.executeCommand(fullCommand)
             println("Command for uuid $uuid finished with exit code $exitCode")
         } catch (e: Exception) {
             println("Error processing uuid $uuid: ${e.message}")
@@ -95,17 +90,6 @@ class ProcessManager(
     private fun readActiveProcesses(): Set<String> {
         val content = SystemUtils.readFile(activeProcessesFile)
         return content.lines().filter { it.isNotBlank() }.toSet()
-    }
-
-    // Execute a command via popen() and return its exit code.
-    @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
-    private fun executeCommand(command: String): Int {
-        val fp = popen(command, "r") ?: throw Exception("popen() failed for command: $command")
-        val exitCode = pclose(fp)
-        if (exitCode == -1) {
-            throw Exception("Error while closing command: $command")
-        }
-        return (exitCode shr 8) and 0xFF
     }
 
     // Stop the monitoring loop and cancel all child coroutines.

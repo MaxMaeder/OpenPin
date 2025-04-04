@@ -1,4 +1,4 @@
-package org.OpenPin.Daemon
+package org.openpin.daemon.intents
 
 import platform.posix.popen
 import platform.posix.pclose
