@@ -96,7 +96,7 @@ class GestureViewModel(
             }
         },
         onCancelAction = {
-            Log.e("GestureInterpreter", "onCancelAction")
+            Log.w("GestureInterpreter", "onCancelAction")
             viewModelScope.launch {
                 handleCancel()
             }
@@ -109,80 +109,93 @@ class GestureViewModel(
     }
 
     private suspend fun handleCapturePhoto() {
-        gestureInterpreter.setMode(InterpreterMode.DISABLED)
-        state = State.PHOTO_CAPTURE
+        runIfPaired {
+            gestureInterpreter.setMode(InterpreterMode.DISABLED)
+            state = State.PHOTO_CAPTURE
 
-        // Capture image
-        val imgFile = processHandler.createTempFile("jpeg")
-        val result = cameraManager.captureImage(imgFile)
+            // Capture image
+            val imgFile = processHandler.createTempFile("jpeg")
+            val result = cameraManager.captureImage(imgFile)
 
-        when (result) {
-            is CaptureResult.Success -> {
-                soundPlayer.play(SystemSound.SHUTTER.key)
-                backendManager.sendUploadRequest(imgFile)
+            when (result) {
+                is CaptureResult.Success -> {
+                    soundPlayer.play(SystemSound.SHUTTER.key)
+                    backendManager.sendUploadRequest(imgFile)
+                }
+
+                else -> {
+                    soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                }
             }
-            else -> {
-                soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
-            }
+
+            imgFile.delete()
+
+            gestureInterpreter.setMode(InterpreterMode.NORMAL)
+            state = State.IDLE
         }
-
-        imgFile.delete()
-
-        gestureInterpreter.setMode(InterpreterMode.NORMAL)
-        state = State.IDLE
     }
 
     private suspend fun handleCaptureVideo() {
-        gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
-        state = State.VIDEO_CAPTURE
+        runIfPaired {
+            gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
+            state = State.VIDEO_CAPTURE
 
-        soundPlayer.play(SystemSound.VIDEO_START.key)
+            soundPlayer.play(SystemSound.VIDEO_START.key)
 
-        // Start video capture with a 15-second maximum.
-        val videoFile = processHandler.createTempFile("mp4")
-        videoCaptureSession = cameraManager.captureVideo(
-            outputFile = videoFile,
-            duration = 15000L,
-            captureConfig = null
-        )
+            // Start video capture with a 15-second maximum.
+            val videoFile = processHandler.createTempFile("mp4")
+            videoCaptureSession = cameraManager.captureVideo(
+                outputFile = videoFile,
+                duration = 15000L,
+                captureConfig = null
+            )
 
-        // Wait for the video capture to complete (even if stopped early).
-        val result = videoCaptureSession?.waitForResult()
+            // Wait for the video capture to complete (even if stopped early).
+            val result = videoCaptureSession?.waitForResult()
 
-        when (result) {
-            is CaptureResult.Success -> {
-                soundPlayer.play(SystemSound.VIDEO_END.key)
-                backendManager.sendUploadRequest(videoFile)
+            when (result) {
+                is CaptureResult.Success -> {
+                    soundPlayer.play(SystemSound.VIDEO_END.key)
+                    backendManager.sendUploadRequest(videoFile)
+                }
+
+                else -> {
+                    soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                }
             }
-            else -> {
-                soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
-            }
+
+            videoCaptureSession = null
+            videoFile.delete()
+
+            gestureInterpreter.setMode(InterpreterMode.NORMAL)
+            state = State.IDLE
         }
-
-        videoCaptureSession = null
-        videoFile.delete()
-
-        gestureInterpreter.setMode(InterpreterMode.NORMAL)
-        state = State.IDLE
     }
 
     private fun handleStartVoiceInput(isTranslating: Boolean) {
-        gestureInterpreter.setMode(InterpreterMode.DISABLED)
-        state = State.VOICE_INPUT
+        runIfPaired {
+            gestureInterpreter.setMode(InterpreterMode.DISABLED)
+            state = State.VOICE_INPUT
 
-        voiceInputStart = System.currentTimeMillis()
+            voiceInputStart = System.currentTimeMillis()
 
-        if (isTranslating) {
-            soundPlayer.play(SystemSound.TRANSLATE_START.key)
-        } else {
-            soundPlayer.play(SystemSound.ASSISTANT_START.key)
+            if (isTranslating) {
+                soundPlayer.play(SystemSound.TRANSLATE_START.key)
+            } else {
+                soundPlayer.play(SystemSound.ASSISTANT_START.key)
+            }
+
+            val speechFile = processHandler.createTempFile("ogg")
+            speechCapture = microphoneManager.recordAudio(speechFile)
         }
-
-        val speechFile = processHandler.createTempFile("ogg")
-        speechCapture = microphoneManager.recordAudio(speechFile)
     }
 
     private suspend fun handleEndVoiceInput(isTranslating: Boolean, useVision: Boolean) {
+        // We need to check this for edge cases
+        // Ex: if not paired voice input will not start, but this will still get called
+        if (state != State.VOICE_INPUT)
+            return
+
         speechCapture?.stop()
         soundPlayer.play(SystemSound.INPUT_END.key)
 
@@ -237,6 +250,14 @@ class GestureViewModel(
             }
 
             else -> Unit
+        }
+    }
+
+    private inline fun runIfPaired(action: () -> Unit) {
+        if (backendManager.isPaired()) {
+            action()
+        } else {
+            soundPlayer.play(SystemSound.FAILED.key)
         }
     }
 

@@ -45,13 +45,20 @@ class BackendManager(
     private val batteryManager: BatteryManager,
     private val configurationManager: ConfigurationManager,
 ) {
-    suspend fun pairDevice(pairUrl: String) {
+    fun isPaired(): Boolean {
+        return configurationManager.exists(ConfigKey.BACKEND_BASE_URL) &&
+                configurationManager.exists(ConfigKey.DEVICE_ID)
+    }
+
+    suspend fun pairDevice(pairUrl: String): Boolean {
         val pairDetails = sendPairRequest(pairUrl)
 
         pairDetails?.let {
             configurationManager.set(ConfigKey.BACKEND_BASE_URL, it.baseUrl)
             configurationManager.set(ConfigKey.DEVICE_ID, it.deviceId)
+            return true
         }
+        return false
     }
 
     suspend fun sendPairRequest(pairUrl: String): PairDetails? {

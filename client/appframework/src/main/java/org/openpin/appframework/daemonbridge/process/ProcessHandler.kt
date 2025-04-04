@@ -39,7 +39,7 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
         val entry = waiting.remove(pid)
 
         if (entry == null) {
-            Log.e("ProcessHandler", "Got 'process done' for completed process!!")
+            Log.w("ProcessHandler", "Got 'process done' for completed process!!")
             return
         }
 
@@ -93,10 +93,10 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
     }
 
     private fun updateActiveProcessesFile() {
-        Log.w("ProcessHandler", "Active Processes")
-        for (proc in activeProcesses) {
-            Log.w("ProcessHandler", proc)
-        }
+//        Log.w("ProcessHandler", "Active Processes")
+//        for (proc in activeProcesses) {
+//            Log.w("ProcessHandler", proc)
+//        }
         try {
             FileWriter(activeProcessesFile, false).use { writer ->
                 activeProcesses.forEach { writer.write("$it\n") }
