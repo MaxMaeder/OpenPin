@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import org.openpin.appframework.ui.locals.LocalUIConfig
 
@@ -20,6 +21,7 @@ fun CrossfadeText(
     modifier: Modifier = Modifier,
     size: TextUnit? = null,
     weight: FontWeight? = null,
+    align: TextAlign = TextAlign.Unspecified
 ) {
     val config = LocalUIConfig.current.fadingText
 
@@ -38,6 +40,7 @@ fun CrossfadeText(
         text = currentText,
         size = size,
         weight = weight,
+        align = align,
         modifier = modifier.graphicsLayer { alpha = alphaAnim.value }
     )
 }

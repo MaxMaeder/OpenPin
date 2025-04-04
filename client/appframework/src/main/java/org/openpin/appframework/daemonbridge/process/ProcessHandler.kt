@@ -36,7 +36,12 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
 
     override fun onReceive(extras: Bundle?) {
         val pid = extras?.getString("pid") ?: return
-        val entry = waiting.remove(pid) ?: return
+        val entry = waiting.remove(pid)
+
+        if (entry == null) {
+            Log.e("ProcessHandler", "Got 'process done' for completed process!!")
+            return
+        }
 
         val outFile = fileSystem.get("processes/$pid-out.txt")
         val errFile = fileSystem.get("processes/$pid-err.txt")
@@ -88,6 +93,10 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
     }
 
     private fun updateActiveProcessesFile() {
+        Log.w("ProcessHandler", "Active Processes")
+        for (proc in activeProcesses) {
+            Log.w("ProcessHandler", proc)
+        }
         try {
             FileWriter(activeProcessesFile, false).use { writer ->
                 activeProcesses.forEach { writer.write("$it\n") }

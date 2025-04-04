@@ -4,7 +4,7 @@ import android.content.Context
 import java.util.UUID
 
 class IdentityManager(private val context: Context) {
-    private val PREFS_NAME = "app_prefs"
+    private val PREFS_NAME = "app_framework_id"
     private val KEY_INSTALLATION_ID = "installation_id"
 
     private val _identifier: String

@@ -62,11 +62,20 @@ class SoundPlayer(
 
     /**
      * Plays the preloaded sound effect corresponding to the provided key using the current volume.
+     * Returns the stream ID so that the caller can later stop the sound if needed.
      */
-    fun play(key: String) {
+    fun play(key: String): Int {
         soundMap[key]?.let { soundId ->
-            soundPool.play(soundId, currentVolume, currentVolume, 1, 0, 1.0f)
+            return soundPool.play(soundId, currentVolume, currentVolume, 1, 0, 1.0f)
         }
+        return 0
+    }
+
+    /**
+     * Stops the sound corresponding to the provided stream ID.
+     */
+    fun stop(streamId: Int) {
+        soundPool.stop(streamId)
     }
 
     /**

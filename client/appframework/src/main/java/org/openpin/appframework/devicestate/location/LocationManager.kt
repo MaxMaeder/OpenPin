@@ -45,11 +45,11 @@ class LocationManager(
     }
 
     suspend fun runScan() {
-        val scanProcess = WiFiScanProcess()
+        val scan = WiFiScanProcess()
         try {
-            processHandler.execute(scanProcess)
+            processHandler.execute(scan)
 
-            val results = scanProcess.parseScanResults()
+            val results = scan.parseScanResults()
             latestScanResults = results
 
             if (config.mapsApiKey != null) {
@@ -57,6 +57,8 @@ class LocationManager(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Scan or location resolution failed: ${e.message}")
+        } finally {
+            processHandler.release(scan)
         }
     }
 

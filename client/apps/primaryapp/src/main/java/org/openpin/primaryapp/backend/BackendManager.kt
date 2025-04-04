@@ -7,6 +7,8 @@ import org.openpin.appframework.daemonbridge.process.RequestProcess
 import org.openpin.appframework.devicestate.battery.BatteryManager
 import org.openpin.appframework.devicestate.identity.IdentityManager
 import org.openpin.appframework.devicestate.location.LocationManager
+import org.openpin.primaryapp.configuration.ConfigKey
+import org.openpin.primaryapp.configuration.ConfigurationManager
 import java.io.File
 
 data class RequestMetadata(
@@ -32,24 +34,62 @@ data class ResponseMetadata(
     val lLevel: Float
 )
 
+data class PairDetails(
+    val baseUrl: String,
+    val deviceId: String
+)
 
 class BackendManager(
     private val processHandler: ProcessHandler,
     private val locationManager: LocationManager,
     private val batteryManager: BatteryManager,
-    private val identityManager: IdentityManager,
-    private val config: BackendConfig = BackendConfig(),
+    private val configurationManager: ConfigurationManager,
 ) {
+    suspend fun pairDevice(pairUrl: String) {
+        val pairDetails = sendPairRequest(pairUrl)
+
+        pairDetails?.let {
+            configurationManager.set(ConfigKey.BACKEND_BASE_URL, it.baseUrl)
+            configurationManager.set(ConfigKey.DEVICE_ID, it.deviceId)
+        }
+    }
+
+    suspend fun sendPairRequest(pairUrl: String): PairDetails? {
+        val req = RequestProcess(
+            url = pairUrl,
+            method = "POST",
+            payloadType = RequestProcess.PayloadType.NONE
+        )
+
+        val reqProcess = processHandler.execute(req)
+
+        if (reqProcess.error.isNotBlank()) {
+            Log.e("BackendHandler", "Error sending request: ${reqProcess.error} ${reqProcess.output}")
+        }
+
+        val pairDetails = try {
+            Gson().fromJson(reqProcess.output, PairDetails::class.java)
+        } catch (e: Exception) {
+            Log.e("BackendHandler", "Failed to parse pair details", e)
+            null
+        }
+
+        return pairDetails
+    }
+
     suspend fun sendUploadRequest(captureFile: File) {
+        val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
+        val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
+
         val payload = RequestProcess.Payload.Multipart(
             mapOf(
-                "deviceId" to "a3cd78aa-463c-4d1e-ba37-2261910f0476",
+                "deviceId" to deviceId,
                 "file" to captureFile
             )
         )
 
         val req = RequestProcess(
-            url = "${config.baseUrl}/api/dev/upload-capture",
+            url = "${baseUrl}/api/dev/upload-capture",
             method = "POST",
             payload = payload,
             payloadType = RequestProcess.PayloadType.MULTIPART
@@ -64,11 +104,14 @@ class BackendManager(
     }
 
     suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
+        val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
+        val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
+
         val requestMetadata = RequestMetadata(
             audioSize = audioFile.length(),
             audioFormat = "ogg",
             imageSize = imageFile?.length() ?: 0,
-            deviceId = "a3cd78aa-463c-4d1e-ba37-2261910f0476", //identityManager.identifier,
+            deviceId = deviceId,
             audioBitrate = "64k",
             battery = batteryManager.status.percentage,
             latitude = locationManager.latestLocation?.location?.lat,
@@ -92,7 +135,7 @@ class BackendManager(
         val responseFile = processHandler.createTempFile("response.raw")
 
         val requestProcess = RequestProcess(
-            url = "${config.baseUrl}/api/dev/$endpoint",
+            url = "${baseUrl}/api/dev/$endpoint",
             method = "POST",
             payloadType = RequestProcess.PayloadType.BINARY,
             payload = RequestProcess.Payload.FromFile(requestFile),

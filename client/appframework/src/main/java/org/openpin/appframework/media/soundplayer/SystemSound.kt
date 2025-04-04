@@ -19,6 +19,9 @@ enum class SystemSound(val key: String, val resId: Int) {
     VIDEO_START("video_start", R.raw.video_start),
     VIDEO_END("video_end", R.raw.video_end),
     CAPTURE_FAILED("capture_failed", R.raw.capture_failed),
+    QR_SCAN("qr_scan", R.raw.qr_scan),
+    QR_FINISH("qr_finish", R.raw.qr_finish),
+    QR_FAILED("qr_failed", R.raw.qr_failed),
     VOLUME_CHANGE("volume_change", R.raw.volume_change);
 
     companion object {

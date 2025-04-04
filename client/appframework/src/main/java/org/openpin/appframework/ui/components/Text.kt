@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import org.openpin.appframework.ui.locals.LocalContentColor
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -15,12 +16,14 @@ fun Text(
     modifier: Modifier = Modifier,
     size: TextUnit? = null,
     weight: FontWeight? = null,
+    align: TextAlign = TextAlign.Unspecified
 ) {
     val config = LocalUIConfig.current.text
 
     BasicText(
         text = text,
         style = TextStyle(
+            textAlign = align,
             fontFamily = config.fontFamily,
             fontSize = size ?: config.fontSize,
             fontWeight = weight ?: config.fontWeight,
