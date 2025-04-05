@@ -10,6 +10,9 @@ node_modules/
 
 app.yaml
 .env
+.env.prod
 */keys/*.ts
 
 .DS_Store
+
+.cloudflared/

@@ -33,8 +33,7 @@ import { PaginatedData } from "src/state/slices/createContentSlice";
 import { capturesActions, DeviceCapture } from "src/state/slices/capturesSlice";
 import { DeviceNote, notesActions } from "src/state/slices/notesSlice";
 import { DeviceMessage, msgsActions } from "src/state/slices/msgsSlice";
-import useAuthToken from "src/util/useAuthToken";
-import { auth } from "../firebase";
+import { useAuthToken } from "../AuthTokenProvider";
 
 interface SocketContextProps {
   sendMessage: (event: string, message: any) => void;
@@ -49,7 +48,7 @@ interface SocketProviderProps {
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const dispatch = useAppDispatch();
-  const { user, idToken: token } = useAuthToken(auth);
+  const { user, idToken: token } = useAuthToken();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {

@@ -25,7 +25,9 @@ export const handlePairDevice = async (req: Request, res: Response) => {
   await addUserDevice(userId, deviceId);
   await sendNewDevDetails(userId, deviceId);
 
+  const baseUrl = process.env.HOSTED_BASE_URL as string;
   return res.status(200).send({
+    baseUrl,
     deviceId
   });
 }

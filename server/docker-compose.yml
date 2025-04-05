@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    image: openpin-server
+    ports:
+      - "9000:9000"
+    networks:
+      - appnet
+    restart: always
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--config", "/etc/cloudflared/config.yml", "run"]
+    volumes:
+      - ${PWD}/.cloudflared:/etc/cloudflared
+    networks:
+      - appnet
+    restart: unless-stopped
+
+networks:
+  appnet:

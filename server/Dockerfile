@@ -27,7 +27,7 @@ RUN cd dashboard && npm run build
 RUN npm run build
 
 # Expose port (adjust if needed)
-EXPOSE 8080
+EXPOSE 9000
 
 # Start the app
 CMD ["npm", "start"]

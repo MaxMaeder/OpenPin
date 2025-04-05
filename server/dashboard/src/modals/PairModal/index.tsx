@@ -1,14 +1,13 @@
 import { Button, Center, Loader, Paper, Stack, Text } from "@mantine/core";
 import { ContextModalProps } from "@mantine/modals";
 import api from "src/comm/api";
-import { auth } from "src/comm/firebase";
-import useAuthToken from "src/util/useAuthToken";
+import { useAuthToken } from "src/comm/AuthTokenProvider";
 
 const PairModal = ({
   context,
   id,
 }: ContextModalProps) => {
-  const { idToken, loading, error } = useAuthToken(auth);
+  const { idToken, loading, error } = useAuthToken();
 
   return (
     <Stack gap="md">

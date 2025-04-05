@@ -7,7 +7,7 @@ import ffmpeg from "fluent-ffmpeg";
 import { writeFile } from "fs-extra";
 import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
 
-export type AudioFormat = "mp3" | "m4a";
+export type AudioFormat = "mp3" | "m4a" | "ogg";
 
 export interface AudioComponent {
   type: "buffer" | "speech";
@@ -52,10 +52,10 @@ const processAudioComponent = async (
 
     buffer = Buffer.from(await speech.speak(
       speechComponent.text,
-      SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3,
+      SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus,
       component.languageCode
     ));
-    format = "mp3";
+    format = "ogg";
   } else {
     const bufferComponent = component as AudioBufferComponent;
 
@@ -77,7 +77,7 @@ const processAudioComponent = async (
 };
 
 const generateSilence = async (duration: number): Promise<FileResult> => {
-  const tmpFile = await file({ postfix: ".mp3" });
+  const tmpFile = await file({ postfix: ".ogg" });
 
   return new Promise<FileResult>((resolve, reject) => {
     ffmpeg()
@@ -162,7 +162,7 @@ export const assembleAudioComponents = async (
     });
 
     ffmpegInstance
-      .format("mp3")
+      .format("ogg")
       .output(outStream)
       .on("error", (err: Error) => {
         doCleanup();

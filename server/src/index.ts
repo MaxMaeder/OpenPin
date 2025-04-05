@@ -11,7 +11,6 @@ import {
   handleAssistant,
 } from "./endpoints/device/voice/assistant";
 import { handleDownloadMedia } from "./endpoints/dashboard/downloadMedia";
-// import { handleUpdateStatus } from "./endpoints/device/updateStatus";
 import { parseDeviceReq } from "./endpoints/device/voice/parser";
 import passport from "passport";
 import { setupSocket } from "./sockets";
@@ -21,6 +20,9 @@ import { handleGeneratePairQR } from "./endpoints/dashboard/generatePairQR";
 import { handleExpressErrors } from "./util/errors";
 import { handlePairDevice } from "./endpoints/device/pairDevice";
 import { handleUploadCapture, parseUploadCapture } from "./endpoints/device/uploadCapture";
+import { noCacheRes } from "./util/caching";
+import { handleGetHomeData, parseGetHomeData } from "./endpoints/device/getHomeData";
+import { handleLocateDevice, parseLocateDevice } from "./endpoints/device/locateDevice";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -62,42 +64,25 @@ app.post(
   parseUploadCapture,
   handleUploadCapture
 );
-// app.post("/api/dev/update-status", parseDeviceReq, handleUpdateStatus);
+app.post(
+  "/api/dev/home-data",
+  parseGetHomeData,
+  handleGetHomeData
+);
+app.post(
+  "/api/dev/locate",
+  parseLocateDevice,
+  handleLocateDevice
+);
 
 app.use("/favicon.svg", express.static("dashboard/dist/favicon.svg"));
 app.use("/dash-assets", express.static("dashboard/dist/dash-assets"));
 app.get("*", upgradeHttp, (_, res) => {
+  noCacheRes(res);
   res.sendFile("index.html", { root: "dashboard/dist" });
 });
 
 app.use(handleExpressErrors);
-
-// import { clearDeviceContent } from "./services/database/device/content";
-// import { addDeviceNote, getDeviceNotesRef } from "./services/database/device/notes";
-// // For example, you can define your test device ID.
-// const deviceId = 'a3cd78aa-463c-4d1e-ba37-2261910f0476';
-
-// (async () => {
-//   try {
-//     // First, clear all existing notes for the device.
-//     await clearDeviceContent(deviceId, getDeviceNotesRef);
-//     console.log(`Cleared all notes for device: ${deviceId}`);
-
-//     // Insert 30 random notes.
-//     for (let i = 0; i < 30; i++) {
-//       const note = {
-//         title: `Random Note ${i + 1}`,
-//         content: `This is the content for random note ${i + 1}.`
-//       };
-//       await addDeviceNote(deviceId, note);
-//       console.log(`Inserted note ${i + 1}`);
-//     }
-
-//     console.log('Successfully inserted 30 random notes.');
-//   } catch (error) {
-//     console.error('Error during test:', error);
-//   }
-// })();
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {

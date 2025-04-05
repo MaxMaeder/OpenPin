@@ -13,19 +13,23 @@ import { router } from "./routes.tsx";
 import { store } from "./state/store.ts";
 import { theme } from "./theme";
 import PairModal from "./modals/PairModal/index.tsx";
+import { AuthTokenProvider } from "./comm/AuthTokenProvider.tsx";
+import { auth } from "./comm/firebase.ts";
 
 export default function App() {
   return (
     <MapsAPIProvider apiKey={G_MAPS_KEY}>
       <ReduxProvider store={store}>
-        <SocketProvider>
-          <MantineProvider defaultColorScheme="dark" theme={theme}>
-            <Notifications />
-            <ModalsProvider modals={{ pair: PairModal }}>
-              <RouterProvider router={router} />
-            </ModalsProvider>
-          </MantineProvider>
-        </SocketProvider>
+        <AuthTokenProvider auth={auth} >
+          <SocketProvider>
+            <MantineProvider defaultColorScheme="dark" theme={theme}>
+              <Notifications />
+              <ModalsProvider modals={{ pair: PairModal }}>
+                <RouterProvider router={router} />
+              </ModalsProvider>
+            </MantineProvider>
+          </SocketProvider>
+        </AuthTokenProvider>
       </ReduxProvider>
     </MapsAPIProvider>
   );

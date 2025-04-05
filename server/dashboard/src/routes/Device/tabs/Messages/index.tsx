@@ -11,14 +11,13 @@ import NoContentPlaceholder from "../../components/NoContentPlaceholder";
 import MessageEntry from "./MessageEntry";
 import { IconList } from "@tabler/icons-react";
 import api from "src/comm/api";
-import useAuthToken from "src/util/useAuthToken";
-import { auth } from "src/comm/firebase";
+import { useAuthToken } from "src/comm/AuthTokenProvider";
 
 const Messages: React.FC = () => {
   const dispatch = useAppDispatch();
   const socket = useSocket();
 
-  const { idToken } = useAuthToken(auth);
+  const { idToken } = useAuthToken();
   const deviceId = useDeviceId()!;
 
   const messages = useAppSelector((state) =>

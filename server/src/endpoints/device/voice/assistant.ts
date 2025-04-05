@@ -4,12 +4,12 @@ import { genCommonDevRes, handleCommonDevData } from "./common";
 import { addDeviceMsg, DeviceMessage, getDeviceMsgs } from "src/services/database/device/messages";
 
 import { ParsedAssistantRequest } from "./parser";
-import { assembleAudioComponents } from "src/services/audio";
 import express from "express";
-import genFileName from "src/util/genFileName";
-import { getStorage } from "firebase-admin/storage";
+// import genFileName from "src/util/genFileName";
+// import { getStorage } from "firebase-admin/storage";
 import { DavisMessage, doDavis } from "src/davis";
 import { sendMsgsUpdate } from "src/sockets/msgBuilders/device";
+import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
 
 export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
   return [
@@ -30,8 +30,8 @@ export const handleAssistant = async (
   next: express.NextFunction
 ) => {
   try {
-    const bucket = getStorage().bucket();
-    const { deviceId, audioBitrate } = req.metadata;
+    // const bucket = getStorage().bucket();
+    const { deviceId } = req.metadata;
     const { deviceData, deviceSettings } = await handleCommonDevData(req, deviceId);
     console.log(req.metadata);
 
@@ -39,11 +39,11 @@ export const handleAssistant = async (
     const audioBuffer: Buffer = req.audioBuffer;
 
     // Start uploading the OGG file to cloud storage
-    const fileName = genFileName(deviceId, "ogg");
-    const file = bucket.file(fileName);
-    const uploadPromise = file.save(audioBuffer, {
-      contentType: "audio/ogg",
-    });
+    // const fileName = genFileName(deviceId, "ogg");
+    // const file = bucket.file(fileName);
+    // const uploadPromise = file.save(audioBuffer, {
+    //   contentType: "audio/ogg",
+    // });
 
     // Process the assistant logic concurrently.
     const assistantPromise = (async () => {
@@ -87,10 +87,10 @@ export const handleAssistant = async (
       console.log("Assistant response:", assistantMessage);
       console.log("Audio components:", audioComponents);
 
-      const audioData = await assembleAudioComponents(audioComponents, {
-        bitrate: audioBitrate,
-        spacing: 0.5,
-      });
+      const audioData = Buffer.from(await speech.speak(
+        assistantMessage,
+            SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus,
+          ));
 
       const resMetadata = await genCommonDevRes(deviceId, deviceData, deviceSettings);
       const assistantRes = Buffer.concat([resMetadata, audioData]);
@@ -101,7 +101,8 @@ export const handleAssistant = async (
     })();
 
     // Wait for both the upload and assistant processing to finish.
-    const [assistantRes] = await Promise.all([assistantPromise, uploadPromise]);
+    const [assistantRes] = await Promise.all([assistantPromise]);
+    console.log("Response size", assistantRes.length)
 
     res.send(assistantRes);
   } catch (error) {

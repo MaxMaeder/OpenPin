@@ -1,8 +1,8 @@
 {
   "name": "functions",
   "scripts": {
-    "build": "tsc",
-    "start": "dotenv -e .env node lib/index.js",
+    "build": "tsc && tsc-alias",
+    "start": "dotenv -e .env -e .env.prod node lib/index.js",
     "dev": "concurrently -k -n backend,dashboard -c blue,green \"npm:dev:backend\" \"npm:dev:dashboard\"",
     "dev:backend": "nodemon",
     "dev:dashboard": "npm --prefix dashboard run dev"
@@ -71,6 +71,7 @@
     "firebase-functions-test": "^3.0.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.13",
     "typescript": "5.1.6"
   },
   "private": true

@@ -2,15 +2,14 @@ import { Center, Image, Stack, Text } from "@mantine/core";
 
 import { IconPhoto } from "@tabler/icons-react";
 import api from "src/comm/api";
-import { auth } from "src/comm/firebase";
-import useAuthToken from "src/util/useAuthToken";
+import { useAuthToken } from "src/comm/AuthTokenProvider";
 
 interface CameraViewProps {
   imageName?: string;
 }
 
 const CameraView = ({ imageName }: CameraViewProps) => {
-  const { idToken } = useAuthToken(auth);
+  const { idToken } = useAuthToken();
 
   if (!imageName || !idToken) {
     return (

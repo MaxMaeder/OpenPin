@@ -10,3 +10,5 @@
 
 - `docker build -t openpin-server .`
 - `docker run -it -p 8080:8080 openpin-server`
+
+`docker compose up -d --build --remove-orphans --force-recreate`

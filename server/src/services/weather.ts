@@ -2,11 +2,34 @@ import axios from "axios";
 
 type WeatherUnits = "imperial" | "metric";
 
+export type ConditionName =
+  | "Thunderstorm"
+  | "Drizzle"
+  | "Rain"
+  | "Snow"
+  | "Mist"
+  | "Smoke"
+  | "Haze"
+  | "Dust"
+  | "Fog"
+  | "Sand"
+  | "Ash"
+  | "Squall"
+  | "Tornado"
+  | "Clear"
+  | "Clouds";
+
+interface WeatherConditions {
+  id: number;
+  main: ConditionName;
+}
+
 interface CurrentWeather {
   temp: number;
   humidity: number;
   uvi: number;
   wind_speed: number;
+  weather: WeatherConditions[];
 }
 
 interface DailyTemp {
@@ -61,5 +84,6 @@ export const getWeather = async (
     currentHumidity: current.humidity,
     currentUvi: current.uvi,
     currentWindSpeed: current.wind_speed,
+    currentConditions: current.weather[0]?.main
   };
 };

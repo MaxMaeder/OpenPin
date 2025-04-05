@@ -10,15 +10,14 @@ import { openConfirmModal } from "src/modals";
 import NoContentPlaceholder from "../../components/NoContentPlaceholder";
 import ImageEntry from "../../components/ImageEntry";
 import { IconGridDots } from "@tabler/icons-react";
-import useAuthToken from "src/util/useAuthToken";
-import { auth } from "src/comm/firebase";
 import api from "src/comm/api";
+import { useAuthToken } from "src/comm/AuthTokenProvider";
 
 const Captures: React.FC = () => {
   const dispatch = useAppDispatch();
   const socket = useSocket();
 
-  const { idToken } = useAuthToken(auth);
+  const { idToken } = useAuthToken();
   const deviceId = useDeviceId()!;
 
   const captures = useAppSelector((state) =>

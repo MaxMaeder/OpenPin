@@ -1,7 +1,9 @@
 import {
   Client,
+  GeocodeResult,
   GeolocateResponseData,
   LatLng,
+  PlaceType2,
   TravelMode,
   UnitSystem,
 } from "@googlemaps/google-maps-services-js";
@@ -55,9 +57,17 @@ export const getLocalTime = async (lat: number, lng: number) => {
 
 interface GeocodingResponse {
   address: string;
+  city?: string;
   plusCode?: string;
   latitude: number;
   longitude: number;
+}
+
+const extractCity = (res: GeocodeResult) => {
+  const cityComponent = res.address_components.find((component) =>
+    component.types.includes(PlaceType2.locality)
+  );
+  return cityComponent?.short_name
 }
 
 export const getGeocoding = async (
@@ -79,6 +89,7 @@ export const getGeocoding = async (
 
   return {
     address: topResult.formatted_address,
+    city: extractCity(topResult),
     plusCode: topResult.plus_code?.global_code,
     latitude: topResult.geometry.location.lat,
     longitude: topResult.geometry.location.lng,
@@ -108,6 +119,7 @@ export const getRevGeocoding = async (
 
   return {
     address: topResult.formatted_address,
+    city: extractCity(topResult),
     plusCode: topResult.plus_code?.global_code,
     latitude: topResult.geometry.location.lat,
     longitude: topResult.geometry.location.lng,
@@ -181,7 +193,7 @@ export const getDirections = async (
   };
 };
 
-interface WiFiAccessPoint {
+export interface WiFiAccessPoint {
   macAddress: string;
   signalStrength: number;
   channel: number;
