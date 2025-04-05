@@ -44,6 +44,7 @@ class MainActivity : PinActivity() {
             single { ConfigurationManager(get()) }
             single { BackendManager(get(), get(), get(), get()) }
             viewModel { GestureViewModel(get(), get(), get(), get(), get(), get(), get()) }
+            viewModel { HomeViewModel(get()) }
         }
     )
 

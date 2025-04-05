@@ -38,6 +38,7 @@ class SleepManager(
 
     private fun sleepDevice() {
         println("Putting device to sleep...")
+        SystemUtils.executeCommand("settings put system screen_off_timeout 1000")
 
         isProbablyAwake = false
     }

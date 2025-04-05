@@ -2,6 +2,7 @@ package org.openpin.primaryapp.backend
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.daemonbridge.process.RequestProcess
 import org.openpin.appframework.devicestate.battery.BatteryManager
@@ -39,6 +40,26 @@ data class ResponseMetadata(
 data class PairDetails(
     val baseUrl: String,
     val deviceId: String
+)
+
+enum class WeatherConditions {
+    @SerializedName("rainy")
+    RAINY,
+    @SerializedName("thunderstorm")
+    THUNDERSTORM,
+    @SerializedName("cloudy")
+    CLOUDY,
+    @SerializedName("sunny")
+    SUNNY,
+    @SerializedName("snow")
+    SNOW
+}
+
+data class HomeData(
+    val location: String? = null,
+    val temp: String? = null,
+    val conditions: WeatherConditions? = null,
+    val time: Long
 )
 
 class BackendManager(
@@ -122,7 +143,7 @@ class BackendManager(
             processHandler.execute(req)
 
             if (req.error.isNotEmpty()) {
-                throw RuntimeException("Geolocation API returned error: ${req.error}")
+                throw RuntimeException("Locate request returned error: ${req.error}")
             }
 
             return gson.fromJson(req.output, ResolvedLocation::class.java)
@@ -136,6 +157,37 @@ class BackendManager(
             in 2412..2484 -> (freq - 2407) / 5
             in 5170..5825 -> (freq - 5000) / 5
             else -> -1
+        }
+    }
+
+    suspend fun sendHomeDataRequest(): HomeData {
+        val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
+        val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
+
+        val payload = gson.toJson(
+            mapOf(
+                "deviceId" to deviceId,
+            )
+        )
+
+        val req = RequestProcess(
+            url = "$baseUrl/api/dev/home-data",
+            method = "POST",
+            headers = mapOf("Content-Type" to "application/json"),
+            payload = RequestProcess.Payload.FromString(payload),
+            payloadType = RequestProcess.PayloadType.RAW
+        )
+
+        try {
+            processHandler.execute(req)
+
+            if (req.error.isNotEmpty()) {
+                throw RuntimeException("Home Data request returned error: ${req.error}")
+            }
+
+            return gson.fromJson(req.output, HomeData::class.java)
+        } finally {
+            processHandler.release(req)
         }
     }
 
