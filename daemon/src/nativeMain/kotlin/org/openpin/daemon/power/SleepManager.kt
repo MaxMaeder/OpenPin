@@ -29,6 +29,7 @@ class SleepManager(
     }
 
     private fun wakeDevice() {
+        SystemUtils.executeCommand("cmd power disable-humane-display-controller")
         SystemUtils.executeCommand("input keyevent KEYCODE_WAKEUP")
         SystemUtils.executeCommand("settings put system screen_off_timeout $sleepAfter")
 
@@ -38,7 +39,7 @@ class SleepManager(
 
     private fun sleepDevice() {
         println("Putting device to sleep...")
-        SystemUtils.executeCommand("settings put system screen_off_timeout 1000")
+        SystemUtils.executeCommand("cmd power enable-humane-display-controller")
 
         isProbablyAwake = false
     }
