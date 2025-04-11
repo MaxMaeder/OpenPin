@@ -1,4 +1,3 @@
-// useMediaThumbnail.tsx
 import { useEffect, useCallback, useId } from 'react';
 import { MediaItem, useGallery } from './GalleryContext';
 

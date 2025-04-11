@@ -16,6 +16,8 @@
   align-items: stretch;
 
   padding: var(--mantine-spacing-md);
+
+  pointer-events: none;
 }
 
 .lightboxControls {
@@ -25,6 +27,8 @@
 
   display: flex;
   gap: var(--mantine-spacing-md);
+
+  pointer-events: auto;
 }
 
 .lightboxGrid {
@@ -33,7 +37,7 @@
   grid-template-areas: "prev content next";
 }
 
-@media (max-width: 62em) {
+@media (max-width: $mantine-breakpoint-md) {
   /* --mantine-breakpoint-md */
   .lightboxGrid {
     grid-template-columns: 1fr 1fr;
@@ -46,7 +50,7 @@
 .contentContainer {
   grid-area: content;
 }
-@media (max-width: 62em) {
+@media (max-width: $mantine-breakpoint-md) {
   .contentContainer {
     display: flex;
     justify-content: center;
@@ -59,6 +63,9 @@
 .contentPaper {
   width: 100%;
   max-height: 100%;
+}
+.contentPaper {
+  pointer-events: auto;
 }
 
 .imgContent {
@@ -73,7 +80,7 @@
   align-items: center;
   justify-content: center;
 }
-@media (max-width: 62em) {
+@media (max-width: $mantine-breakpoint-md) {
   .arrowContainer {
     margin: var(--mantine-spacing-md);
   }
@@ -89,14 +96,14 @@
 .arrowIconButton {
   height: 70px;
   width: 70px;
+  pointer-events: auto;
 }
 .arrowIcon {
   height: 60px;
   width: 60px;
 }
 
-@media (max-width: 62em) {
-  /* --mantine-breakpoint-md */
+@media (max-width: $mantine-breakpoint-md) {
   .arrowIconButton {
     height: 44px; /* Mantine XL Icon */
     width: 44px;

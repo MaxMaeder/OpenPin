@@ -1,6 +1,6 @@
 .detailsButton {
   position: absolute;
-  z-index: 100;
+  z-index: 10;
   top: calc(var(--grid-col-padding) + 0.25rem);
   right: calc(var(--grid-col-padding) + 0.25rem);
 }

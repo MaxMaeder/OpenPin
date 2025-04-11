@@ -1,8 +1,9 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
   useCallback,
+  ReactNode,
 } from 'react';
 import { DeviceCaptureType } from 'src/state/slices/capturesSlice';
 import Lightbox from './Lightbox';
@@ -28,7 +29,7 @@ interface GalleryContextProps {
 const GalleryContext = createContext<GalleryContextProps | undefined>(undefined);
 
 // Provider that holds our media items and the state of the lightbox.
-export const GalleryProvider = ({ children }: { children: React.ReactNode }) => {
+export const GalleryProvider = ({ children }: { children: ReactNode }) => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [openMediaId, setOpenMediaId] = useState<string | null>(null);
 

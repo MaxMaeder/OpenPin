@@ -18,16 +18,14 @@ const Lightbox = () => {
   if (currentIndex === -1) return null;
   const currentItem = mediaItems[currentIndex];
 
-  // Handlers to navigate through media items.
   const handlePrev = () => {
     setSlideDirection(-1);
-    const newIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length;
+    const newIndex = (currentIndex + 1) % mediaItems.length;
     setOpenMediaId(mediaItems[newIndex].id);
   };
-
   const handleNext = () => {
     setSlideDirection(1);
-    const newIndex = (currentIndex + 1) % mediaItems.length;
+    const newIndex = (currentIndex - 1 + mediaItems.length) % mediaItems.length;
     setOpenMediaId(mediaItems[newIndex].id);
   };
 
@@ -48,7 +46,7 @@ const Lightbox = () => {
   return (
     <Box className={classes.lightboxContainer}>
 
-      <Overlay color="black" zIndex={0} />
+      <Overlay color="black" zIndex={0} onClick={closeLightbox} />
 
       <Box className={classes.lightboxContent}>
 
