@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import classes from "./TabLayout.module.css";
-import NotFound from "src/routes/NotFound";
 import useIsMobile from "src/util/useIsMobile";
 
 export interface TabDefinition {
@@ -24,8 +23,7 @@ const TabLayout: React.FC<TabLayoutProps> = ({ tabs, animationDuration: duration
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const activeTab = tabs.find(tab => tab.value === tabParam);
-  if (!tabParam || !activeTab) return <NotFound />;
+  const activeTab = tabs.find(tab => tab.value === tabParam) || tabs[0];
 
   const [displayTab, setDisplayTab] = useState(activeTab);
 

@@ -6,8 +6,8 @@ const SelectDevice: React.FC = () => (
   <DashboardLayout title="Select">
     <Center flex={1}>
       <Stack align="center">
-        <Title>No Device Selected</Title>
-        <Text>Select from Top Right</Text>
+        <Title>Select A Device</Title>
+        <Text>Select or add a device from the top right.</Text>
       </Stack>
     </Center>
   </DashboardLayout>
