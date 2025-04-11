@@ -39,7 +39,7 @@ setupSocket(server);
 
 app.get(
   "/api/dash/media-download/:name",
-  authUserEndpoint,
+  // authUserEndpoint,
   handleDownloadMedia
 );
 app.get(

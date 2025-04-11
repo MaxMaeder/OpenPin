@@ -1,6 +1,6 @@
 import { createContentSlice, DeviceContent } from "./createContentSlice";
 
-type DeviceCaptureType = "image" | "video";
+export type DeviceCaptureType = "image" | "video";
 
 export interface DeviceCapture extends DeviceContent {
   type: DeviceCaptureType;

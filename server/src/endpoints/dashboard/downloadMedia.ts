@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 import { getStorage } from "firebase-admin/storage";
 import createHttpError from "http-errors";
+import { foreverCacheRes } from "src/util/caching";
 
 export const handleDownloadMedia = async (req: Request, res: Response) => {
   const fileName = req.params.name;
@@ -16,6 +17,7 @@ export const handleDownloadMedia = async (req: Request, res: Response) => {
   }
 
   res.set("Content-Type", metadata.contentType);
+  foreverCacheRes(res);
 
   const stream = file.createReadStream();
   stream.on("error", () => {

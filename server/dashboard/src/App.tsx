@@ -15,6 +15,7 @@ import { theme } from "./theme";
 import PairModal from "./modals/PairModal/index.tsx";
 import { AuthTokenProvider } from "./comm/AuthTokenProvider.tsx";
 import { auth } from "./comm/firebase.ts";
+import { GalleryProvider } from "./lightbox/GalleryContext.tsx";
 
 export default function App() {
   return (
@@ -23,10 +24,12 @@ export default function App() {
         <AuthTokenProvider auth={auth} >
           <SocketProvider>
             <MantineProvider defaultColorScheme="dark" theme={theme}>
-              <Notifications />
-              <ModalsProvider modals={{ pair: PairModal }}>
-                <RouterProvider router={router} />
-              </ModalsProvider>
+              <GalleryProvider>
+                <Notifications />
+                <ModalsProvider modals={{ pair: PairModal }}>
+                  <RouterProvider router={router} />
+                </ModalsProvider>
+              </GalleryProvider>
             </MantineProvider>
           </SocketProvider>
         </AuthTokenProvider>

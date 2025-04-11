@@ -1,0 +1,37 @@
+.detailsButton {
+  position: absolute;
+  z-index: 100;
+  top: calc(var(--grid-col-padding) + 0.25rem);
+  right: calc(var(--grid-col-padding) + 0.25rem);
+}
+
+.detailsIcon {
+  height: 70%;
+  width: 70%;
+}
+
+.mediaBase {
+  aspect-ratio: 321 / 240;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+
+/* VideoMedia */
+.controlIcon {
+  position: absolute;
+  bottom: 17px;
+  left: 15px;
+  z-index: 100;
+}
+
+.controlMotionContainer {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.controlMotion {
+  position: absolute;
+  top: 0;
+  left: 0;
+}

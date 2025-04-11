@@ -62,8 +62,9 @@ const api = {
       throw handleError(error as AxiosError<unknown>);
     }
   },
-  getMediaDownloadUrl: (token: string, mediaName: string) =>
-    `/api/dash/media-download/${mediaName}?token=${token}`,
+  getMediaDownloadUrl: (_: string, mediaName: string) =>
+    //`/api/dash/media-download/${mediaName}?token=${token}`,
+  `/api/dash/media-download/${mediaName}`,
   getPairQrUrl: (token: string) =>
     `/api/dash/pair-qr.png?token=${token}`,
 };

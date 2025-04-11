@@ -8,7 +8,7 @@ import { useSocket } from "src/comm/socket";
 import FetchMoreButton from "../../components/FetchMoreButton";
 import { openConfirmModal } from "src/modals";
 import NoContentPlaceholder from "../../components/NoContentPlaceholder";
-import ImageEntry from "../../components/ImageEntry";
+import MediaEntry from "../../components/MediaEntry";
 import { IconGridDots } from "@tabler/icons-react";
 import api from "src/comm/api";
 import { useAuthToken } from "src/comm/AuthTokenProvider";
@@ -45,8 +45,13 @@ const Captures: React.FC = () => {
           <Stack gap="xl">
             <Grid>
               {captures.map((capture) => (
-                <ImageEntry
+                <MediaEntry
                   key={capture.id}
+
+                  id={capture.id}
+                  date={capture.date}
+                  type={capture.type}
+
                   src={api.getMediaDownloadUrl(idToken!, capture.mediaId)}
                   onDelete={handleDelete(capture.id)}
                 />
