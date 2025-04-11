@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useGallery } from "./GalleryContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { ActionIcon, Overlay } from "@mantine/core";
-import { IconArrowLeft, IconArrowRight, IconCaretLeftFilled, IconCaretRightFilled } from "@tabler/icons-react";
+import { ActionIcon, Box, Overlay, Paper } from "@mantine/core";
+import { IconCaretLeftFilled, IconCaretRightFilled, IconDownload, IconX } from "@tabler/icons-react";
+import classes from "./Lightbox.module.css"
+import clsx from "clsx";
 
 const Lightbox = () => {
   const { mediaItems, openMediaId, setOpenMediaId, closeLightbox } =
@@ -35,103 +37,101 @@ const Lightbox = () => {
       x: direction > 0 ? 300 : -300,
       opacity: 0,
     }),
-    animate: { x: 0, opacity: 1, transition: { duration: 0.4 } },
+    animate: { x: 0, opacity: 1, transition: { duration: 0.2 } },
     exit: (direction: number) => ({
       x: direction > 0 ? -300 : 300,
       opacity: 0,
-      transition: { duration: 0.4 },
+      transition: { duration: 0.2 },
     }),
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 1000,
-        }}
-        onClick={closeLightbox}
-      >
-        {/* Animated overlay background */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, transition: { duration: 0.4 } }}
-          exit={{ opacity: 0, transition: { duration: 0.4 } }}
-        >
-          <Overlay opacity={0.8} color="black" zIndex={0} />
-        </motion.div>
+    <Box className={classes.lightboxContainer}>
 
-        {/* Content container prevents click propagation */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Previous arrow */}
+      <Overlay color="black" zIndex={0} />
+
+      <Box className={classes.lightboxContent}>
+
+        <Box className={classes.lightboxControls}>
           <ActionIcon
-            onClick={handlePrev}
+            size="lg"
             variant="transparent"
-            style={{ position: 'absolute', left: 20, top: '50%' }}
-            size="xl"
+            color="white"
+            component="a"
+            href={currentItem.src}
+            download={true}
           >
-            <IconCaretLeftFilled size={32} />
+            <IconDownload size={32} />
           </ActionIcon>
+          <ActionIcon
+            size="lg"
+            variant="transparent"
+            color="white"
+            onClick={closeLightbox}
+          >
+            <IconX size={32} />
+          </ActionIcon>
+        </Box>
 
-          {/* Media content with horizontal slide animation */}
-          <AnimatePresence custom={slideDirection} mode="wait">
-            <motion.div
-              key={currentItem.id}
-              custom={slideDirection}
-              variants={mediaVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              style={{ maxWidth: '100%', maxHeight: '100%' }}
+        <Box className={classes.lightboxGrid}>
+          {/* Previous arrow */}
+          <Box className={clsx(classes.arrowContainer, classes.prevContainer)}>
+            <ActionIcon
+              onClick={handlePrev}
+              variant="transparent"
+              color="white"
+              className={classes.arrowIconButton}
             >
-              {currentItem.type === 'image' ? (
-                <img
-                  src={currentItem.src}
-                  alt=""
-                  style={{ maxWidth: '100%', maxHeight: '100%' }}
-                />
-              ) : (
-                <video
-                  src={currentItem.src}
-                  controls
-                  style={{ maxWidth: '100%', maxHeight: '100%' }}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
+              <IconCaretLeftFilled className={classes.arrowIcon} />
+            </ActionIcon>
+          </Box>
+
+
+          <Box className={classes.contentContainer}>
+            <AnimatePresence custom={slideDirection} mode="wait">
+              <motion.div
+                key={currentItem.id}
+                custom={slideDirection}
+                variants={mediaVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className={classes.contentWrapper}
+              >
+                {currentItem.type === 'image' ? (
+                  <Paper
+                    className={clsx(classes.contentPaper, classes.imgContent)}
+                    component="img"
+                    withBorder
+                    src={currentItem.src}
+                  />
+                ) : (
+                  <Paper
+                    className={clsx(classes.contentPaper, classes.videoContent)}
+                    component="video"
+                    withBorder
+                    src={currentItem.src}
+                    controls
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </Box>
 
           {/* Next arrow */}
-          <ActionIcon
-            onClick={handleNext}
-            variant="transparent"
-            style={{ position: 'absolute', right: 20, top: '50%' }}
-            size="xl"
-          >
-            <IconCaretRightFilled size={32} />
-          </ActionIcon>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+          <Box className={clsx(classes.arrowContainer, classes.nextContainer)}>
+            <ActionIcon
+              onClick={handleNext}
+              variant="transparent"
+              color="white"
+              className={classes.arrowIconButton}
+            >
+              <IconCaretRightFilled className={classes.arrowIcon} />
+            </ActionIcon>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

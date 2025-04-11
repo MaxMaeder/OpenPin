@@ -1,0 +1,109 @@
+.lightboxContainer {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+}
+
+.lightboxContent {
+  z-index: 5;
+  height: 100%;
+  width: 100%;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+
+  padding: var(--mantine-spacing-md);
+}
+
+.lightboxControls {
+  position: absolute;
+  top: var(--mantine-spacing-xl);
+  right: var(--mantine-spacing-xl);
+
+  display: flex;
+  gap: var(--mantine-spacing-md);
+}
+
+.lightboxGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-areas: "prev content next";
+}
+
+@media (max-width: 62em) {
+  /* --mantine-breakpoint-md */
+  .lightboxGrid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "content content" /* content spans both columns on the first row */
+      "prev next"; /* prev and next in the second row */
+  }
+}
+
+.contentContainer {
+  grid-area: content;
+}
+@media (max-width: 62em) {
+  .contentContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+.contentWrapper,
+.contentPaper {
+  width: 100%;
+  max-height: 100%;
+}
+
+.imgContent {
+  aspect-ratio: 4 / 3;
+}
+.videoContent {
+  aspect-ratio: 16 / 9;
+}
+
+.arrowContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 62em) {
+  .arrowContainer {
+    margin: var(--mantine-spacing-md);
+  }
+}
+
+.prevContainer {
+  grid-area: prev;
+}
+.nextContainer {
+  grid-area: next;
+}
+
+.arrowIconButton {
+  height: 70px;
+  width: 70px;
+}
+.arrowIcon {
+  height: 60px;
+  width: 60px;
+}
+
+@media (max-width: 62em) {
+  /* --mantine-breakpoint-md */
+  .arrowIconButton {
+    height: 44px; /* Mantine XL Icon */
+    width: 44px;
+  }
+
+  .arrowIcon {
+    height: 36px; /* Little bigger 36 vs 32px to account for 'small' icons */
+    width: 36px;
+  }
+}
