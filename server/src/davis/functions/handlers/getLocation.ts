@@ -12,10 +12,7 @@ export const handleGetLocation = async (
     deviceData.longitude
   );
 
-  return {
-    returnValue: JSON.stringify({
-      address,
-    }),
-    audioComponents: [],
-  };
+  return JSON.stringify({
+    address,
+  });
 };

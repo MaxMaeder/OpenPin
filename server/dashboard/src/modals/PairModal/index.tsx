@@ -1,5 +1,6 @@
 import { Button, Center, Loader, Paper, Stack, Text } from "@mantine/core";
 import { ContextModalProps } from "@mantine/modals";
+import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import api from "src/comm/api";
@@ -16,9 +17,12 @@ const PairModal = ({
   const { idToken, loading, error } = useAuthToken();
   const deviceIds = useSelector(selectDeviceIds);
 
-  useOnItemAdded(deviceIds, (newIds) => {
-    navigate(`/${newIds[0]}`)
-  });
+  const goToDevice = useCallback((deviceId: string) => {
+    context.closeModal(id);
+    navigate(`/${deviceId}`);
+  }, [navigate]);
+
+  useOnItemAdded(deviceIds, (newIds) => goToDevice(newIds[0]));
 
   return (
     <Stack gap="md">

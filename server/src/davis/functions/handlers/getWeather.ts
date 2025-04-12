@@ -37,7 +37,8 @@ export const handleGetWeather = async (
   const percentf = (percent: number) => `${percent * 100}%`;
 
   const weather = await getWeather(latitude, longitude);
-  const returnValue = JSON.stringify({
+
+  return JSON.stringify({
     low: tempf(weather.low),
     high: tempf(weather.high),
     probOfPercip: percentf(weather.probOfPercip),
@@ -48,9 +49,4 @@ export const handleGetWeather = async (
     sunrise: timef(weather.sunrise),
     sunset: timef(weather.sunset),
   });
-
-  return {
-    returnValue,
-    audioComponents: [],
-  };
 };

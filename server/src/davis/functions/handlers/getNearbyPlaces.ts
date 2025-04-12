@@ -26,8 +26,5 @@ export const handleGetNearbyPlaces = async (
     radius: 1600,
   });
 
-  return {
-    returnValue: JSON.stringify(nearbyPlaces),
-    audioComponents: [],
-  };
+  return JSON.stringify(nearbyPlaces);
 };

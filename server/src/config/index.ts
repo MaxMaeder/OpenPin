@@ -18,13 +18,13 @@ export const MSFT_TTS_LANGUAGE = "en-US";
 export const MSFT_TTS_VOICE = "en-US-DavisNeural";
 export const MSFT_TTS_MULTILINGUAL_VOICE = "en-US-DavisMultilingualNeural";
 export const MSFT_TTS_FORMAT =
-  SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+  SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus;
 
 export const DEV_MSGS_COL = "DeviceMessages2"; // Todo: fix this
 export const DEV_MSGS_NUM = 10;
 
-export const USER_DATA_COL = "Users"
-export const PAIR_CODES_COL = "PairCodes"
+export const USER_DATA_COL = "Users";
+export const PAIR_CODES_COL = "PairCodes";
 export const DEV_LIST_COL = "Devices";
 export const DEV_DATA_COL = "DeviceData";
 export const DEV_SETTINGS_COL = "DeviceSettings";
@@ -33,8 +33,6 @@ export const DEV_NOTES_COL = "DeviceNotes";
 
 // Max calls to chat completion service in one invocation of the assistant, "davis"
 export const CHAT_COMP_MAX_CALLS = 5;
-
-
 
 export const CHAT_COMP_MODEL: CompletionModel = {
   provider: "openai",
@@ -55,7 +53,7 @@ export const LOW_BATTERY_PERCENT = 0.2;
 export const LOCATION_WORSE_UPDATE_TIME = 10 * 60 * 1000;
 
 export const INIT_USER_DATA: UserData = {
-  deviceIds: []
+  deviceIds: [],
 };
 
 export const INIT_DEVICE_DATA: DeviceData = {

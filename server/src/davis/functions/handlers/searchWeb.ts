@@ -17,10 +17,6 @@ export const handleSearchWeb = async (
     throw new FunctionHandlerError("No web search query provided.");
   }
 
-  const searchResults = await getSearchResults(query);
-
-  return {
-    returnValue: JSON.stringify(searchResults),
-    audioComponents: [],
-  };
+  const results = await getSearchResults(query);
+  return JSON.stringify(results);
 };

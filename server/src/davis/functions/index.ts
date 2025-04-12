@@ -1,8 +1,6 @@
 import { FunctionDefinition } from "openai/resources";
 import { DeviceData } from "../../dbTypes";
 
-import { InputAudioComponent } from "../../services/audio";
-import { handlePlayMusic } from "./handlers/playMusic";
 import { handleGetWeather } from "./handlers/getWeather";
 import { handleGetLocation } from "./handlers/getLocation";
 import { handleSearchWeb } from "./handlers/searchWeb";
@@ -13,12 +11,7 @@ import { handleGetWolframResponse } from "./handlers/getWolframResponse";
 import { handleSearchWikipedia } from "./handlers/searchWikipedia";
 import { DeviceSettings } from "src/config/deviceSettings";
 
-export interface FunctionHandlerResponse {
-  returnValue: string;
-  audioComponents: InputAudioComponent[];
-}
-
-export type FunctionHandlerReturnType = Promise<FunctionHandlerResponse>;
+export type FunctionHandlerReturnType = Promise<string>;
 
 interface DavisFunction {
   // Function is only available for a single invocation of the completion
@@ -41,26 +34,6 @@ export class FunctionHandlerError extends Error {
 }
 
 export const functions: Array<DavisFunction> = [
-  {
-    availableOnce: true,
-    definition: {
-      name: "play_music",
-      description: "Plays music on the user's device",
-      parameters: {
-        type: "object",
-        properties: {
-          query: {
-            type: "string",
-            description:
-              "The search term to lookup the song to play. " +
-              "Ex: 'Dancing Queen Abba'",
-          },
-        },
-        required: ["query"],
-      },
-    },
-    handler: handlePlayMusic,
-  },
   {
     definition: {
       name: "get_weather",

@@ -39,8 +39,5 @@ export const handleSearchWikipedia = async (
     })
   );
 
-  return {
-    returnValue: JSON.stringify(resultsSummary),
-    audioComponents: [],
-  };
+  return JSON.stringify(resultsSummary);
 };

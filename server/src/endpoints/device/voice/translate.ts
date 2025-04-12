@@ -1,12 +1,17 @@
 import { ParsedAssistantRequest } from "./parser";
-import * as speech from "src/services/speech";
+import * as translateSST from "src/services/speech/translateSST";
+import * as TTS from "src/services/speech/TTS";
 import express from "express";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { genCommonDevRes, handleCommonDevData } from "./common";
+import {
+  genCommonDevRes,
+  getUserSpeechConfig,
+  handleCommonDevData,
+} from "./common";
 import { translate } from "src/services/translate";
 import createHttpError from "http-errors";
-import { assembleAudioComponents, AudioSpeechComponent } from "src/services/audio";
+import { changeVolume } from "src/services/audio";
 
 export const handleTranslate = async (
   req: ParsedAssistantRequest,
@@ -14,7 +19,7 @@ export const handleTranslate = async (
 ) => {
   const bucket = getStorage().bucket();
 
-  const { deviceId, audioFormat, audioBitrate } = req.metadata;
+  const { deviceId, audioFormat } = req.metadata;
   const { deviceData, deviceSettings } = await handleCommonDevData(
     req,
     deviceId
@@ -34,7 +39,7 @@ export const handleTranslate = async (
     deviceSettings.translateLanguage,
   ];
 
-  const recognizedResult = await speech.googleRecognize(gcsUri, languagePool);
+  const recognizedResult = await translateSST.recognize(gcsUri, languagePool);
 
   console.log("Recognized speech", recognizedResult);
 
@@ -59,23 +64,19 @@ export const handleTranslate = async (
     deviceSettings
   );
 
-  const audioComponents: AudioSpeechComponent[] = [
-    {
-      type: "speech",
-      text: translatedText,
-      languageCode: targetLanguage
-    }
-  ]
-
-  const audioData = await assembleAudioComponents(
-    audioComponents, 
-    {
-      bitrate: audioBitrate,
-      spacing: 0.5,
-    }
+  let audioData = await TTS.speak(
+    translatedText,
+    getUserSpeechConfig(deviceSettings, targetLanguage)
   );
 
-  const assistantRes = Buffer.concat([resMetadata, Buffer.from(audioData)]);
+  if (targetLanguage != deviceSettings.myLanguage) {
+    audioData = await changeVolume(
+      audioData,
+      deviceSettings.translateVolumeBoost
+    );
+  }
+
+  const assistantRes = Buffer.concat([resMetadata, audioData]);
 
   res.send(assistantRes);
 };

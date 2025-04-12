@@ -1,7 +1,16 @@
-import * as speech from "src/services/speech";
+import * as SST from "src/services/speech/SST";
+import * as TTS from "src/services/speech/TTS";
 
-import { genCommonDevRes, handleCommonDevData } from "./common";
-import { addDeviceMsg, DeviceMessage, getDeviceMsgs } from "src/services/database/device/messages";
+import {
+  genCommonDevRes,
+  getUserSpeechConfig,
+  handleCommonDevData,
+} from "./common";
+import {
+  addDeviceMsg,
+  DeviceMessage,
+  getDeviceMsgs,
+} from "src/services/database/device/messages";
 
 import { ParsedAssistantRequest } from "./parser";
 import express from "express";
@@ -9,7 +18,6 @@ import express from "express";
 // import { getStorage } from "firebase-admin/storage";
 import { DavisMessage, doDavis } from "src/davis";
 import { sendMsgsUpdate } from "src/sockets/msgBuilders/device";
-import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
 
 export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
   return [
@@ -22,7 +30,7 @@ export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
       content: deviceMsg.assistantMsg,
     },
   ];
-}
+};
 
 export const handleAssistant = async (
   req: ParsedAssistantRequest,
@@ -32,7 +40,10 @@ export const handleAssistant = async (
   try {
     // const bucket = getStorage().bucket();
     const { deviceId } = req.metadata;
-    const { deviceData, deviceSettings } = await handleCommonDevData(req, deviceId);
+    const { deviceData, deviceSettings } = await handleCommonDevData(
+      req,
+      deviceId
+    );
     console.log(req.metadata);
 
     // Get the audio buffer in OGG format from the request
@@ -47,13 +58,13 @@ export const handleAssistant = async (
 
     // Process the assistant logic concurrently.
     const assistantPromise = (async () => {
-      const recognizedSpeech = await speech.recognize(audioBuffer);
+      const recognizedSpeech = await SST.recognize(audioBuffer);
       console.log("Recognized:", recognizedSpeech);
 
       const { entries: msgs } = await getDeviceMsgs(deviceId);
       const msgContext = msgs.flatMap(convToDavisMsg);
 
-      const { assistantMessage, audioComponents } = await doDavis({
+      const { assistantMessage } = await doDavis({
         deviceId,
         deviceData,
         deviceSettings,
@@ -64,7 +75,7 @@ export const handleAssistant = async (
 
       const msgDraft: Omit<DeviceMessage, "date"> = {
         userMsg: recognizedSpeech,
-        assistantMsg: assistantMessage
+        assistantMsg: assistantMessage,
       };
 
       if (req.imageBuffer) {
@@ -79,20 +90,21 @@ export const handleAssistant = async (
       );
 
       sendMsgsUpdate(deviceId, {
-        entries: [
-          msgEntry
-        ]
+        entries: [msgEntry],
       });
 
       console.log("Assistant response:", assistantMessage);
-      console.log("Audio components:", audioComponents);
 
-      const audioData = Buffer.from(await speech.speak(
+      const audioData = await TTS.speak(
         assistantMessage,
-            SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus,
-          ));
+        getUserSpeechConfig(deviceSettings)
+      );
 
-      const resMetadata = await genCommonDevRes(deviceId, deviceData, deviceSettings);
+      const resMetadata = await genCommonDevRes(
+        deviceId,
+        deviceData,
+        deviceSettings
+      );
       const assistantRes = Buffer.concat([resMetadata, audioData]);
 
       console.log("Assistant done.");
@@ -102,11 +114,10 @@ export const handleAssistant = async (
 
     // Wait for both the upload and assistant processing to finish.
     const [assistantRes] = await Promise.all([assistantPromise]);
-    console.log("Response size", assistantRes.length)
+    console.log("Response size", assistantRes.length);
 
     res.send(assistantRes);
   } catch (error) {
     next(error);
   }
 };
-

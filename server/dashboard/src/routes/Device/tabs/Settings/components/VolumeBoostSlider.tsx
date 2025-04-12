@@ -6,13 +6,13 @@ const VolumeBoostSlider: React.FC<SliderProps> = ({ ...props }) => (
     label={null}
     marks={[
       { value: 1, label: "100%" },
-      { value: 1.25, label: "125%" },
       { value: 1.5, label: "150%" },
-      { value: 1.75, label: "175%" },
       { value: 2, label: "200%" },
+      { value: 2.5, label: "250%" },
+      { value: 3, label: "300%" },
     ]}
     min={1}
-    max={2}
+    max={3}
     step={0.05}
     mb="1.25rem"
     {...props}

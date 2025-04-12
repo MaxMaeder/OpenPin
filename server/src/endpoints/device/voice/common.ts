@@ -12,11 +12,16 @@ import { clearDeviceMsgs } from "src/services/database/device/messages";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
 import { updateDeviceLocation } from "src/services/location";
-import { getDeviceSettings, updateDeviceSettings } from "src/services/database/device/settings";
+import {
+  getDeviceSettings,
+  updateDeviceSettings,
+} from "src/services/database/device/settings";
 import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 import { doesDeviceExist } from "src/services/database/device/list";
 import createHttpError = require("http-errors");
-import { DeviceSettings } from "src/config/deviceSettings";
+import { DeviceSettings, TranslateLanguage } from "src/config/deviceSettings";
+import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
+import { SynthesisConfig } from "src/services/speech/TTS";
 
 // Update DB, etc. with data from request
 // Call genCommonDevRes() to actually write changes to DB
@@ -77,7 +82,8 @@ export const handleCommonDevData = async (
   return { deviceData, deviceSettings };
 };
 
-export const isDevLowBatt = (data: DeviceData) => data.battery < LOW_BATTERY_PERCENT;
+export const isDevLowBatt = (data: DeviceData) =>
+  data.battery < LOW_BATTERY_PERCENT;
 
 const formatDevRes = (json: Record<string, unknown>) => {
   // Step 1: Stringify the JSON object
@@ -113,4 +119,18 @@ export const genCommonDevRes = async (
   updateDeviceSettings(deviceId, deviceSettings);
 
   return formatDevRes(resData);
+};
+
+export const getUserSpeechConfig = (
+  settings: DeviceSettings,
+  language: TranslateLanguage = "en-US"
+): SynthesisConfig => {
+  const voice = MSFT_TTS_VOICES[settings.voiceName];
+  const voiceName = language == "en-US" ? voice.english : voice.multiligual;
+
+  return {
+    speed: settings.voiceSpeed,
+    voiceName,
+    language,
+  };
 };

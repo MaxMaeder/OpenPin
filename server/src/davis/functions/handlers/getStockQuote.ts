@@ -25,16 +25,11 @@ export const handleGetStockQuote = async (
       currency: "USD",
     }).format(dollars);
 
-  const returnValue = JSON.stringify({
+  return JSON.stringify({
     current: dollarsf(quote.c),
     high: dollarsf(quote.h),
     low: dollarsf(quote.l),
     open: dollarsf(quote.o),
     preClose: dollarsf(quote.pc),
   });
-
-  return {
-    returnValue,
-    audioComponents: [],
-  };
 };

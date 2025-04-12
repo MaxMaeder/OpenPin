@@ -17,10 +17,5 @@ export const handleGetWolframResponse = async (
     throw new FunctionHandlerError("Wolfram input is invalid.");
   }
 
-  const returnValue = await getWolframResponse(input);
-
-  return {
-    returnValue,
-    audioComponents: [],
-  };
+  return await getWolframResponse(input);
 };

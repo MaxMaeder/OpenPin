@@ -34,8 +34,5 @@ export const handleGetDirections = async (
     toAddress
   );
 
-  return {
-    returnValue: JSON.stringify(directions),
-    audioComponents: [],
-  };
+  return JSON.stringify(directions);
 };

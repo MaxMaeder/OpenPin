@@ -64,12 +64,7 @@ export const handleToggleSetting =
       spokenVerb = stateVerbs[1];
     }
 
-    const returnValue = JSON.stringify({
+    return JSON.stringify({
       result: `${spokenName} ${spokenVerb}`,
     });
-
-    return {
-      returnValue,
-      audioComponents: [],
-    };
   };

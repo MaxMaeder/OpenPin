@@ -3,7 +3,6 @@ import { getLocalTime } from "../services/maps";
 import { doChatCompletion } from "../services/completions";
 import { formatInTimeZone } from "date-fns-tz";
 import { functions, FunctionHandlerError } from "./functions";
-import { InputAudioComponent } from "../services/audio";
 import { ChatCompletionMessageParam } from "openai/resources";
 import { CHAT_COMP_MAX_CALLS } from "../config";
 import { DeviceSettings } from "src/config/deviceSettings";
@@ -26,26 +25,11 @@ interface DavisResponse {
   completionCalls: number;
   toolCalls: string[];
   assistantMessage: string;
-  audioComponents: InputAudioComponent[];
 }
 
 const formatDate = (date: Date) =>
   formatInTimeZone(date, "UTC", "h:mm aaa, MMM do yyyy");
 const formatBattery = (percent: number) => `${(percent * 100).toFixed(0)}%`;
-
-const sortComponents = (
-  items: InputAudioComponent[]
-): InputAudioComponent[] => {
-  return items.slice().sort((a, b) => {
-    if (a.type === "speech" && b.type !== "speech") {
-      return -1;
-    } else if (a.type !== "speech" && b.type === "speech") {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-};
 
 export const doDavis = async (
   davisDetails: DavisDetails
@@ -74,8 +58,6 @@ ${prompt}`
 
     let { llmPrompt, visionLlmPrompt } = davisDetails.deviceSettings;
     [llmPrompt, visionLlmPrompt] = addDeviceContext(llmPrompt, visionLlmPrompt);
-
-    const audioComponents: InputAudioComponent[] = [];
 
     for (let i = 0; i < CHAT_COMP_MAX_CALLS; i++) {
       const {
@@ -123,28 +105,20 @@ ${prompt}`
           }
 
           try {
-            const { returnValue, audioComponents: functionAudioComponents } =
-              await calledFunction.handler(
-                toolCall.function.arguments,
-                davisDetails.deviceId,
-                davisDetails.deviceData,
-                davisDetails.deviceSettings
-              );
+            const returnValue = await calledFunction.handler(
+              toolCall.function.arguments,
+              davisDetails.deviceId,
+              davisDetails.deviceData,
+              davisDetails.deviceSettings
+            );
 
             msgContext.push({
               role: "tool",
               content: returnValue,
               tool_call_id: toolCall.id,
             });
-
-            audioComponents.push(...functionAudioComponents);
           } catch (error) {
             console.error(error);
-
-            audioComponents.push({
-              type: "speech",
-              text: (error as FunctionHandlerError).message,
-            });
 
             msgContext.push({
               role: "tool",
@@ -162,14 +136,6 @@ ${prompt}`
           completionCalls: i + 1,
           toolCalls: toolCallsMade,
           assistantMessage: assistantResMsg,
-          audioComponents: sortComponents([
-            ...audioComponents,
-            {
-              type: "speech",
-              text:
-                assistantMessage || "No response from Davis, please try again",
-            },
-          ]),
         };
       }
     }
@@ -181,11 +147,5 @@ ${prompt}`
     completionCalls: CHAT_COMP_MAX_CALLS,
     toolCalls: toolCallsMade,
     assistantMessage: assistantResMsg,
-    audioComponents: [
-      {
-        type: "speech",
-        text: "Error getting a response from Davis, please try again",
-      },
-    ],
   };
 };
