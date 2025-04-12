@@ -11,6 +11,7 @@ kotlin {
         binaries {
             executable {
                 entryPoint = "org.openpin.daemon.main"
+                baseName = "openpin-daemon"
             }
         }
     }
@@ -29,9 +30,9 @@ tasks.register("deployToAdb") {
     dependsOn("linkDebugExecutableNative")
 
     doLast {
-        val binaryPath = "build/bin/native/debugExecutable/daemon.kexe"
+        val binaryPath = "build/bin/native/debugExecutable/openpin-daemon.kexe"
         val adbCommand = "/opt/homebrew/bin/adb"
-        val adbPath = "/data/local/tmp/daemon"
+        val adbPath = "/data/local/tmp/openpin-daemon"
 
         println("Pushing binary to device...")
         exec {

@@ -288,7 +288,10 @@ class CameraManager
         val recorder = Recorder.Builder()
             .setQualitySelector(config.qualitySelector)
             .build()
-        return VideoCapture.withOutput(recorder)
+
+        return VideoCapture.withOutput(recorder).apply {
+            this.targetRotation = Surface.ROTATION_270
+        }
     }
 
     private fun buildImageAnalysis(): ImageAnalysis {
