@@ -1,6 +1,9 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
+import {
+  getDeviceData,
+  updateDeviceData,
+} from "src/services/database/device/data";
 import { doesDeviceExist } from "src/services/database/device/list";
 import * as yup from "yup";
 import _ from "lodash";
@@ -30,7 +33,6 @@ interface ResolvedLocation {
 export const parseLocateDevice = json();
 
 export const handleLocateDevice = async (req: Request, res: Response) => {
-  console.log(req.body)
   try {
     await reqSchema.validate(req.body);
   } catch (err) {
@@ -44,7 +46,6 @@ export const handleLocateDevice = async (req: Request, res: Response) => {
   const accessPoints = req.body.wifiAccessPoints;
   if (!(await doesDeviceExist(deviceId)))
     throw createHttpError(404, "Device does not exist");
-
 
   const location = await getWiFiLocation(accessPoints);
   const deviceData = await getDeviceData(deviceId);
@@ -62,8 +63,8 @@ export const handleLocateDevice = async (req: Request, res: Response) => {
       lat: location.latitude,
       lng: location.longitude,
     },
-    accuracy: location.accuracy
-  }
+    accuracy: location.accuracy,
+  };
 
   res.status(200).send(resBody);
-}
+};

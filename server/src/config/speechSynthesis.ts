@@ -20,7 +20,7 @@ export const MSFT_TTS_VOICES: Record<AssistantVoice, MsftTTSVoice> = {
     multiligual: "en-US-AndrewMultilingualNeural",
   },
   derek: {
-    english: "en-US-DerekNeural",
+    english: "en-US-DerekMultilingualNeural", // There's not a normal one for this voice I guess
     multiligual: "en-US-DerekMultilingualNeural",
   },
   nancy: {

@@ -1,6 +1,15 @@
 import axios from "axios";
 import { GROQ_SST_MODEL } from "src/config";
 import FormData from "form-data";
+import { getPeakVolume } from "../audio";
+import { WHISPER_MIN_DB } from "src/config/speechRecognition";
+
+export class NoRecognitionError extends Error {
+  constructor(message: string = "No speech recognized") {
+    super(message);
+    this.name = "NoRecognitionError";
+  }
+}
 
 const whisperClient = axios.create({
   baseURL: "https://api.groq.com/openai/v1",
@@ -10,6 +19,11 @@ const whisperClient = axios.create({
 });
 
 export const recognize = async (audioBuffer: Buffer): Promise<string> => {
+  const maxVolume = await getPeakVolume(audioBuffer);
+  if (maxVolume < WHISPER_MIN_DB) {
+    throw new NoRecognitionError();
+  }
+
   const formData = new FormData();
   formData.append("file", audioBuffer, "audio.ogg");
   formData.append("model", GROQ_SST_MODEL);

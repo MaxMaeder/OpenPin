@@ -1,6 +1,7 @@
 import firebaseKey from "src/keys/firebaseKey";
 import admin from "firebase-admin";
 import axios from "axios";
+import { NoRecognitionError } from "./SST";
 
 const getGoogleClient = async () => {
   const credential = admin.app().options.credential;
@@ -18,13 +19,15 @@ const getGoogleClient = async () => {
 };
 
 export interface GoogleRecognizeResponse {
-  results: {
-    alternatives: {
-      transcript: string;
-      confidence?: number;
-    }[];
-    languageCode?: string;
-  }[];
+  results:
+    | {
+        alternatives: {
+          transcript: string;
+          confidence?: number;
+        }[];
+        languageCode?: string;
+      }[]
+    | undefined;
 }
 
 export const recognize = async (mediaId: string, languageCodes: string[]) => {
@@ -45,17 +48,19 @@ export const recognize = async (mediaId: string, languageCodes: string[]) => {
   );
 
   const { results } = response.data;
+  if (!results) throw new NoRecognitionError();
 
   const transcript = results
-    ?.flatMap((result) => result.alternatives || [])
-    .map((alt) => alt.transcript?.trim())
-    .filter((t): t is string => Boolean(t))
-    .join(" ");
+    .map((result) => result.alternatives[0]?.transcript || "")
+    .join(" ")
+    .trim();
+
+  if (transcript.length == 0) throw new NoRecognitionError();
 
   const detectedLanguage = results[0]?.languageCode;
 
   return {
-    transcript: transcript || "",
+    transcript,
     languageCode: detectedLanguage,
   };
 };

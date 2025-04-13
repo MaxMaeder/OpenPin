@@ -25,3 +25,30 @@ export const changeVolume = (
     outputStream.on("error", reject);
   });
 };
+
+export const getPeakVolume = (inputBuffer: Buffer): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const inputStream = streamifier.createReadStream(inputBuffer);
+
+    let stderr = "";
+
+    ffmpeg(inputStream)
+      .inputFormat("ogg")
+      .audioFilters("volumedetect")
+      .format("null")
+      .outputOptions("-f", "null")
+      .on("stderr", (line: string) => {
+        stderr += line + "\n";
+      })
+      .on("end", () => {
+        const match = stderr.match(/max_volume: ([\-\d\.]+) dB/);
+        if (match) {
+          resolve(parseFloat(match[1]));
+        } else {
+          reject(new Error("Failed to parse max volume from ffmpeg output."));
+        }
+      })
+      .on("error", reject)
+      .saveToFile("/dev/null");
+  });
+};

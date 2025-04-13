@@ -22,7 +22,7 @@ const metadataSchema = object({
 
 export type DeviceMetadata = InferType<typeof metadataSchema>;
 
-export interface ParsedAssistantRequest extends express.Request {
+export interface ParsedVoiceRequest extends express.Request {
   metadata: DeviceMetadata;
   imageBuffer: Buffer | undefined;
   audioBuffer: Buffer;
@@ -42,7 +42,7 @@ const getBodyBuffer = async (req: express.Request): Promise<Buffer> => {
 };
 
 export const parseDeviceReq = async (
-  req: ParsedAssistantRequest,
+  req: ParsedVoiceRequest,
   res: express.Response,
   next: express.NextFunction
 ) => {
@@ -71,7 +71,7 @@ export const parseDeviceReq = async (
     req.audioBuffer = buffer.subarray(
       req.metadata.imageSize + REQ_METADATA_SIZE,
       req.metadata.audioSize + req.metadata.imageSize + REQ_METADATA_SIZE
-    )
+    );
 
     next();
   } catch (error) {

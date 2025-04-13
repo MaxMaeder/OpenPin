@@ -1,23 +1,22 @@
 import * as SST from "src/services/speech/SST";
 import * as TTS from "src/services/speech/TTS";
 
-import {
-  genCommonDevRes,
-  getUserSpeechConfig,
-  handleCommonDevData,
-} from "./common";
+import { AbstractVoiceHandler } from "./common";
 import {
   addDeviceMsg,
+  clearDeviceMsgs,
   DeviceMessage,
   getDeviceMsgs,
 } from "src/services/database/device/messages";
 
-import { ParsedAssistantRequest } from "./parser";
-import express from "express";
-// import genFileName from "src/util/genFileName";
-// import { getStorage } from "firebase-admin/storage";
+import { ParsedVoiceRequest } from "./parser";
+import { Response, NextFunction } from "express";
 import { DavisMessage, doDavis } from "src/davis";
-import { sendMsgsUpdate } from "src/sockets/msgBuilders/device";
+import {
+  sendMsgsUpdate,
+  sendSettingsUpdate,
+} from "src/sockets/msgBuilders/device";
+import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 
 export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
   return [
@@ -32,92 +31,77 @@ export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
   ];
 };
 
-export const handleAssistant = async (
-  req: ParsedAssistantRequest,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  try {
-    // const bucket = getStorage().bucket();
-    const { deviceId } = req.metadata;
-    const { deviceData, deviceSettings } = await handleCommonDevData(
-      req,
-      deviceId
-    );
-    console.log(req.metadata);
-
-    // Get the audio buffer in OGG format from the request
-    const audioBuffer: Buffer = req.audioBuffer;
-
-    // Start uploading the OGG file to cloud storage
-    // const fileName = genFileName(deviceId, "ogg");
-    // const file = bucket.file(fileName);
-    // const uploadPromise = file.save(audioBuffer, {
-    //   contentType: "audio/ogg",
-    // });
-
-    // Process the assistant logic concurrently.
-    const assistantPromise = (async () => {
-      const recognizedSpeech = await SST.recognize(audioBuffer);
-      console.log("Recognized:", recognizedSpeech);
-
-      const { entries: msgs } = await getDeviceMsgs(deviceId);
-      const msgContext = msgs.flatMap(convToDavisMsg);
-
-      const { assistantMessage } = await doDavis({
-        deviceId,
-        deviceData,
-        deviceSettings,
-        msgContext,
-        recognizedSpeech,
-        imageBuffer: req.imageBuffer,
-      });
-
-      const msgDraft: Omit<DeviceMessage, "date"> = {
-        userMsg: recognizedSpeech,
-        assistantMsg: assistantMessage,
-      };
-
-      if (req.imageBuffer) {
-        msgDraft.userImgId = deviceData.latestImage;
-      }
-
-      // Save conversation context
-      const msgEntry = await addDeviceMsg(
-        deviceId,
-        msgDraft,
-        deviceSettings.messagesToKeep
-      );
-
-      sendMsgsUpdate(deviceId, {
-        entries: [msgEntry],
-      });
-
-      console.log("Assistant response:", assistantMessage);
-
-      const audioData = await TTS.speak(
-        assistantMessage,
-        getUserSpeechConfig(deviceSettings)
-      );
-
-      const resMetadata = await genCommonDevRes(
-        deviceId,
-        deviceData,
-        deviceSettings
-      );
-      const assistantRes = Buffer.concat([resMetadata, audioData]);
-
-      console.log("Assistant done.");
-
-      return assistantRes;
-    })();
-
-    // Wait for both the upload and assistant processing to finish.
-    const [assistantRes] = await Promise.all([assistantPromise]);
-    console.log("Response size", assistantRes.length);
-
-    res.send(assistantRes);
-  } catch (error) {
-    next(error);
+class Handler extends AbstractVoiceHandler {
+  constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
+    super(req, res, next);
   }
+
+  public async run() {
+    await super.run();
+
+    if (!this.deviceData || !this.deviceSettings)
+      throw new Error("Device data/settings null");
+
+    const recognizedSpeech = await SST.recognize(this.req.audioBuffer);
+
+    if (this.deviceSettings.clearMessages) {
+      await clearDeviceMsgs(this.deviceId);
+      sendSettingsUpdate(this.deviceId, {
+        clearMessages: false,
+      });
+      this.deviceSettings.clearMessages = false;
+    }
+
+    const { entries: msgs } = await getDeviceMsgs(this.deviceId);
+    const msgContext = msgs.flatMap(convToDavisMsg);
+
+    const { assistantMessage } = await doDavis({
+      deviceId: this.deviceId,
+      deviceData: this.deviceData,
+      deviceSettings: this.deviceSettings,
+      msgContext,
+      recognizedSpeech,
+      imageBuffer: this.req.imageBuffer,
+    });
+
+    const msgDraft: Omit<DeviceMessage, "date"> = {
+      userMsg: recognizedSpeech,
+      assistantMsg: assistantMessage,
+    };
+
+    if (this.req.imageBuffer) {
+      msgDraft.userImgId = this.deviceData.latestImage;
+    }
+
+    // Save conversation context
+    const msgEntry = await addDeviceMsg(
+      this.deviceId,
+      msgDraft,
+      this.deviceSettings.messagesToKeep
+    );
+
+    sendMsgsUpdate(this.deviceId, {
+      entries: [msgEntry],
+    });
+
+    const audioData = await TTS.speak(assistantMessage, this.getSpeechConfig());
+
+    if (STORE_VOICE_RECORDINGS) {
+      this.runLazyWork(async () => {
+        this.uploadVoiceData();
+      });
+    }
+
+    this.writeDeviceData();
+    this.sendResponse(audioData);
+  }
+}
+
+export const handleAssistant = async (
+  req: ParsedVoiceRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const handler = new Handler(req, res, next);
+  await handler.run();
 };

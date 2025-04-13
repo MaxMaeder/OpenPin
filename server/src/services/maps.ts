@@ -9,7 +9,6 @@ import {
 } from "@googlemaps/google-maps-services-js";
 import { addHours } from "date-fns";
 import { stripHtml } from "string-strip-html";
-import { DeviceLocation } from "./location";
 
 const client = new Client();
 const getKey = () => process.env.GOOGLE_KEY as string;
@@ -67,8 +66,8 @@ const extractCity = (res: GeocodeResult) => {
   const cityComponent = res.address_components.find((component) =>
     component.types.includes(PlaceType2.locality)
   );
-  return cityComponent?.short_name
-}
+  return cityComponent?.short_name;
+};
 
 export const getGeocoding = async (
   address: string
@@ -199,9 +198,15 @@ export interface WiFiAccessPoint {
   channel: number;
 }
 
+export interface WiFiGeolocation {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+}
+
 export const getWiFiLocation = async (
   accessPoints: WiFiAccessPoint[]
-): Promise<DeviceLocation> => {
+): Promise<WiFiGeolocation> => {
   const res = await client.geolocate({
     params: {
       key: getKey(),

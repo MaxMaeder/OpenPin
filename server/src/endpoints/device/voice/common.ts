@@ -1,136 +1,171 @@
 import _ = require("lodash");
-
 import { DeviceData } from "src/dbTypes";
-import { LOW_BATTERY_PERCENT } from "src/config";
 import {
   getDeviceData,
   updateDeviceData,
 } from "src/services/database/device/data";
-
-import { ParsedAssistantRequest } from "./parser";
-import { clearDeviceMsgs } from "src/services/database/device/messages";
+import { ParsedVoiceRequest } from "./parser";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { updateDeviceLocation } from "src/services/location";
 import {
   getDeviceSettings,
   updateDeviceSettings,
 } from "src/services/database/device/settings";
-import { sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 import { doesDeviceExist } from "src/services/database/device/list";
-import createHttpError = require("http-errors");
+import createHttpError from "http-errors";
 import { DeviceSettings, TranslateLanguage } from "src/config/deviceSettings";
 import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
+import { Response, NextFunction } from "express";
+import { Bucket } from "@google-cloud/storage";
 
-// Update DB, etc. with data from request
-// Call genCommonDevRes() to actually write changes to DB
-// (both functions work together)
-export const handleCommonDevData = async (
-  req: ParsedAssistantRequest,
-  deviceId: string
-): Promise<{
-  deviceData: DeviceData;
-  deviceSettings: DeviceSettings;
-}> => {
-  const bucket = getStorage().bucket();
+export class AbstractVoiceHandler {
+  protected readonly req: ParsedVoiceRequest;
+  protected readonly res: Response;
+  protected readonly next: NextFunction;
 
-  if (!(await doesDeviceExist(deviceId)))
-    throw createHttpError(404, "Device does not exist");
+  protected readonly deviceId: string;
 
-  const deviceSettings = await getDeviceSettings(deviceId);
-  const deviceData = await getDeviceData(deviceId);
+  protected deviceData?: DeviceData;
+  protected deviceSettings?: DeviceSettings;
 
-  deviceData.lastConnected = _.now();
+  protected readonly bucket: Bucket;
 
-  if (req.imageBuffer) {
-    const imageName = genFileName(deviceId, "jpeg");
-    const imageFileStream = bucket.file(imageName).createWriteStream();
+  constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
+    this.req = req;
+    this.res = res;
+    this.next = next;
 
-    imageFileStream.write(req.imageBuffer);
-    imageFileStream.end();
+    this.deviceId = req.metadata.deviceId;
 
-    deviceData.latestImage = imageName;
-    deviceData.latestImageCaptured = _.now();
+    this.bucket = getStorage().bucket();
   }
 
-  _.assign(
-    deviceData,
-    _.pick(req.metadata, ["latitude", "longitude", "battery"])
-  );
+  /**
+   * Gets current device data & settings from DB
+   */
+  private async getDeviceData() {
+    if (!(await doesDeviceExist(this.deviceId)))
+      throw createHttpError(404, "Device does not exist");
 
-  if (req.metadata.latitude && req.metadata.longitude) {
-    updateDeviceLocation(
-      deviceData,
-      {
-        latitude: req.metadata.latitude,
-        longitude: req.metadata.longitude,
-        accuracy: 0, // Todo: need from backend
-      },
-      "gnss"
+    this.deviceSettings = await getDeviceSettings(this.deviceId);
+    this.deviceData = await getDeviceData(this.deviceId);
+  }
+
+  /**
+   * Drafts update of common device data from request
+   */
+  private updateDeviceData() {
+    if (!this.deviceData) throw new Error("Device data null")!;
+
+    this.deviceData.lastConnected = _.now();
+
+    // We update latest image in writeDeviceData(), since there we can upload the image lazily
+    // If we did it here we might run into a race condition where device data was written,
+    // pointing to an image not yet uploaded
+
+    _.assign(
+      this.deviceData,
+      _.pick(this.req.metadata, ["latitude", "longitude", "battery"])
     );
   }
 
-  if (deviceSettings.clearMessages) {
-    await clearDeviceMsgs(deviceId);
-    sendSettingsUpdate(deviceId, {
-      clearMessages: false,
+  /**
+   * Run some lazy work
+   * Does not block nor return a promise
+   */
+  protected runLazyWork(work: () => Promise<void>) {
+    setImmediate(async () => {
+      try {
+        await work();
+      } catch (e) {
+        console.error("Lazy work failed:", e);
+      }
     });
-    deviceSettings.clearMessages = false;
   }
 
-  return { deviceData, deviceSettings };
-};
+  /**
+   * Upload voice data from request to bucket, return URI
+   */
+  protected async uploadVoiceData() {
+    const fileName = genFileName(this.deviceId, "ogg");
 
-export const isDevLowBatt = (data: DeviceData) =>
-  data.battery < LOW_BATTERY_PERCENT;
+    const voiceFile = this.bucket.file(fileName);
+    await voiceFile.save(this.req.audioBuffer, {
+      contentType: "audio/ogg",
+    });
 
-const formatDevRes = (json: Record<string, unknown>) => {
-  // Step 1: Stringify the JSON object
-  const jsonString = JSON.stringify(json);
-
-  // Step 2: Convert the string to a buffer, include space for null terminator
-  const stringBuffer = Buffer.from(jsonString, "utf-8");
-  const withNullTerminator = Buffer.concat([stringBuffer, Buffer.from([0])]);
-
-  if (withNullTerminator.length > 512) {
-    throw new Error("Device response exceeds the 512 byte limit.");
+    return voiceFile.cloudStorageURI.toString();
   }
 
-  // Step 3: Create a Uint8Array of 512 bytes
-  const paddedArray = new Uint8Array(512);
+  /**
+   * Writes device data & settings to DB
+   * Lazy: does not block nor return a promise
+   */
+  protected writeDeviceData() {
+    this.runLazyWork(async () => {
+      if (!this.deviceData || !this.deviceSettings)
+        throw new Error("Device data/settings null")!;
 
-  // Step 4: Copy the JSON with null terminator into the padded array
-  paddedArray.set(withNullTerminator);
+      if (this.req.imageBuffer) {
+        const imageName = genFileName(this.deviceId, "jpeg");
 
-  return paddedArray;
-};
+        await this.bucket.file(imageName).save(this.req.imageBuffer, {
+          contentType: "image/jpeg",
+        });
 
-export const genCommonDevRes = async (
-  deviceId: string,
-  deviceData: DeviceData,
-  deviceSettings: DeviceSettings
-): Promise<Uint8Array> => {
-  const resData = {
-    disabled: deviceSettings.deviceDisabled,
-  };
+        this.deviceData.latestImage = imageName;
+        this.deviceData.latestImageCaptured = _.now();
+      }
 
-  updateDeviceData(deviceId, deviceData);
-  updateDeviceSettings(deviceId, deviceSettings);
+      await updateDeviceData(this.deviceId, this.deviceData);
+      await updateDeviceSettings(this.deviceId, this.deviceSettings);
+    });
+  }
 
-  return formatDevRes(resData);
-};
+  /**
+   * Gets speech synthesis config based on device settings
+   */
+  protected getSpeechConfig(
+    language: TranslateLanguage = "en-US"
+  ): SynthesisConfig {
+    if (!this.deviceSettings) throw new Error("Device settings null")!;
 
-export const getUserSpeechConfig = (
-  settings: DeviceSettings,
-  language: TranslateLanguage = "en-US"
-): SynthesisConfig => {
-  const voice = MSFT_TTS_VOICES[settings.voiceName];
-  const voiceName = language == "en-US" ? voice.english : voice.multiligual;
+    const voice = MSFT_TTS_VOICES[this.deviceSettings.voiceName];
+    const voiceName = language == "en-US" ? voice.english : voice.multiligual;
 
-  return {
-    speed: settings.voiceSpeed,
-    voiceName,
-    language,
-  };
-};
+    return {
+      speed: this.deviceSettings.voiceSpeed,
+      voiceName,
+      language,
+    };
+  }
+
+  /**
+   * Sends voice response
+   */
+  protected sendResponse(
+    audioData: Buffer,
+    metadata: Record<string, unknown> = {}
+  ) {
+    const metadataBuffer = Buffer.concat([
+      Buffer.from(JSON.stringify(metadata), "utf-8"),
+      Buffer.from([0]),
+    ]);
+
+    if (metadataBuffer.length > 512) {
+      throw new Error("Device metadata response exceeds the 512 byte limit.");
+    }
+
+    const paddedMetadata = new Uint8Array(512);
+    paddedMetadata.set(paddedMetadata);
+
+    const body = Buffer.concat([paddedMetadata, audioData]);
+    this.res.status(200).send(body);
+  }
+
+  protected async run() {
+    await this.getDeviceData();
+    this.updateDeviceData();
+  }
+}
