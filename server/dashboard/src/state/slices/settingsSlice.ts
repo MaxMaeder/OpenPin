@@ -9,9 +9,9 @@ import { languageModels } from "src/assets/languageModels";
 import { translateLanguages } from "src/assets/languages";
 import { assistantVoices } from "src/assets/voices";
 
-export type LanguageModel = typeof languageModels[number]["value"];
-export type TranslateLanguage = typeof translateLanguages[number]["value"];
-export type AssistantVoice = typeof assistantVoices[number]["value"];
+export type LanguageModel = (typeof languageModels)[number]["value"];
+export type TranslateLanguage = (typeof translateLanguages)[number]["value"];
+export type AssistantVoice = (typeof assistantVoices)[number]["value"];
 
 export interface DeviceSettings {
   id: string;
@@ -38,8 +38,8 @@ const initialSettings: Omit<DeviceSettings, "id"> = {
   // General
   deviceDisabled: false,
   // Assistant
-  llmName: "llama-3-2-90b",
-  visionLlmName: "llama-3-2-90b",
+  llmName: "gpt-4o-mini",
+  visionLlmName: "gpt-4o-mini",
   llmPrompt: "",
   visionLlmPrompt: "",
   messagesToKeep: 20,
@@ -50,7 +50,7 @@ const initialSettings: Omit<DeviceSettings, "id"> = {
   translateVolumeBoost: 1.5,
   // Voice
   voiceName: "davis",
-  voiceSpeed: 1.2
+  voiceSpeed: 1.2,
 };
 
 export const settingsAdapter = createEntityAdapter<DeviceSettings>();

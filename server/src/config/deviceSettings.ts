@@ -7,10 +7,10 @@ export const LANGUAGE_MODELS = [
   { value: "gemini-2-0-flash", label: "Gemini 2.0 Flash" },
   { value: "gemini-2-5-pro", label: "Gemini 2.5 Pro" },
   { value: "claude-3-5", label: "Claude 3.5 Sonnet" },
-  { value: "claude-3-7", label: "Claude 3.7 Sonnet" }
+  { value: "claude-3-7", label: "Claude 3.7 Sonnet" },
 ] as const;
 
-export type LanguageModel = typeof LANGUAGE_MODELS[number]["value"];
+export type LanguageModel = (typeof LANGUAGE_MODELS)[number]["value"];
 
 export const TRANSLATE_LANGUAGES = [
   { value: "en-US", label: "English (United States)" },
@@ -25,20 +25,19 @@ export const TRANSLATE_LANGUAGES = [
   { value: "hi-IN", label: "Hindi (India)" },
 ] as const;
 
-export type TranslateLanguage = typeof TRANSLATE_LANGUAGES[number]["value"];
+export type TranslateLanguage = (typeof TRANSLATE_LANGUAGES)[number]["value"];
 
 export const ASSISTANT_VOICES = [
   { value: "davis", label: "The Davis Voice" },
   { value: "andrew", label: "Andrew" },
   { value: "derek", label: "Derek" },
   { value: "nancy", label: "Nancy" },
-  { value: "jenny", label: "Jenny" }
+  { value: "jenny", label: "Jenny" },
 ] as const;
 
-export type AssistantVoice = typeof ASSISTANT_VOICES[number]["value"];
+export type AssistantVoice = (typeof ASSISTANT_VOICES)[number]["value"];
 
-export const CHAT_COMP_PROMPT = `
-You are the user's assistant running from an AI Pin, and your name is Davis. Keep your responses concise and informal. 
+export const CHAT_COMP_PROMPT = `You are the user's assistant running from an AI Pin, and your name is Davis. Keep your responses concise and informal. 
 You are holding a conversation with the user, so your responses should be helpful, but not overly wordy, as a rule of thumb, they should be able to be spoken in about 5-10 seconds. 
 Don't ask the user any follow-up questions. Respond with pure english text, without any special symbols beyond basic punctuation.
 
@@ -84,13 +83,12 @@ export interface DeviceSettings {
   voiceSpeed: number;
 }
 
-
 export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   // General
   deviceDisabled: false,
   // Assistant
-  llmName: "llama-3-2-90b",
-  visionLlmName: "llama-3-2-90b",
+  llmName: "gpt-4o-mini",
+  visionLlmName: "gpt-4o-mini",
   llmPrompt: CHAT_COMP_PROMPT,
   visionLlmPrompt: CHAT_COMP_PROMPT,
   messagesToKeep: 20,
@@ -101,5 +99,5 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   translateVolumeBoost: 1.5,
   // Voice
   voiceName: "davis",
-  voiceSpeed: 1.2
+  voiceSpeed: 1.2,
 };
