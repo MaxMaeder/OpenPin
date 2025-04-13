@@ -53,8 +53,8 @@ const SignupRoute = () => {
             {...register('password', {
               required: true,
               pattern: {
-                value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
-                message: 'Password must contain a number and be at least 8 characters.',
+                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+                message: 'Password must contain a uppercase & lowercase letter, number and be at least 8 characters.',
               }
             })}
           />
