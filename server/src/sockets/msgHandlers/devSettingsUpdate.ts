@@ -6,26 +6,31 @@ import { sendSettingsUpdate } from "../msgBuilders/device";
 import { withAuthAndValidation } from "./common";
 import {
   ASSISTANT_VOICES,
-  AssistantVoice,
+  AssistantVoiceKey,
   DeviceSettings,
-  LANGUAGE_MODELS,
-  LanguageModel,
+  getModelsForInterface,
+  TextModelKey,
   TRANSLATE_LANGUAGES,
-  TranslateLanguage,
+  TranslateLanguageKey,
+  VisionModelKey,
 } from "src/config/deviceSettings";
 
 interface DeviceSettingsPayload extends Partial<DeviceSettings> {
   id: string;
 }
 
-const llmNameSchema = string().oneOf(
-  LANGUAGE_MODELS.map((model) => model.value) as LanguageModel[]
+const textModelSchema = string().oneOf(
+  getModelsForInterface({ supportText: true }) as TextModelKey[]
 );
+const visionModelSchema = string().oneOf(
+  getModelsForInterface({ supportVision: true }) as VisionModelKey[]
+);
+
 const languageSchema = string().oneOf(
-  TRANSLATE_LANGUAGES.map((model) => model.value) as TranslateLanguage[]
+  TRANSLATE_LANGUAGES.map((model) => model.value) as TranslateLanguageKey[]
 );
 const voiceNameSchema = string().oneOf(
-  ASSISTANT_VOICES.map((model) => model.value) as AssistantVoice[]
+  ASSISTANT_VOICES.map((model) => model.value) as AssistantVoiceKey[]
 );
 
 const payloadSchema: ObjectSchema<DeviceSettingsPayload> = object({
@@ -35,8 +40,8 @@ const payloadSchema: ObjectSchema<DeviceSettingsPayload> = object({
   deviceDisabled: boolean(),
   // Assistant
   messagesToKeep: number().integer().min(0).max(50),
-  llmName: llmNameSchema,
-  visionLlmName: llmNameSchema,
+  llmName: textModelSchema,
+  visionLlmName: visionModelSchema,
   llmPrompt: string(),
   visionLlmPrompt: string(),
   clearMessages: boolean().isTrue(), // Can only clear, can't cancel

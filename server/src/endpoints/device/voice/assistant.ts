@@ -3,6 +3,7 @@ import * as TTS from "src/services/speech/TTS";
 import { AbstractVoiceHandler } from "./common";
 import {
   addDeviceMsg,
+  clearDeviceMsgs,
   DeviceMessageDraft,
 } from "src/services/database/device/messages";
 import { ParsedVoiceRequest } from "./parser";
@@ -30,6 +31,9 @@ class Handler extends AbstractVoiceHandler {
       sendSettingsUpdate(this.context.id, {
         clearMessages: false,
       });
+
+      // Need to clear here, since we only upsert at end
+      await clearDeviceMsgs(this.context.id);
 
       this.context.msgs = [];
       this.context.settings.clearMessages = false;

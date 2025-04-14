@@ -13,7 +13,10 @@ import {
 } from "src/services/database/device/settings";
 import { doesDeviceExist } from "src/services/database/device/list";
 import createHttpError from "http-errors";
-import { DeviceSettings, TranslateLanguage } from "src/config/deviceSettings";
+import {
+  DeviceSettings,
+  TranslateLanguageKey,
+} from "src/config/deviceSettings";
 import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
 import { Response, NextFunction } from "express";
@@ -58,7 +61,7 @@ export class AbstractVoiceHandler {
       limit: window,
     });
 
-    return result.entries;
+    return result.entries.reverse(); // We want newest last
   }
 
   /**
@@ -164,7 +167,7 @@ export class AbstractVoiceHandler {
    * Gets speech synthesis config based on device settings
    */
   protected getSpeechConfig(
-    language: TranslateLanguage = "en-US"
+    language: TranslateLanguageKey = "en-US"
   ): SynthesisConfig {
     if (!this.context) throw new Error("Device context null");
 

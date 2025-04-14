@@ -1,5 +1,5 @@
 import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
-import { AssistantVoice } from "./deviceSettings";
+import { AssistantVoiceKey } from "./deviceSettings";
 
 export const MSFT_TTS_REGION = "eastus";
 export const MSFT_TTS_FORMAT =
@@ -10,7 +10,7 @@ interface MsftTTSVoice {
   multiligual: string;
 }
 
-export const MSFT_TTS_VOICES: Record<AssistantVoice, MsftTTSVoice> = {
+export const MSFT_TTS_VOICES: Record<AssistantVoiceKey, MsftTTSVoice> = {
   davis: {
     english: "en-US-DavisNeural",
     multiligual: "en-US-DavisMultilingualNeural",

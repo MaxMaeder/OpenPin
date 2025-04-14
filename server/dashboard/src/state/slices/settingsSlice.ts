@@ -9,9 +9,9 @@ import { languageModels } from "src/assets/languageModels";
 import { translateLanguages } from "src/assets/languages";
 import { assistantVoices } from "src/assets/voices";
 
-export type LanguageModel = (typeof languageModels)[number]["value"];
-export type TranslateLanguage = (typeof translateLanguages)[number]["value"];
-export type AssistantVoice = (typeof assistantVoices)[number]["value"];
+export type LanguageModelKey = (typeof languageModels)[number]["value"];
+export type TranslateLanguageKey = (typeof translateLanguages)[number]["value"];
+export type AssistantVoiceKey = (typeof assistantVoices)[number]["value"];
 
 export interface DeviceSettings {
   id: string;
@@ -19,18 +19,18 @@ export interface DeviceSettings {
   displayName?: string;
   deviceDisabled: boolean;
   // Assistant
-  llmName: LanguageModel;
-  visionLlmName: LanguageModel;
+  llmName: LanguageModelKey;
+  visionLlmName: LanguageModelKey;
   llmPrompt: string;
   visionLlmPrompt: string;
   messagesToKeep: number;
   clearMessages: boolean;
   // Translate
-  myLanguage: TranslateLanguage;
-  translateLanguage: TranslateLanguage;
+  myLanguage: TranslateLanguageKey;
+  translateLanguage: TranslateLanguageKey;
   translateVolumeBoost: number;
   // Voice
-  voiceName: AssistantVoice;
+  voiceName: AssistantVoiceKey;
   voiceSpeed: number;
 }
 

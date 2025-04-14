@@ -1,7 +1,17 @@
+interface LanguageModel {
+  value: string;
+  label: string;
+}
+
+export interface ModelInterfaces {
+  supportText?: boolean;
+  supportVision?: boolean;
+}
+
 export const LANGUAGE_MODELS = [
-  { value: "gpt-4o-mini", label: "GPT-4o Mini" },
-  { value: "grok-2-sexy", label: "Grok 2 (Sexy Mode)" },
-  { value: "gpt-4o", label: "GPT-4o" },
+  { value: "gpt-4o", label: "GPT-4o", supportVision: true },
+  { value: "gpt-4o-mini", label: "GPT-4o Mini", supportText: true },
+  { value: "grok-2-sexy", label: "Grok 2 (Sexy Mode)", supportText: true },
   { value: "grok-3", label: "Grok 3" },
   { value: "llama-3-2-11b", label: "Llama 3.2 11B" },
   { value: "llama-3-2-90b", label: "Llama 3.2 90B" },
@@ -10,9 +20,18 @@ export const LANGUAGE_MODELS = [
   { value: "gemini-2-5-pro", label: "Gemini 2.5 Pro" },
   { value: "claude-3-5", label: "Claude 3.5 Sonnet" },
   { value: "claude-3-7", label: "Claude 3.7 Sonnet" },
-] as const;
+] as const satisfies readonly (LanguageModel & ModelInterfaces)[];
 
-export type LanguageModel = (typeof LANGUAGE_MODELS)[number]["value"];
+export type LanguageModelKey = (typeof LANGUAGE_MODELS)[number]["value"];
+
+export type VisionModelKey = Extract<
+  (typeof LANGUAGE_MODELS)[number],
+  { supportVision: true }
+>["value"];
+export type TextModelKey = Extract<
+  (typeof LANGUAGE_MODELS)[number],
+  { supportText: true }
+>["value"];
 
 export const TRANSLATE_LANGUAGES = [
   { value: "en-US", label: "English (United States)" },
@@ -27,7 +46,8 @@ export const TRANSLATE_LANGUAGES = [
   { value: "hi-IN", label: "Hindi (India)" },
 ] as const;
 
-export type TranslateLanguage = (typeof TRANSLATE_LANGUAGES)[number]["value"];
+export type TranslateLanguageKey =
+  (typeof TRANSLATE_LANGUAGES)[number]["value"];
 
 export const ASSISTANT_VOICES = [
   { value: "davis", label: "The Davis Voice" },
@@ -37,7 +57,7 @@ export const ASSISTANT_VOICES = [
   { value: "jenny", label: "Jenny" },
 ] as const;
 
-export type AssistantVoice = (typeof ASSISTANT_VOICES)[number]["value"];
+export type AssistantVoiceKey = (typeof ASSISTANT_VOICES)[number]["value"];
 
 export const CHAT_COMP_PROMPT = `You are the user's assistant running from an AI Pin, and your name is Davis. Keep your responses concise and informal. 
 You are holding a conversation with the user, so your responses should be helpful, but not overly wordy, as a rule of thumb, they should be able to be spoken in about 5-10 seconds. 
@@ -70,18 +90,18 @@ export interface DeviceSettings {
   displayName?: string;
   deviceDisabled: boolean;
   // Assistant
-  llmName: LanguageModel;
-  visionLlmName: LanguageModel;
+  llmName: TextModelKey;
+  visionLlmName: VisionModelKey;
   llmPrompt: string;
   visionLlmPrompt: string;
   messagesToKeep: number;
   clearMessages: boolean;
   // Translate
-  myLanguage: TranslateLanguage;
-  translateLanguage: TranslateLanguage;
+  myLanguage: TranslateLanguageKey;
+  translateLanguage: TranslateLanguageKey;
   translateVolumeBoost: number;
   // Voice
-  voiceName: AssistantVoice;
+  voiceName: AssistantVoiceKey;
   voiceSpeed: number;
 }
 
@@ -90,7 +110,7 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   deviceDisabled: false,
   // Assistant
   llmName: "gpt-4o-mini",
-  visionLlmName: "gpt-4o-mini",
+  visionLlmName: "gpt-4o",
   llmPrompt: CHAT_COMP_PROMPT,
   visionLlmPrompt: CHAT_COMP_PROMPT,
   messagesToKeep: 20,
@@ -102,4 +122,22 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   // Voice
   voiceName: "davis",
   voiceSpeed: 1.2,
+};
+
+export const getModelsForInterface = (
+  interfaces: ModelInterfaces
+): LanguageModelKey[] => {
+  return LANGUAGE_MODELS.filter((model) => {
+    if (
+      interfaces.supportText &&
+      (!("supportText" in model) || !model.supportText)
+    )
+      return false;
+    if (
+      interfaces.supportVision &&
+      (!("supportVision" in model) || !model.supportVision)
+    )
+      return false;
+    return true;
+  }).map((model) => model.value);
 };

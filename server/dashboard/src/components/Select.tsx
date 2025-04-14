@@ -1,10 +1,10 @@
-import { ComboboxItem, Select as MSelect, SelectProps as MSelectProps } from "@mantine/core";
+import { ComboboxData, ComboboxItem, Select as MSelect, SelectProps as MSelectProps } from "@mantine/core";
 import { useCallback } from "react";
 
 interface SelectProps<T> extends Omit<MSelectProps, "value" | "onChange" | "data"> {
   value: T;
   onChange: (value: T, option: ComboboxItem) => void;
-  data: readonly { value: T; label: string }[];
+  data: ComboboxData;
 }
 
 const Select = <T extends string>({ value, onChange, ...props }: SelectProps<T>) => {

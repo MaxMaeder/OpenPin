@@ -12,12 +12,15 @@ import Section from "./components/Section";
 import Select from "src/components/Select";
 import VoiceSpeedSlider from "./components/VoiceSpeedSlider";
 import VolumeBoostSlider from "./components/VolumeBoostSlider";
-import { languageModels } from "src/assets/languageModels";
 import { assistantVoices } from "src/assets/voices";
+import { useModelsForInterface } from "./useModelsForInterface";
 
 const Settings: React.FC = () => {
   const bind = useBindSettings();
   const deviceId = useDeviceId();
+
+  const textModels = useModelsForInterface({ supportText: true });
+  const visionModels = useModelsForInterface({ supportVision: true });
 
   return (
     <TabContainer paper={true}>
@@ -46,12 +49,12 @@ const Settings: React.FC = () => {
           <SectionCol>
             <Select
               label="Language Model"
-              data={languageModels}
+              data={textModels}
               {...bind("llmName")}
             />
             <Select
               label="Vision Language Model"
-              data={languageModels}
+              data={visionModels}
               {...bind("visionLlmName")}
             />
             <Input.Wrapper label="Messages for Context Window">
