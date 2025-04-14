@@ -68,8 +68,8 @@ class GestureDetector(
         longPressJob = coroutineScope.launch {
             delay(longPressThreshold)
             if (touchActive && !dragStarted) {
-                gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_DOWN))
                 longPressFired = true
+                gestureCallback(GestureEvent(getFingerCount(), GestureType.LONG_PRESS_DOWN))
             }
         }
     }

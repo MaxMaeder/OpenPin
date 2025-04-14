@@ -208,20 +208,20 @@ class BackendManager(
             payload = payload,
             payloadType = RequestProcess.PayloadType.MULTIPART
         )
-        val reqProcess = processHandler.execute(req)
 
-        if (reqProcess.error.isNotBlank()) {
-            Log.e(
-                "BackendHandler",
-                "Error sending request: ${reqProcess.error} ${reqProcess.output}"
-            )
+        try {
+            processHandler.execute(req)
+
+            if (req.error.isNotEmpty()) {
+                throw RuntimeException("Upload request returned error: ${req.error}")
+            }
+        } finally {
+            processHandler.release(req)
         }
-
-        processHandler.release(req)
     }
 
     suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
-        // Todo: better error handling
+        // Todo: clean up logic into multiple fns
         val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
         val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
 
@@ -236,70 +236,62 @@ class BackendManager(
             longitude = locationManager.latestLocation?.location?.lng
         )
 
-        val headerString = gson.toJson(requestMetadata) + "\u0000"
-        val headerBytes = headerString.toByteArray(Charsets.UTF_8)
-        val paddedHeader = ByteArray(512)
-        val copyLength = headerBytes.size.coerceAtMost(512)
-        System.arraycopy(headerBytes, 0, paddedHeader, 0, copyLength)
+        var req: RequestProcess? = null
+        var requestFile: File? = null
+        var responseFile: File? = null
 
-        val requestFile = processHandler.createTempFile("request.dat")
-        requestFile.outputStream().use { os ->
-            os.write(paddedHeader)
-            imageFile?.inputStream()?.use { it.copyTo(os) }
-            audioFile.inputStream().use { it.copyTo(os) }
+        try {
+            val headerString = gson.toJson(requestMetadata) + "\u0000"
+            val headerBytes = headerString.toByteArray(Charsets.UTF_8)
+            val paddedHeader = ByteArray(512)
+            val copyLength = headerBytes.size.coerceAtMost(512)
+            System.arraycopy(headerBytes, 0, paddedHeader, 0, copyLength)
+
+            requestFile = processHandler.createTempFile("request.dat")
+            requestFile.outputStream().use { os ->
+                os.write(paddedHeader)
+                imageFile?.inputStream()?.use { it.copyTo(os) }
+                audioFile.inputStream().use { it.copyTo(os) }
+            }
+
+            responseFile = processHandler.createTempFile("response.raw")
+
+            req = RequestProcess(
+                url = "${baseUrl}/api/dev/$endpoint",
+                method = "POST",
+                payloadType = RequestProcess.PayloadType.BINARY,
+                payload = RequestProcess.Payload.FromFile(requestFile),
+                outputFile = responseFile
+            )
+
+            processHandler.execute(req)
+            if (req.error.isNotEmpty()) {
+                throw RuntimeException("Voice request returned error: ${req.error}")
+            }
+
+            // Parse response metadata (first 512 bytes)
+            val metadataBuffer = ByteArray(512)
+            responseFile.inputStream().use { input ->
+                input.read(metadataBuffer)
+            }
+
+            val responseMetadataJson =
+                metadataBuffer.toString(Charsets.UTF_8).trimEnd('\u0000', '\u0001', '\n')
+            val responseMetadata = gson.fromJson(responseMetadataJson, ResponseMetadata::class.java)
+
+            Log.i("BackendHandler", "Received response metadata: $responseMetadata")
+
+            // Strip 512-byte header and return the mp3 portion
+            val audioBytes = responseFile.inputStream().use { input ->
+                input.skip(512)
+                input.readBytes()
+            }
+
+            return audioBytes
+        } finally {
+            requestFile?.delete()
+            responseFile?.delete()
+            req?.let { processHandler.release(it) }
         }
-
-        val responseFile = processHandler.createTempFile("response.raw")
-
-        val requestProcess = RequestProcess(
-            url = "${baseUrl}/api/dev/$endpoint",
-            method = "POST",
-            payloadType = RequestProcess.PayloadType.BINARY,
-            payload = RequestProcess.Payload.FromFile(requestFile),
-            outputFile = responseFile
-        )
-
-        val resultProcess = processHandler.execute(requestProcess)
-        if (resultProcess.error.isNotBlank()) {
-            Log.e("BackendHandler", "Error sending request: ${resultProcess.error}")
-            requestFile.delete()
-            responseFile.delete()
-            processHandler.release(requestProcess)
-            return null
-        }
-
-        // Parse response metadata (first 512 bytes)
-        val metadataBuffer = ByteArray(512)
-        responseFile.inputStream().use { input ->
-            input.read(metadataBuffer)
-        }
-
-        val responseMetadataJson =
-            metadataBuffer.toString(Charsets.UTF_8).trimEnd('\u0000', '\u0001', '\n')
-        val responseMetadata = try {
-            gson.fromJson(responseMetadataJson, ResponseMetadata::class.java)
-        } catch (e: Exception) {
-            Log.e("BackendHandler", "Failed to parse response metadata: $responseMetadataJson", e)
-            requestFile.delete()
-            responseFile.delete()
-            processHandler.release(requestProcess)
-            null
-        }
-
-        Log.i("BackendHandler", "Received response metadata: $responseMetadata")
-
-        // Strip 512-byte header and return the mp3 portion
-        val audioBytes = responseFile.inputStream().use { input ->
-            input.skip(512)
-            input.readBytes()
-        }
-
-        // Clean up temporary files:
-        requestFile.delete()
-        responseFile.delete()
-        processHandler.release(requestProcess)
-
-        return audioBytes
     }
-
 }
