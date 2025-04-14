@@ -28,6 +28,8 @@ class Handler extends AbstractVoiceHandler {
 
     if (!this.context) throw new Error("Device context null");
 
+    const imageUpload = this.uploadImage();
+
     let userMsg: string;
     try {
       userMsg = await SST.recognize(this.req.audioBuffer);
@@ -66,12 +68,13 @@ class Handler extends AbstractVoiceHandler {
       assistantMsg,
     };
 
-    if (this.req.imageBuffer) {
-      msgDraft.userImgId = this.context.data.latestImage;
-    }
-
     this.runLazyWork(async () => {
       if (!this.context) throw new Error("Device context null");
+
+      const imageUploadResult = await imageUpload;
+      if (imageUploadResult) {
+        msgDraft.userImgId = imageUploadResult.name;
+      }
 
       const msgEntry = await addDeviceMsg(
         this.context.id,

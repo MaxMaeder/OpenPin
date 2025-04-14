@@ -1,12 +1,12 @@
 import { ParsedVoiceRequest } from "./parser";
 import * as translateSST from "src/services/speech/translateSST";
 import * as TTS from "src/services/speech/TTS";
+import * as SST from "src/services/speech/SST";
 import { translate } from "src/services/translate";
 import createHttpError from "http-errors";
 import { changeVolume } from "src/services/audio";
 import { Response, NextFunction } from "express";
 import { AbstractVoiceHandler } from "./common";
-import { NoRecognitionError } from "src/services/speech/SST";
 import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
 import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 
@@ -31,7 +31,7 @@ class Handler extends AbstractVoiceHandler {
     try {
       recognizedResult = await translateSST.recognize(voiceFileUri, languagePool);
     } catch (e) {
-      if (e instanceof NoRecognitionError) {
+      if (e instanceof SST.NoRecognitionError) {
         console.log("No speech recognized");
 
         const speech = getRandomCannedMsg(NO_SPEECH_MSGS);

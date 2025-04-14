@@ -22,6 +22,11 @@ export interface DeviceContext {
   msgs: DeviceMessage[];
 }
 
+export interface BucketUploadResult {
+  uri: string;
+  name: string;
+}
+
 export class AbstractVoiceHandler {
   protected readonly req: ParsedVoiceRequest;
   protected readonly res: Response;
@@ -80,11 +85,30 @@ export class AbstractVoiceHandler {
 
     this.context.data.lastConnected = _.now();
 
-    // We update latest image in writeDeviceData(), since there we can upload the image lazily
-    // If we did it here we might run into a race condition where device data was written,
-    // pointing to an image not yet uploaded
-
     _.assign(this.context.data, _.pick(this.req.metadata, ["latitude", "longitude", "battery"]));
+  }
+
+  /**
+   * Uploads image, if one exists in request, and drafts update of related device context
+   */
+  protected async uploadImage(): Promise<BucketUploadResult | undefined> {
+    if (!this.context) throw new Error("Device context null");
+    if (!this.req.imageBuffer) return;
+
+    const imageName = genFileName(this.context.id, "jpeg");
+
+    const imageFile = await this.bucket.file(imageName);
+    imageFile.save(this.req.imageBuffer, {
+      contentType: "image/jpeg",
+    });
+
+    this.context.data.latestImage = imageName;
+    this.context.data.latestImageCaptured = _.now();
+
+    return {
+      name: imageName,
+      uri: imageFile.cloudStorageURI.toString(),
+    };
   }
 
   /**
@@ -104,7 +128,7 @@ export class AbstractVoiceHandler {
   /**
    * Upload voice data from request to bucket, return URI
    */
-  protected async uploadVoiceData() {
+  protected async uploadVoiceData(): Promise<BucketUploadResult> {
     if (!this.context) throw new Error("Device context null");
 
     const fileName = genFileName(this.context.id, "ogg");
@@ -129,16 +153,8 @@ export class AbstractVoiceHandler {
     this.runLazyWork(async () => {
       if (!this.context) throw new Error("Device context null");
 
-      if (this.req.imageBuffer) {
-        const imageName = genFileName(this.context.id, "jpeg");
-
-        await this.bucket.file(imageName).save(this.req.imageBuffer, {
-          contentType: "image/jpeg",
-        });
-
-        this.context.data.latestImage = imageName;
-        this.context.data.latestImageCaptured = _.now();
-      }
+      // There is a DB watcher that will send the update to the client over WS
+      // This will scale interestingly
 
       await Promise.all([
         updateDeviceData(this.context.id, this.context.data),
