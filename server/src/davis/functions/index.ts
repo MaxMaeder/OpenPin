@@ -8,6 +8,7 @@ import { handleGetStockQuote } from "./handlers/getStockQuote";
 import { handleGetWolframResponse } from "./handlers/getWolframResponse";
 import { handleSearchWikipedia } from "./handlers/searchWikipedia";
 import { DavisToolContext } from "..";
+import { handleUpsertNote } from "./handlers/upsertNote";
 
 export type FunctionHandlerReturnType = Promise<string>;
 
@@ -15,10 +16,7 @@ interface DavisFunction {
   // Function is only available for a single invocation of the completion
   //  service. This avoids function-calling loops.
   definition: FunctionDefinition;
-  handler: (
-    payload: string,
-    context: DavisToolContext
-  ) => FunctionHandlerReturnType;
+  handler: (payload: string, context: DavisToolContext) => FunctionHandlerReturnType;
 }
 
 export class FunctionHandlerError extends Error {
@@ -29,6 +27,55 @@ export class FunctionHandlerError extends Error {
 }
 
 export const functions: Array<DavisFunction> = [
+  {
+    definition: {
+      name: "create_note",
+      description:
+        "Create a note. Notes serve two purposes: (1) a long-term memory for the assistant (2) a way to share long content with the user. " +
+        "Example uses of notes: 'Add a reminder to pick up dry cleaning', 'Remember I'm allergic to peanuts'," +
+        "'create a draft of that speech I was telling you about'",
+      parameters: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description: "The title of the note to create.",
+          },
+          content: {
+            type: "string",
+            description: "The text contents of the note.",
+          },
+        },
+        required: ["title", "content"],
+      },
+    },
+    handler: handleUpsertNote,
+  },
+  {
+    definition: {
+      name: "update_note",
+      description: "Updates a note.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug: {
+            type: "string",
+            description: "The slug of the note to update.",
+          },
+          title: {
+            type: "string",
+            description: "An optional new title for the note.",
+          },
+          content: {
+            type: "string",
+            description: "The full, updated text contents of the note.",
+          },
+        },
+        required: ["slug", "content"],
+      },
+    },
+    handler: handleUpsertNote,
+  },
   {
     definition: {
       name: "get_weather",
@@ -51,29 +98,6 @@ export const functions: Array<DavisFunction> = [
     },
     handler: handleGetWeather,
   },
-  // {
-  //   availableOnce: true,
-  //   definition: {
-  //     name: "toggle_wifi",
-  //     description: "Turn's the device's WiFi on/off",
-  //     parameters: {
-  //       type: "object",
-  //       properties: {
-  //         transformation: {
-  //           type: "string",
-  //           description:
-  //             "How to change the state of the WiFi. Either 'on', 'off' " +
-  //             "or 'toggle' to turn WiFi on if off, off if on.",
-  //         },
-  //       },
-  //       required: ["transformation"],
-  //     },
-  //   },
-  //   handler: handleToggleSetting("enableWifi", "WiFi", [
-  //     "turned on",
-  //     "turned off",
-  //   ]),
-  // },
   {
     definition: {
       name: "get_location",

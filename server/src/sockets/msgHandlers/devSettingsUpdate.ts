@@ -62,6 +62,6 @@ export const handleDevSettingsUpdate = withAuthAndValidation(
     const settings: Partial<DeviceSettings> = _.omit(payload, "id");
     await updateDeviceSettings(deviceId, settings);
 
-    sendSettingsUpdate(deviceId, settings);
+    sendSettingsUpdate(deviceId, settings, [socket.id]);
   }
 );

@@ -40,8 +40,8 @@ export interface UserMessage {
 export type AssistantToolCall = ChatCompletionMessageToolCall;
 export interface AssistantMessage {
   role: "assistant";
-  content: string;
-  toolCalls?: AssistantToolCall[];
+  content?: string;
+  tool_calls?: AssistantToolCall[];
 }
 
 export type CompletionMessage =
@@ -92,12 +92,12 @@ export class NoCompletionError extends Error {
 }
 
 const parseResponse = (res: ChatCompletion): AssistantMessage => {
-  if (!res.choices[0]?.message.content) throw new NoCompletionError();
+  if (!res.choices[0]) throw new NoCompletionError();
 
   return {
     role: "assistant",
-    content: res.choices[0].message.content,
-    toolCalls: res.choices[0].message.tool_calls,
+    content: res.choices[0].message.content ?? undefined,
+    tool_calls: res.choices[0].message.tool_calls,
   };
 };
 

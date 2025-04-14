@@ -11,6 +11,9 @@ import { COMP_MAX_CALLS, COMP_MODELS } from "../config/davis";
 import { DeviceContext } from "src/endpoints/device/voice/common";
 import { DeviceNote, getDeviceNotes } from "src/services/database/device/notes";
 import { COMP_CALLS_EXCEEDED_MSG } from "src/config/davis";
+import { getNoteSlug } from "./functions/handlers/upsertNote";
+import { WithId } from "src/services/database/device/content";
+import { addHours } from "date-fns/addHours";
 
 interface CompletionPrompt {
   text: string;
@@ -25,6 +28,7 @@ export interface DavisDetails {
 
 export interface DavisToolContext extends DeviceContext {
   time: LocalTime;
+  notes: WithId<DeviceNote>[];
 }
 
 export interface DavisResponse {
@@ -40,7 +44,7 @@ class DavisEngine {
   private readonly userImg?: Buffer;
 
   private time?: LocalTime;
-  private notes?: DeviceNote[];
+  private notes?: WithId<DeviceNote>[];
   // private prompt?: CompletionPrompt;
 
   private completionMsgs: CompletionMessage[] = [];
@@ -80,11 +84,13 @@ class DavisEngine {
     return `${(percent * 100).toFixed(0)}%`;
   }
 
-  private static formatNotes(notes: DeviceNote[]) {
+  private static formatNotes(notes: DeviceNote[], tzOffset: number) {
     return notes
       .map(
         (note) =>
-          `Note name: ${note.title}, date: ${this.formatDate(note.date)}\n` +
+          `Note slug: ${getNoteSlug(note)},\n` +
+          `name: ${note.title}, ` +
+          `date: ${this.formatDate(addHours(note.date, tzOffset))}\n` +
           note.content
       )
       .join("\n");
@@ -101,11 +107,9 @@ class DavisEngine {
     UTC time: ${DavisEngine.formatDate(this.time.utcTime)}, 
     local time: ${DavisEngine.formatDate(this.time.localTime)},
     timezone: ${this.time.tsName}.
-    Device battery charge: ${DavisEngine.formatBattery(
-      this.context.data.battery
-    )}.
+    Device battery charge: ${DavisEngine.formatBattery(this.context.data.battery)}.
 
-    Notes: ${DavisEngine.formatNotes(this.notes)}
+    Notes: \n${DavisEngine.formatNotes(this.notes, this.time.tzOffset)}
     
     ${userPrompt}`;
   }
@@ -128,6 +132,7 @@ class DavisEngine {
       role: "system",
       content: hasImg ? prompt.vision : prompt.text,
     });
+    console.log(this.completionMsgs);
 
     const msgHistory = this.context.msgs.flatMap<CompletionMessage>((msg) => [
       {
@@ -162,20 +167,20 @@ class DavisEngine {
 
   private getToolContext(): DavisToolContext {
     if (!this.time) throw new Error("LocalTime is null");
+    if (!this.notes) throw new Error("Notes is null");
 
     return {
       ...this.context,
       time: this.time,
+      notes: this.notes,
     };
   }
 
   private async doToolCall(toolCall: AssistantToolCall) {
-    const calledFunction = functions.find(
-      (fn) => fn.definition.name == toolCall.function.name
-    );
+    const calledFunction = functions.find((fn) => fn.definition.name == toolCall.function.name);
 
     if (!calledFunction) {
-      console.error("No matching function handler found");
+      console.warn("No matching function handler found");
 
       this.completionMsgs.push({
         role: "tool",
@@ -219,7 +224,7 @@ class DavisEngine {
     );
 
     this.completionMsgs.push(assistantMsg);
-    const toolCalls = assistantMsg.toolCalls || [];
+    const toolCalls = assistantMsg.tool_calls || [];
 
     if (toolCalls.length > 0) {
       await Promise.all(toolCalls.map((toolCall) => this.doToolCall(toolCall)));
