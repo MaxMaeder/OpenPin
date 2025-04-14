@@ -8,7 +8,7 @@ export interface ModelInterfaces {
   supportVision?: boolean;
 }
 
-export const LANGUAGE_MODELS = [
+export const languageModels = [
   { value: "gpt-4o", label: "GPT-4o", supportVision: true },
   { value: "gpt-4o-mini", label: "GPT-4o Mini", supportText: true },
   { value: "grok-2-sexy", label: "Grok 2 (Sexy Mode)", supportText: true },
@@ -22,22 +22,15 @@ export const LANGUAGE_MODELS = [
   { value: "claude-3-7", label: "Claude 3.7 Sonnet" },
 ] as const satisfies readonly (LanguageModel & ModelInterfaces)[];
 
-export type LanguageModelKey = (typeof LANGUAGE_MODELS)[number]["value"];
+export type LanguageModelKey = (typeof languageModels)[number]["value"];
 
-export const getModelsForInterface = (
-  interfaces: ModelInterfaces
-): LanguageModelKey[] => {
-  return LANGUAGE_MODELS.filter((model) => {
-    if (
-      interfaces.supportText &&
-      (!("supportText" in model) || !model.supportText)
-    )
-      return false;
-    if (
-      interfaces.supportVision &&
-      (!("supportVision" in model) || !model.supportVision)
-    )
-      return false;
-    return true;
-  }).map((model) => model.value);
+export const getModelsForInterface = (interfaces: ModelInterfaces): LanguageModelKey[] => {
+  return languageModels
+    .filter((model) => {
+      if (interfaces.supportText && (!("supportText" in model) || !model.supportText)) return false;
+      if (interfaces.supportVision && (!("supportVision" in model) || !model.supportVision))
+        return false;
+      return true;
+    })
+    .map((model) => model.value);
 };
