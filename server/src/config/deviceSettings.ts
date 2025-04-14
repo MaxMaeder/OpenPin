@@ -46,8 +46,7 @@ export const TRANSLATE_LANGUAGES = [
   { value: "hi-IN", label: "Hindi (India)" },
 ] as const;
 
-export type TranslateLanguageKey =
-  (typeof TRANSLATE_LANGUAGES)[number]["value"];
+export type TranslateLanguageKey = (typeof TRANSLATE_LANGUAGES)[number]["value"];
 
 export const ASSISTANT_VOICES = [
   { value: "davis", label: "The Davis Voice" },
@@ -113,23 +112,14 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   translateLanguage: "es-ES",
   translateVolumeBoost: 1.5,
   // Voice
-  voiceName: "davis",
-  voiceSpeed: 1.2,
+  voiceName: "derek",
+  voiceSpeed: 1.1,
 };
 
-export const getModelsForInterface = (
-  interfaces: ModelInterfaces
-): LanguageModelKey[] => {
+export const getModelsForInterface = (interfaces: ModelInterfaces): LanguageModelKey[] => {
   return LANGUAGE_MODELS.filter((model) => {
-    if (
-      interfaces.supportText &&
-      (!("supportText" in model) || !model.supportText)
-    )
-      return false;
-    if (
-      interfaces.supportVision &&
-      (!("supportVision" in model) || !model.supportVision)
-    )
+    if (interfaces.supportText && (!("supportText" in model) || !model.supportText)) return false;
+    if (interfaces.supportVision && (!("supportVision" in model) || !model.supportVision))
       return false;
     return true;
   }).map((model) => model.value);

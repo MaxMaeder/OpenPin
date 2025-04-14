@@ -1,30 +1,18 @@
 import _ = require("lodash");
 import { DeviceData, DeviceId } from "src/dbTypes";
-import {
-  getDeviceData,
-  updateDeviceData,
-} from "src/services/database/device/data";
+import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
 import { ParsedVoiceRequest } from "./parser";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import {
-  getDeviceSettings,
-  updateDeviceSettings,
-} from "src/services/database/device/settings";
+import { getDeviceSettings, updateDeviceSettings } from "src/services/database/device/settings";
 import { doesDeviceExist } from "src/services/database/device/list";
 import createHttpError from "http-errors";
-import {
-  DeviceSettings,
-  TranslateLanguageKey,
-} from "src/config/deviceSettings";
+import { DeviceSettings, TranslateLanguageKey } from "src/config/deviceSettings";
 import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
 import { Response, NextFunction } from "express";
 import { Bucket } from "@google-cloud/storage";
-import {
-  DeviceMessage,
-  getDeviceMsgs,
-} from "src/services/database/device/messages";
+import { DeviceMessage, getDeviceMsgs } from "src/services/database/device/messages";
 
 export interface DeviceContext {
   id: DeviceId;
@@ -70,13 +58,9 @@ export class AbstractVoiceHandler {
   private async getDeviceContext() {
     const id = this.req.metadata.deviceId;
 
-    if (!(await doesDeviceExist(id)))
-      throw createHttpError(404, "Device does not exist");
+    if (!(await doesDeviceExist(id))) throw createHttpError(404, "Device does not exist");
 
-    const [data, settings] = await Promise.all([
-      getDeviceData(id),
-      getDeviceSettings(id),
-    ]);
+    const [data, settings] = await Promise.all([getDeviceData(id), getDeviceSettings(id)]);
 
     const msgs = await this.getDeviceMsgs(id, settings.messagesToKeep);
 
@@ -100,10 +84,7 @@ export class AbstractVoiceHandler {
     // If we did it here we might run into a race condition where device data was written,
     // pointing to an image not yet uploaded
 
-    _.assign(
-      this.context.data,
-      _.pick(this.req.metadata, ["latitude", "longitude", "battery"])
-    );
+    _.assign(this.context.data, _.pick(this.req.metadata, ["latitude", "longitude", "battery"]));
   }
 
   /**
@@ -133,7 +114,10 @@ export class AbstractVoiceHandler {
       contentType: "audio/ogg",
     });
 
-    return voiceFile.cloudStorageURI.toString();
+    return {
+      name: fileName,
+      uri: voiceFile.cloudStorageURI.toString(),
+    };
   }
 
   /**
@@ -166,9 +150,7 @@ export class AbstractVoiceHandler {
   /**
    * Gets speech synthesis config based on device settings
    */
-  protected getSpeechConfig(
-    language: TranslateLanguageKey = "en-US"
-  ): SynthesisConfig {
+  protected getSpeechConfig(language: TranslateLanguageKey = "en-US"): SynthesisConfig {
     if (!this.context) throw new Error("Device context null");
 
     const voice = MSFT_TTS_VOICES[this.context.settings.voiceName];
@@ -184,10 +166,7 @@ export class AbstractVoiceHandler {
   /**
    * Sends voice response
    */
-  protected sendResponse(
-    audioData: Buffer,
-    metadata: Record<string, unknown> = {}
-  ) {
+  protected sendResponse(audioData: Buffer, metadata: Record<string, unknown> = {}) {
     const metadataBuffer = Buffer.concat([
       Buffer.from(JSON.stringify(metadata), "utf-8"),
       Buffer.from([0]),

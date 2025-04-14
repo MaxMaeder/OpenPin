@@ -8,7 +8,7 @@ import { Response, NextFunction } from "express";
 import { AbstractVoiceHandler } from "./common";
 import { NoRecognitionError } from "src/services/speech/SST";
 import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
-// import { STORE_VOICE_RECORDINGS } from "src/config/logging";
+import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
@@ -20,7 +20,7 @@ class Handler extends AbstractVoiceHandler {
 
     if (!this.context) throw new Error("Device context null");
 
-    const voiceDataUri = await this.uploadVoiceData();
+    const { uri: voiceFileUri, name: voiceFileName } = await this.uploadVoiceData();
 
     const languagePool = [
       this.context.settings.myLanguage,
@@ -29,7 +29,7 @@ class Handler extends AbstractVoiceHandler {
 
     let recognizedResult: translateSST.TranslateSSTResult;
     try {
-      recognizedResult = await translateSST.recognize(voiceDataUri, languagePool);
+      recognizedResult = await translateSST.recognize(voiceFileUri, languagePool);
     } catch (e) {
       if (e instanceof NoRecognitionError) {
         console.log("No speech recognized");
@@ -65,12 +65,11 @@ class Handler extends AbstractVoiceHandler {
       audioData = await changeVolume(audioData, this.context.settings.translateVolumeBoost);
     }
 
-    // TODO: fix
-    // if (!STORE_VOICE_RECORDINGS) {
-    //   this.runLazyWork(async () => {
-    //     await this.bucket.file(voiceDataUri).delete();
-    //   });
-    // }
+    if (!STORE_VOICE_RECORDINGS) {
+      this.runLazyWork(async () => {
+        await this.bucket.file(voiceFileName).delete();
+      });
+    }
 
     this.sendResponse(audioData);
   }
