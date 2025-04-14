@@ -1,109 +1,143 @@
-import { CHAT_COMP_IMG_MODEL, CHAT_COMP_MODEL } from "../config";
-
 import {
   ChatCompletion,
+  ChatCompletionContentPart,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
   FunctionDefinition,
 } from "openai/resources";
-import { CompletionCreateParams } from "groq-sdk/resources/chat";
-import Groq from "groq-sdk";
 import OpenAI from "openai";
 
 export interface CompletionModel {
-  provider: "openai" | "groq";
+  endpoint: string;
   name: string;
+
+  supportsTools: boolean;
+  systemMsgTransform?: (msg: string) => string;
 }
 
-export interface CompletionResponse {
-  message?: string;
-  toolCalls: ChatCompletionMessageToolCall[];
-  msgContext: ChatCompletionMessageParam[];
+export interface AuthenticatedCompletionModel extends CompletionModel {
+  getKey: () => string;
 }
 
-const getCompletion = async (
-  model: CompletionModel,
-  msgs: ChatCompletionMessageParam[],
-  tools?: ChatCompletionTool[]
-): Promise<CompletionResponse> => {
-  const parseResponse = (res: ChatCompletion): CompletionResponse => ({
-    message: res.choices[0]?.message.content || undefined,
-    toolCalls: res.choices[0]?.message.tool_calls || [],
-    msgContext: msgs.slice(1), // Skip prompt message
-  });
+export interface SystemMessage {
+  role: "system";
+  content: string;
+}
 
-  if (model.provider == "openai") {
-    const res = await new OpenAI({
-      apiKey: process.env.OPENAI_KEY as string,
-    }).chat.completions.create({
-      messages: msgs,
-      model: model.name,
-      tools,
-    });
+export interface ToolMessage {
+  role: "tool";
+  content: string;
+  tool_call_id: string;
+}
 
-    return parseResponse(res);
-  } else {
-    const res = await new Groq({
-      apiKey: process.env.GROQ_KEY as string,
-    }).chat.completions.create({
-      messages: msgs as Array<CompletionCreateParams.Message>,
-      model: model.name,
-      tools,
-    });
+export interface UserMessage {
+  role: "user";
+  content: string;
+  image?: Buffer;
+}
 
-    return parseResponse(res as ChatCompletion);
+export type AssistantToolCall = ChatCompletionMessageToolCall;
+export interface AssistantMessage {
+  role: "assistant";
+  content: string;
+  toolCalls?: AssistantToolCall[];
+}
+
+export type CompletionMessage =
+  | SystemMessage
+  | ToolMessage
+  | UserMessage
+  | AssistantMessage;
+
+const transformCompletionMsg =
+  (model: CompletionModel) =>
+  (msg: CompletionMessage): ChatCompletionMessageParam => {
+    if (msg.role == "system" && model.systemMsgTransform) {
+      return {
+        role: "system",
+        content: model.systemMsgTransform(msg.content),
+      };
+    }
+
+    if (msg.role != "user") return msg;
+
+    const content: ChatCompletionContentPart[] = [
+      {
+        type: "text",
+        text: msg.content,
+      },
+    ];
+
+    if (msg.image) {
+      content.push({
+        type: "image_url",
+        image_url: {
+          url: `data:image/jpeg;base64,${msg.image.toString("base64")}`,
+        },
+      });
+    }
+
+    return {
+      role: "user",
+      content,
+    };
+  };
+
+export class NoCompletionError extends Error {
+  constructor(message: string = "No completion received from model") {
+    super(message);
+    this.name = "NoCompletionError";
   }
+}
+
+const parseResponse = (res: ChatCompletion): AssistantMessage => {
+  if (!res.choices[0]?.message.content) throw new NoCompletionError();
+
+  return {
+    role: "assistant",
+    content: res.choices[0].message.content,
+    toolCalls: res.choices[0].message.tool_calls,
+  };
 };
 
-interface CompletionPrompts {
-  llmPrompt: string;
-  visionLlmPrompt: string;
-}
+const getCompletion = async (
+  model: AuthenticatedCompletionModel,
+  msgs: ChatCompletionMessageParam[],
+  tools: ChatCompletionTool[]
+): Promise<AssistantMessage> => {
+  if (!model.supportsTools) {
+    tools = [];
+  }
+
+  const body = {
+    messages: msgs,
+    model: model.name,
+    tools,
+  };
+
+  const options = {
+    path: model.endpoint,
+  };
+
+  const res = await new OpenAI({
+    apiKey: model.getKey(),
+  }).chat.completions.create(body, options);
+
+  return parseResponse(res);
+};
 
 export const doChatCompletion = async (
-  prompts: CompletionPrompts,
-  msgContext: ChatCompletionMessageParam[],
-  functions: FunctionDefinition[],
-  userMsg: string,
-  userImage: Buffer | undefined
-): Promise<CompletionResponse> => {
-  const completionModel = userImage ? CHAT_COMP_IMG_MODEL : CHAT_COMP_MODEL;
-  const completionMsgs: ChatCompletionMessageParam[] = [];
-
-  completionMsgs.push({
-    role: "system",
-    content: userImage ? prompts.visionLlmPrompt : prompts.llmPrompt,
-  });
-  completionMsgs.push(...msgContext);
-
-  if (userImage) {
-    completionMsgs.push({
-      role: "user",
-      content: [
-        {
-          type: "text",
-          text: userMsg,
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:image/jpeg;base64,${userImage.toString("base64")}`,
-          },
-        },
-      ],
-    });
-  } else {
-    completionMsgs.push({
-      role: "user",
-      content: userMsg,
-    });
-  }
+  model: AuthenticatedCompletionModel,
+  msgs: CompletionMessage[],
+  functions: FunctionDefinition[]
+): Promise<AssistantMessage> => {
+  const transformedMsgs = msgs.map(transformCompletionMsg(model));
 
   const tools: ChatCompletionTool[] = functions.map((fn) => ({
     type: "function",
     function: fn,
   }));
 
-  return await getCompletion(completionModel, completionMsgs, tools);
+  return await getCompletion(model, transformedMsgs, tools);
 };

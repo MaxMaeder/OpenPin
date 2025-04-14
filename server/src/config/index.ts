@@ -1,8 +1,6 @@
 /* eslint-disable quotes */
 /* eslint-disable max-len */
 import { DeviceData, UserData } from "../dbTypes";
-
-import { CompletionModel } from "../services/completions";
 import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
 
 export const REQ_METADATA_SIZE = 512;
@@ -30,18 +28,6 @@ export const DEV_DATA_COL = "DeviceData";
 export const DEV_SETTINGS_COL = "DeviceSettings";
 export const DEV_CAPTURES_COL = "DeviceCaptures";
 export const DEV_NOTES_COL = "DeviceNotes";
-
-// Max calls to chat completion service in one invocation of the assistant, "davis"
-export const CHAT_COMP_MAX_CALLS = 5;
-
-export const CHAT_COMP_MODEL: CompletionModel = {
-  provider: "openai",
-  name: "gpt-3.5-turbo",
-};
-export const CHAT_COMP_IMG_MODEL: CompletionModel = {
-  provider: "openai",
-  name: "gpt-4o",
-};
 
 export const TEST_TEXT =
   "This is a test of the audio pipeline. This is the end of the test.";

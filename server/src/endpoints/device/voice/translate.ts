@@ -6,6 +6,7 @@ import createHttpError from "http-errors";
 import { changeVolume } from "src/services/audio";
 import { Response, NextFunction } from "express";
 import { AbstractVoiceHandler } from "./common";
+// import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
@@ -15,14 +16,13 @@ class Handler extends AbstractVoiceHandler {
   public async run() {
     await super.run();
 
-    if (!this.deviceData || !this.deviceSettings)
-      throw new Error("Device data/settings null");
+    if (!this.context) throw new Error("Device context null");
 
     const voiceDataUri = await this.uploadVoiceData();
 
     const languagePool = [
-      this.deviceSettings.myLanguage,
-      this.deviceSettings.translateLanguage,
+      this.context.settings.myLanguage,
+      this.context.settings.translateLanguage,
     ];
 
     const recognizedResult = await translateSST.recognize(
@@ -50,12 +50,19 @@ class Handler extends AbstractVoiceHandler {
       this.getSpeechConfig(targetLanguage)
     );
 
-    if (targetLanguage != this.deviceSettings.myLanguage) {
+    if (targetLanguage != this.context.settings.myLanguage) {
       audioData = await changeVolume(
         audioData,
-        this.deviceSettings.translateVolumeBoost
+        this.context.settings.translateVolumeBoost
       );
     }
+
+    // TODO: fix
+    // if (!STORE_VOICE_RECORDINGS) {
+    //   this.runLazyWork(async () => {
+    //     await this.bucket.file(voiceDataUri).delete();
+    //   });
+    // }
 
     this.sendResponse(audioData);
   }

@@ -1,3 +1,0 @@
-const key = "XXX";
-
-export default key;

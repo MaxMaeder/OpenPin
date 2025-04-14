@@ -1,1 +1,1 @@
-export const STORE_VOICE_RECORDINGS = true;
+export const STORE_VOICE_RECORDINGS = false;

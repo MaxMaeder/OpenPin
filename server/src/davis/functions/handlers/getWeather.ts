@@ -1,9 +1,9 @@
 import { object, string } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
-import { DeviceData } from "../../../dbTypes";
 import { getGeocoding } from "../../../services/maps";
 import { getWeather } from "../../../services/weather";
 import { format } from "date-fns";
+import { DavisToolContext } from "src/davis";
 
 const payloadSchema = object({
   location: string(),
@@ -11,8 +11,7 @@ const payloadSchema = object({
 
 export const handleGetWeather = async (
   payload: string,
-  deviceId: string,
-  deviceData: DeviceData
+  context: DavisToolContext
 ): FunctionHandlerReturnType => {
   let location: string | undefined;
   try {
@@ -22,7 +21,7 @@ export const handleGetWeather = async (
     throw new FunctionHandlerError("Weather search location is invalid.");
   }
 
-  let { latitude, longitude } = deviceData;
+  let { latitude, longitude } = context.data;
 
   if (location) {
     const geocodeLocation = await getGeocoding(location);
@@ -33,6 +32,7 @@ export const handleGetWeather = async (
   const tempf = (temp: number) => `${temp.toFixed(0)} °F`;
   const humidityf = (humidity: number) => `${humidity.toFixed(0)}%`;
   const speedf = (speed: number) => `${speed.toFixed(0)} mph`;
+  // TODO: format in local time
   const timef = (time: Date) => format(time, "h:mm aaa");
   const percentf = (percent: number) => `${percent * 100}%`;
 

@@ -1,8 +1,8 @@
 import { object, string } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
-import { DeviceData } from "../../../dbTypes";
 import { getDirections } from "../../../services/maps";
 import { LatLng } from "@googlemaps/google-maps-services-js";
+import { DavisToolContext } from "src/davis";
 
 const payloadSchema = object({
   fromAddress: string(),
@@ -11,8 +11,7 @@ const payloadSchema = object({
 
 export const handleGetDirections = async (
   payload: string,
-  deviceId: string,
-  deviceData: DeviceData
+  context: DavisToolContext
 ): FunctionHandlerReturnType => {
   let fromAddress: string | undefined;
   let toAddress: string;
@@ -25,8 +24,8 @@ export const handleGetDirections = async (
   }
 
   const currentLocation: LatLng = {
-    lat: deviceData.latitude,
-    lng: deviceData.longitude,
+    lat: context.data.latitude,
+    lng: context.data.longitude,
   };
 
   const directions = await getDirections(

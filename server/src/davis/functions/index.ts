@@ -1,6 +1,4 @@
 import { FunctionDefinition } from "openai/resources";
-import { DeviceData } from "../../dbTypes";
-
 import { handleGetWeather } from "./handlers/getWeather";
 import { handleGetLocation } from "./handlers/getLocation";
 import { handleSearchWeb } from "./handlers/searchWeb";
@@ -9,20 +7,17 @@ import { handleGetDirections } from "./handlers/getDirections";
 import { handleGetStockQuote } from "./handlers/getStockQuote";
 import { handleGetWolframResponse } from "./handlers/getWolframResponse";
 import { handleSearchWikipedia } from "./handlers/searchWikipedia";
-import { DeviceSettings } from "src/config/deviceSettings";
+import { DavisToolContext } from "..";
 
 export type FunctionHandlerReturnType = Promise<string>;
 
 interface DavisFunction {
   // Function is only available for a single invocation of the completion
   //  service. This avoids function-calling loops.
-  availableOnce?: boolean;
   definition: FunctionDefinition;
   handler: (
     payload: string,
-    deviceId: string,
-    deviceData: DeviceData,
-    deviceSettings: DeviceSettings
+    context: DavisToolContext
   ) => FunctionHandlerReturnType;
 }
 

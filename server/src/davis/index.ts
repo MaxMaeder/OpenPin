@@ -1,151 +1,250 @@
-import { DeviceData } from "../dbTypes";
-import { getLocalTime } from "../services/maps";
-import { doChatCompletion } from "../services/completions";
+import { getLocalTime, LocalTime } from "../services/maps";
+import {
+  AssistantToolCall,
+  AuthenticatedCompletionModel,
+  CompletionMessage,
+  doChatCompletion,
+} from "../services/completions";
 import { formatInTimeZone } from "date-fns-tz";
 import { functions, FunctionHandlerError } from "./functions";
-import { ChatCompletionMessageParam } from "openai/resources";
-import { CHAT_COMP_MAX_CALLS } from "../config";
-import { DeviceSettings } from "src/config/deviceSettings";
+import { COMP_MAX_CALLS, COMP_MODELS } from "../config/davis";
+import { DeviceContext } from "src/endpoints/device/voice/common";
+import { DeviceNote, getDeviceNotes } from "src/services/database/device/notes";
+import { COMP_CALLS_EXCEEDED_MSG } from "src/config/davis";
 
-export type DavisMessage = {
-  role: "system" | "assistant" | "user";
-  content: string;
-};
-
-interface DavisDetails {
-  deviceId: string;
-  deviceData: DeviceData;
-  deviceSettings: DeviceSettings;
-  msgContext: DavisMessage[];
-  recognizedSpeech: string;
-  imageBuffer: Buffer | undefined;
+interface CompletionPrompt {
+  text: string;
+  vision: string;
 }
 
-interface DavisResponse {
+export interface DavisDetails {
+  context: DeviceContext;
+  userMsg: string;
+  userImg?: Buffer;
+}
+
+export interface DavisToolContext extends DeviceContext {
+  time: LocalTime;
+}
+
+export interface DavisResponse {
   completionCalls: number;
   toolCalls: string[];
   assistantMessage: string;
 }
 
-const formatDate = (date: Date) =>
-  formatInTimeZone(date, "UTC", "h:mm aaa, MMM do yyyy");
-const formatBattery = (percent: number) => `${(percent * 100).toFixed(0)}%`;
+class DavisEngine {
+  private readonly context: DeviceContext;
 
-export const doDavis = async (
-  davisDetails: DavisDetails
-): Promise<DavisResponse> => {
-  const toolCallsMade: string[] = [];
-  let assistantResMsg = "ERROR: no response";
+  private readonly userMsg: string;
+  private readonly userImg?: Buffer;
 
-  try {
-    const { latitude, longitude, battery } = davisDetails.deviceData;
-    const time = await getLocalTime(latitude, longitude);
+  private time?: LocalTime;
+  private notes?: DeviceNote[];
+  // private prompt?: CompletionPrompt;
 
-    const addDeviceContext = (...prompts: string[]) =>
-      prompts.map(
-        (prompt) =>
-          `
-UTC time: ${formatDate(time.utcTime)}, 
-local time: ${formatDate(time.localTime)},
-timezone: ${time.timezoneName}.
-Device battery charge: ${formatBattery(battery)}.
+  private completionMsgs: CompletionMessage[] = [];
 
-${prompt}`
-      );
-
-    let { msgContext }: { msgContext: ChatCompletionMessageParam[] } =
-      davisDetails;
-
-    let { llmPrompt, visionLlmPrompt } = davisDetails.deviceSettings;
-    [llmPrompt, visionLlmPrompt] = addDeviceContext(llmPrompt, visionLlmPrompt);
-
-    for (let i = 0; i < CHAT_COMP_MAX_CALLS; i++) {
-      const {
-        message: assistantMessage,
-        toolCalls: assistantToolCalls,
-        msgContext: updatedMsgContext,
-      } = await doChatCompletion(
-        {
-          llmPrompt,
-          visionLlmPrompt,
-        },
-        msgContext,
-        functions.map((f) => f.definition),
-        davisDetails.recognizedSpeech,
-        davisDetails.imageBuffer
-      );
-
-      msgContext = updatedMsgContext;
-
-      if (assistantToolCalls.length > 0) {
-        msgContext.push({
-          role: "assistant",
-          tool_calls: assistantToolCalls,
-        });
-
-        for (const toolCall of assistantToolCalls) {
-          toolCallsMade.push(toolCall.function.name);
-
-          const calledFunction = functions.find(
-            (fn) => fn.definition.name == toolCall.function.name
-          );
-
-          if (!calledFunction) {
-            console.error("No matching function handler found");
-
-            msgContext.push({
-              role: "tool",
-              content: JSON.stringify({
-                error: "No matching tool handler found",
-              }),
-              tool_call_id: toolCall.id,
-            });
-
-            continue;
-          }
-
-          try {
-            const returnValue = await calledFunction.handler(
-              toolCall.function.arguments,
-              davisDetails.deviceId,
-              davisDetails.deviceData,
-              davisDetails.deviceSettings
-            );
-
-            msgContext.push({
-              role: "tool",
-              content: returnValue,
-              tool_call_id: toolCall.id,
-            });
-          } catch (error) {
-            console.error(error);
-
-            msgContext.push({
-              role: "tool",
-              content: JSON.stringify({
-                error: (error as FunctionHandlerError).message,
-              }),
-              tool_call_id: toolCall.id,
-            });
-          }
-        }
-      } else {
-        if (assistantMessage) assistantResMsg = assistantMessage;
-
-        return {
-          completionCalls: i + 1,
-          toolCalls: toolCallsMade,
-          assistantMessage: assistantResMsg,
-        };
-      }
-    }
-  } catch (e) {
-    console.error(e);
+  constructor(details: DavisDetails) {
+    this.context = details.context;
+    this.userMsg = details.userMsg;
+    this.userImg = details.userImg;
   }
 
-  return {
-    completionCalls: CHAT_COMP_MAX_CALLS,
-    toolCalls: toolCallsMade,
-    assistantMessage: assistantResMsg,
-  };
+  /**
+   * Gets the local time, tz, etc from device location
+   */
+  private async getTime() {
+    // If the location is not known, we'll be at (lat: 0, lng: 0), which is GMT (tz: 0)
+    // which is a good fallback
+    const { latitude, longitude } = this.context.data;
+    this.time = await getLocalTime(latitude, longitude);
+  }
+
+  /**
+   * Gets all device notes from DB
+   */
+  private async getNotes() {
+    const results = await getDeviceNotes(this.context.id, {
+      limit: 1000, // Fetch all notes
+    });
+
+    this.notes = results.entries;
+  }
+
+  private static formatDate(date: Date) {
+    return formatInTimeZone(date, "UTC", "h:mm aaa, MMM do yyyy");
+  }
+
+  private static formatBattery(percent: number) {
+    return `${(percent * 100).toFixed(0)}%`;
+  }
+
+  private static formatNotes(notes: DeviceNote[]) {
+    return notes
+      .map(
+        (note) =>
+          `Note name: ${note.title}, date: ${this.formatDate(note.date)}\n` +
+          note.content
+      )
+      .join("\n");
+  }
+
+  /**
+   * Adds useful device context to the specified user prompt
+   */
+  private addPromptContext(userPrompt: string) {
+    if (!this.time) throw new Error("LocalTime is null");
+    if (!this.notes) throw new Error("Notes are null");
+
+    return `
+    UTC time: ${DavisEngine.formatDate(this.time.utcTime)}, 
+    local time: ${DavisEngine.formatDate(this.time.localTime)},
+    timezone: ${this.time.tsName}.
+    Device battery charge: ${DavisEngine.formatBattery(
+      this.context.data.battery
+    )}.
+
+    Notes: ${DavisEngine.formatNotes(this.notes)}
+    
+    ${userPrompt}`;
+  }
+
+  private createPrompt(): CompletionPrompt {
+    const { llmPrompt, visionLlmPrompt } = this.context.settings;
+
+    return {
+      text: this.addPromptContext(llmPrompt),
+      vision: this.addPromptContext(visionLlmPrompt),
+    };
+  }
+
+  private createMsgContext() {
+    const hasImg = !!this.userImg;
+
+    const prompt = this.createPrompt();
+
+    this.completionMsgs.push({
+      role: "system",
+      content: hasImg ? prompt.vision : prompt.text,
+    });
+
+    const msgHistory = this.context.msgs.flatMap<CompletionMessage>((msg) => [
+      {
+        role: "user",
+        content: msg.userMsg,
+      },
+      {
+        role: "assistant",
+        content: msg.assistantMsg,
+      },
+    ]);
+
+    this.completionMsgs.push(...msgHistory);
+
+    const userMsg: CompletionMessage = {
+      role: "user",
+      content: this.userMsg,
+      image: this.userImg,
+    };
+
+    this.completionMsgs.push(userMsg);
+  }
+
+  private getModel(): AuthenticatedCompletionModel {
+    const hasImg = !!this.userImg;
+
+    const { llmName: textLlmName, visionLlmName } = this.context.settings;
+    const llmName = hasImg ? visionLlmName : textLlmName;
+
+    return COMP_MODELS[llmName] ?? COMP_MODELS["gpt-4o-mini"];
+  }
+
+  private getToolContext(): DavisToolContext {
+    if (!this.time) throw new Error("LocalTime is null");
+
+    return {
+      ...this.context,
+      time: this.time,
+    };
+  }
+
+  private async doToolCall(toolCall: AssistantToolCall) {
+    const calledFunction = functions.find(
+      (fn) => fn.definition.name == toolCall.function.name
+    );
+
+    if (!calledFunction) {
+      console.error("No matching function handler found");
+
+      this.completionMsgs.push({
+        role: "tool",
+        content: JSON.stringify({
+          error: "No matching tool handler found",
+        }),
+        tool_call_id: toolCall.id,
+      });
+      return;
+    }
+
+    try {
+      const returnValue = await calledFunction.handler(
+        toolCall.function.arguments,
+        this.getToolContext()
+      );
+
+      this.completionMsgs.push({
+        role: "tool",
+        content: returnValue,
+        tool_call_id: toolCall.id,
+      });
+    } catch (error) {
+      console.warn("Davis tool call failed", error);
+
+      this.completionMsgs.push({
+        role: "tool",
+        content: JSON.stringify({
+          error: (error as FunctionHandlerError).message,
+        }),
+        tool_call_id: toolCall.id,
+      });
+    }
+  }
+
+  private async doCompletionIteration(): Promise<string | undefined> {
+    const assistantMsg = await doChatCompletion(
+      this.getModel(),
+      this.completionMsgs,
+      functions.map((f) => f.definition)
+    );
+
+    this.completionMsgs.push(assistantMsg);
+    const toolCalls = assistantMsg.toolCalls || [];
+
+    if (toolCalls.length > 0) {
+      await Promise.all(toolCalls.map((toolCall) => this.doToolCall(toolCall)));
+      return;
+    } else {
+      return assistantMsg.content;
+    }
+  }
+
+  public async run(): Promise<string> {
+    await Promise.all([this.getTime(), this.getNotes()]);
+    this.createMsgContext();
+
+    for (let i = 0; i < COMP_MAX_CALLS; i++) {
+      const result = await this.doCompletionIteration();
+      if (result) return result;
+    }
+
+    return COMP_CALLS_EXCEEDED_MSG;
+  }
+}
+
+export const doDavis = async (details: DavisDetails): Promise<string> => {
+  const engine = new DavisEngine(details);
+
+  const response = await engine.run();
+  return response;
 };

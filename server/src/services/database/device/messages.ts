@@ -2,13 +2,21 @@ import { DeviceId } from "src/dbTypes";
 import { CollectionReference, getFirestore } from "firebase-admin/firestore";
 
 import { DEV_MSGS_COL } from "src/config";
-import { addDeviceContent, clearDeviceContent, deleteDeviceContent, DeviceContent, getDeviceContent, PaginationConfig } from "./content";
+import {
+  addDeviceContent,
+  clearDeviceContent,
+  deleteDeviceContent,
+  DeviceContent,
+  getDeviceContent,
+  PaginationConfig,
+} from "./content";
 
 export interface DeviceMessage extends DeviceContent {
   userMsg: string;
   userImgId?: string;
   assistantMsg: string;
 }
+export type DeviceMessageDraft = Omit<DeviceMessage, "date">;
 
 export const getDeviceMsgsRef = (deviceId: string): CollectionReference =>
   getFirestore().collection(DEV_MSGS_COL).doc(deviceId).collection("entries");
@@ -20,15 +28,18 @@ export const getDeviceMsgs = async (
 
 export const addDeviceMsg = async (
   deviceId: DeviceId,
-  message: Omit<DeviceMessage, "date">,
+  message: DeviceMessageDraft,
   contextWindow: number
-) => addDeviceContent<DeviceMessage>(deviceId, message, getDeviceMsgsRef, contextWindow);
+) =>
+  addDeviceContent<DeviceMessage>(
+    deviceId,
+    message,
+    getDeviceMsgsRef,
+    contextWindow
+  );
 
-export const deleteDeviceMsg = async (
-  deviceId: DeviceId,
-  id: string
-) => deleteDeviceContent(deviceId, id, getDeviceMsgsRef);
+export const deleteDeviceMsg = async (deviceId: DeviceId, id: string) =>
+  deleteDeviceContent(deviceId, id, getDeviceMsgsRef);
 
-export const clearDeviceMsgs = async (
-  deviceId: DeviceId
-) => clearDeviceContent(deviceId, getDeviceMsgsRef);
+export const clearDeviceMsgs = async (deviceId: DeviceId) =>
+  clearDeviceContent(deviceId, getDeviceMsgsRef);

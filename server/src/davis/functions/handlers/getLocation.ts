@@ -1,16 +1,13 @@
+import { DavisToolContext } from "src/davis";
 import { FunctionHandlerReturnType } from "..";
-import { DeviceData } from "../../../dbTypes";
 import { getRevGeocoding } from "../../../services/maps";
 
 export const handleGetLocation = async (
-  payload: string,
-  deviceId: string,
-  deviceData: DeviceData
+  _: string,
+  context: DavisToolContext
 ): FunctionHandlerReturnType => {
-  const { address } = await getRevGeocoding(
-    deviceData.latitude,
-    deviceData.longitude
-  );
+  let { latitude, longitude } = context.data;
+  const { address } = await getRevGeocoding(latitude, longitude);
 
   return JSON.stringify({
     address,

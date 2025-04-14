@@ -20,7 +20,17 @@ export class MapsError extends Error {
   }
 }
 
-export const getLocalTime = async (lat: number, lng: number) => {
+export interface LocalTime {
+  tzOffset: number;
+  tsName: string;
+  utcTime: Date;
+  localTime: Date;
+}
+
+export const getLocalTime = async (
+  lat: number,
+  lng: number
+): Promise<LocalTime> => {
   const now = new Date();
 
   const res = await client.timezone({
@@ -36,8 +46,8 @@ export const getLocalTime = async (lat: number, lng: number) => {
 
   if (res.data.status != "OK") {
     return {
-      offset: 0,
-      timezoneName: "UTC",
+      tzOffset: 0,
+      tsName: "UTC",
       utcTime: now,
       localTime: now,
     };
@@ -47,8 +57,8 @@ export const getLocalTime = async (lat: number, lng: number) => {
   const totalOffset = (dstOffset + rawOffset) / 60 / 60; // Conv. seconds to hrs
 
   return {
-    offset: totalOffset,
-    timezoneName,
+    tzOffset: totalOffset,
+    tsName: timezoneName,
     utcTime: now,
     localTime: addHours(now, totalOffset),
   };

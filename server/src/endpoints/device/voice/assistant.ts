@@ -1,35 +1,18 @@
 import * as SST from "src/services/speech/SST";
 import * as TTS from "src/services/speech/TTS";
-
 import { AbstractVoiceHandler } from "./common";
 import {
   addDeviceMsg,
-  clearDeviceMsgs,
-  DeviceMessage,
-  getDeviceMsgs,
+  DeviceMessageDraft,
 } from "src/services/database/device/messages";
-
 import { ParsedVoiceRequest } from "./parser";
 import { Response, NextFunction } from "express";
-import { DavisMessage, doDavis } from "src/davis";
+import { doDavis } from "src/davis";
 import {
   sendMsgsUpdate,
   sendSettingsUpdate,
 } from "src/sockets/msgBuilders/device";
 import { STORE_VOICE_RECORDINGS } from "src/config/logging";
-
-export const convToDavisMsg = (deviceMsg: DeviceMessage): DavisMessage[] => {
-  return [
-    {
-      role: "user",
-      content: deviceMsg.userMsg,
-    },
-    {
-      role: "assistant",
-      content: deviceMsg.assistantMsg,
-    },
-  ];
-};
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
@@ -39,52 +22,49 @@ class Handler extends AbstractVoiceHandler {
   public async run() {
     await super.run();
 
-    if (!this.deviceData || !this.deviceSettings)
-      throw new Error("Device data/settings null");
+    if (!this.context) throw new Error("Device context null");
 
-    const recognizedSpeech = await SST.recognize(this.req.audioBuffer);
+    const userMsg = await SST.recognize(this.req.audioBuffer);
 
-    if (this.deviceSettings.clearMessages) {
-      await clearDeviceMsgs(this.deviceId);
-      sendSettingsUpdate(this.deviceId, {
+    if (this.context.settings.clearMessages) {
+      sendSettingsUpdate(this.context.id, {
         clearMessages: false,
       });
-      this.deviceSettings.clearMessages = false;
+
+      this.context.msgs = [];
+      this.context.settings.clearMessages = false;
     }
 
-    const { entries: msgs } = await getDeviceMsgs(this.deviceId);
-    const msgContext = msgs.flatMap(convToDavisMsg);
-
-    const { assistantMessage } = await doDavis({
-      deviceId: this.deviceId,
-      deviceData: this.deviceData,
-      deviceSettings: this.deviceSettings,
-      msgContext,
-      recognizedSpeech,
-      imageBuffer: this.req.imageBuffer,
+    const assistantMsg = await doDavis({
+      context: this.context,
+      userMsg,
+      userImg: this.req.imageBuffer,
     });
 
-    const msgDraft: Omit<DeviceMessage, "date"> = {
-      userMsg: recognizedSpeech,
-      assistantMsg: assistantMessage,
+    const msgDraft: DeviceMessageDraft = {
+      userMsg,
+      assistantMsg,
     };
 
     if (this.req.imageBuffer) {
-      msgDraft.userImgId = this.deviceData.latestImage;
+      msgDraft.userImgId = this.context.data.latestImage;
     }
 
-    // Save conversation context
-    const msgEntry = await addDeviceMsg(
-      this.deviceId,
-      msgDraft,
-      this.deviceSettings.messagesToKeep
-    );
+    this.runLazyWork(async () => {
+      if (!this.context) throw new Error("Device context null");
 
-    sendMsgsUpdate(this.deviceId, {
-      entries: [msgEntry],
+      const msgEntry = await addDeviceMsg(
+        this.context.id,
+        msgDraft,
+        this.context.settings.messagesToKeep
+      );
+
+      sendMsgsUpdate(this.context.id, {
+        entries: [msgEntry],
+      });
     });
 
-    const audioData = await TTS.speak(assistantMessage, this.getSpeechConfig());
+    const audioData = await TTS.speak(assistantMsg, this.getSpeechConfig());
 
     if (STORE_VOICE_RECORDINGS) {
       this.runLazyWork(async () => {
@@ -92,7 +72,7 @@ class Handler extends AbstractVoiceHandler {
       });
     }
 
-    this.writeDeviceData();
+    this.writeDeviceContext();
     this.sendResponse(audioData);
   }
 }

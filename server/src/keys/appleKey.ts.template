@@ -1,6 +1,0 @@
-export const APPLE_TEAM_ID = "XXX";
-export const APPLE_KEY_ID = "XXX";
-
-export const APPLE_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
-XXX
------END PRIVATE KEY-----`;

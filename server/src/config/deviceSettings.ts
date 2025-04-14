@@ -1,6 +1,8 @@
 export const LANGUAGE_MODELS = [
   { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+  { value: "grok-2-sexy", label: "Grok 2 (Sexy Mode)" },
   { value: "gpt-4o", label: "GPT-4o" },
+  { value: "grok-3", label: "Grok 3" },
   { value: "llama-3-2-11b", label: "Llama 3.2 11B" },
   { value: "llama-3-2-90b", label: "Llama 3.2 90B" },
   { value: "gemini-2-0-flash-lite", label: "Gemini 2.0 Flash Lite" },

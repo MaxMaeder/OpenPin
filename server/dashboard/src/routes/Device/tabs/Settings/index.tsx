@@ -47,13 +47,11 @@ const Settings: React.FC = () => {
             <Select
               label="Language Model"
               data={languageModels}
-              disabled
               {...bind("llmName")}
             />
             <Select
               label="Vision Language Model"
               data={languageModels}
-              disabled
               {...bind("visionLlmName")}
             />
             <Input.Wrapper label="Messages for Context Window">

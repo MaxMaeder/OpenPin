@@ -1,0 +1,15 @@
+// declare namespace NodeJS {
+//   interface ProcessEnv {
+//     HOSTED_BASE_URL: string;
+//     PORT: string;
+//     MSFT_SPEECH_KEY: string;
+//     OPENAI_KEY: string;
+//     GROQ_KEY: string;
+//     GROK_KEY: string;
+//     GOOGLE_KEY: string;
+//     OPEN_WEATHER_KEY: string;
+//     BING_KEY: string;
+//     FINNHUB_KEY: string;
+//     WOLFRAM_KEY: string;
+//   }
+// }

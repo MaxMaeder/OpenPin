@@ -1,6 +1,0 @@
-const key = {
-  clientId: "XXX",
-  clientSecret: "XXX",
-};
-
-export default key;

@@ -1,7 +1,7 @@
 import { object, string } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
-import { DeviceData } from "../../../dbTypes";
 import { getNearbyPlaces } from "../../../services/maps";
+import { DavisToolContext } from "src/davis";
 
 const payloadSchema = object({
   query: string().required(),
@@ -9,8 +9,7 @@ const payloadSchema = object({
 
 export const handleGetNearbyPlaces = async (
   payload: string,
-  deviceId: string,
-  deviceData: DeviceData
+  context: DavisToolContext
 ): FunctionHandlerReturnType => {
   let query: string;
   try {
@@ -20,9 +19,10 @@ export const handleGetNearbyPlaces = async (
     throw new FunctionHandlerError("No place search query provided.");
   }
 
+  let { latitude, longitude } = context.data;
   const nearbyPlaces = await getNearbyPlaces(query, {
-    latitude: deviceData.latitude,
-    longitude: deviceData.longitude,
+    latitude,
+    longitude,
     radius: 1600,
   });
 

@@ -1,5 +1,5 @@
 import _ = require("lodash");
-import { DeviceData } from "src/dbTypes";
+import { DeviceData, DeviceId } from "src/dbTypes";
 import {
   getDeviceData,
   updateDeviceData,
@@ -18,16 +18,25 @@ import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
 import { Response, NextFunction } from "express";
 import { Bucket } from "@google-cloud/storage";
+import {
+  DeviceMessage,
+  getDeviceMsgs,
+} from "src/services/database/device/messages";
+
+export interface DeviceContext {
+  id: DeviceId;
+
+  data: DeviceData;
+  settings: DeviceSettings;
+  msgs: DeviceMessage[];
+}
 
 export class AbstractVoiceHandler {
   protected readonly req: ParsedVoiceRequest;
   protected readonly res: Response;
   protected readonly next: NextFunction;
 
-  protected readonly deviceId: string;
-
-  protected deviceData?: DeviceData;
-  protected deviceSettings?: DeviceSettings;
+  protected context?: DeviceContext;
 
   protected readonly bucket: Bucket;
 
@@ -36,36 +45,60 @@ export class AbstractVoiceHandler {
     this.res = res;
     this.next = next;
 
-    this.deviceId = req.metadata.deviceId;
+    // this.deviceId = req.metadata.deviceId;
 
     this.bucket = getStorage().bucket();
   }
 
   /**
-   * Gets current device data & settings from DB
+   * Gets device messages within specified context window from DB
    */
-  private async getDeviceData() {
-    if (!(await doesDeviceExist(this.deviceId)))
-      throw createHttpError(404, "Device does not exist");
+  private async getDeviceMsgs(id: DeviceId, window: number) {
+    const result = await getDeviceMsgs(id, {
+      limit: window,
+    });
 
-    this.deviceSettings = await getDeviceSettings(this.deviceId);
-    this.deviceData = await getDeviceData(this.deviceId);
+    return result.entries;
   }
 
   /**
-   * Drafts update of common device data from request
+   * Gets current device data, settings and messages from DB
    */
-  private updateDeviceData() {
-    if (!this.deviceData) throw new Error("Device data null")!;
+  private async getDeviceContext() {
+    const id = this.req.metadata.deviceId;
 
-    this.deviceData.lastConnected = _.now();
+    if (!(await doesDeviceExist(id)))
+      throw createHttpError(404, "Device does not exist");
+
+    const [data, settings] = await Promise.all([
+      getDeviceData(id),
+      getDeviceSettings(id),
+    ]);
+
+    const msgs = await this.getDeviceMsgs(id, settings.messagesToKeep);
+
+    this.context = {
+      id,
+      data,
+      settings,
+      msgs,
+    };
+  }
+
+  /**
+   * Drafts update of common device context from request
+   */
+  private updateDeviceContext() {
+    if (!this.context) throw new Error("Device context null");
+
+    this.context.data.lastConnected = _.now();
 
     // We update latest image in writeDeviceData(), since there we can upload the image lazily
     // If we did it here we might run into a race condition where device data was written,
     // pointing to an image not yet uploaded
 
     _.assign(
-      this.deviceData,
+      this.context.data,
       _.pick(this.req.metadata, ["latitude", "longitude", "battery"])
     );
   }
@@ -88,7 +121,9 @@ export class AbstractVoiceHandler {
    * Upload voice data from request to bucket, return URI
    */
   protected async uploadVoiceData() {
-    const fileName = genFileName(this.deviceId, "ogg");
+    if (!this.context) throw new Error("Device context null");
+
+    const fileName = genFileName(this.context.id, "ogg");
 
     const voiceFile = this.bucket.file(fileName);
     await voiceFile.save(this.req.audioBuffer, {
@@ -100,26 +135,28 @@ export class AbstractVoiceHandler {
 
   /**
    * Writes device data & settings to DB
+   * Does NOT write device msgs
    * Lazy: does not block nor return a promise
    */
-  protected writeDeviceData() {
+  protected writeDeviceContext() {
     this.runLazyWork(async () => {
-      if (!this.deviceData || !this.deviceSettings)
-        throw new Error("Device data/settings null")!;
+      if (!this.context) throw new Error("Device context null");
 
       if (this.req.imageBuffer) {
-        const imageName = genFileName(this.deviceId, "jpeg");
+        const imageName = genFileName(this.context.id, "jpeg");
 
         await this.bucket.file(imageName).save(this.req.imageBuffer, {
           contentType: "image/jpeg",
         });
 
-        this.deviceData.latestImage = imageName;
-        this.deviceData.latestImageCaptured = _.now();
+        this.context.data.latestImage = imageName;
+        this.context.data.latestImageCaptured = _.now();
       }
 
-      await updateDeviceData(this.deviceId, this.deviceData);
-      await updateDeviceSettings(this.deviceId, this.deviceSettings);
+      await Promise.all([
+        updateDeviceData(this.context.id, this.context.data),
+        updateDeviceSettings(this.context.id, this.context.settings),
+      ]);
     });
   }
 
@@ -129,13 +166,13 @@ export class AbstractVoiceHandler {
   protected getSpeechConfig(
     language: TranslateLanguage = "en-US"
   ): SynthesisConfig {
-    if (!this.deviceSettings) throw new Error("Device settings null")!;
+    if (!this.context) throw new Error("Device context null");
 
-    const voice = MSFT_TTS_VOICES[this.deviceSettings.voiceName];
+    const voice = MSFT_TTS_VOICES[this.context.settings.voiceName];
     const voiceName = language == "en-US" ? voice.english : voice.multiligual;
 
     return {
-      speed: this.deviceSettings.voiceSpeed,
+      speed: this.context.settings.voiceSpeed,
       voiceName,
       language,
     };
@@ -164,8 +201,12 @@ export class AbstractVoiceHandler {
     this.res.status(200).send(body);
   }
 
+  /**
+   * Gets device context, and drafts update of common device context from request
+   * Should be overridden in subclass
+   */
   protected async run() {
-    await this.getDeviceData();
-    this.updateDeviceData();
+    await this.getDeviceContext();
+    this.updateDeviceContext();
   }
 }
