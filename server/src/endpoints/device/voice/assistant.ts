@@ -9,15 +9,18 @@ import {
 import { ParsedVoiceRequest } from "./parser";
 import { Response, NextFunction } from "express";
 import { doDavis } from "src/davis";
-import {
-  sendMsgsUpdate,
-  sendSettingsUpdate,
-} from "src/sockets/msgBuilders/device";
+import { sendMsgsUpdate, sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 import { STORE_VOICE_RECORDINGS } from "src/config/logging";
+import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
     super(req, res, next);
+  }
+
+  private async sendSpeech(speech: string) {
+    const audioData = await TTS.speak(speech, this.getSpeechConfig());
+    this.sendResponse(audioData);
   }
 
   public async run() {
@@ -25,7 +28,20 @@ class Handler extends AbstractVoiceHandler {
 
     if (!this.context) throw new Error("Device context null");
 
-    const userMsg = await SST.recognize(this.req.audioBuffer);
+    let userMsg: string;
+    try {
+      userMsg = await SST.recognize(this.req.audioBuffer);
+    } catch (e) {
+      if (e instanceof SST.NoRecognitionError) {
+        console.log("No speech recognized");
+
+        const speech = getRandomCannedMsg(NO_SPEECH_MSGS);
+        await this.sendSpeech(speech);
+        return;
+      }
+
+      throw e;
+    }
 
     if (this.context.settings.clearMessages) {
       sendSettingsUpdate(this.context.id, {
@@ -68,8 +84,6 @@ class Handler extends AbstractVoiceHandler {
       });
     });
 
-    const audioData = await TTS.speak(assistantMsg, this.getSpeechConfig());
-
     if (STORE_VOICE_RECORDINGS) {
       this.runLazyWork(async () => {
         this.uploadVoiceData();
@@ -77,7 +91,7 @@ class Handler extends AbstractVoiceHandler {
     }
 
     this.writeDeviceContext();
-    this.sendResponse(audioData);
+    await this.sendSpeech(assistantMsg);
   }
 }
 

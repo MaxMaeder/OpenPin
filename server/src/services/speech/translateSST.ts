@@ -25,12 +25,20 @@ export interface GoogleRecognizeResponse {
           transcript: string;
           confidence?: number;
         }[];
-        languageCode?: string;
+        languageCode: string;
       }[]
     | undefined;
 }
 
-export const recognize = async (mediaId: string, languageCodes: string[]) => {
+export interface TranslateSSTResult {
+  transcript: string;
+  languageCode: string;
+}
+
+export const recognize = async (
+  mediaId: string,
+  languageCodes: string[]
+): Promise<TranslateSSTResult> => {
   const googleSpeechClient = await getGoogleClient();
 
   const requestBody = {
@@ -48,7 +56,7 @@ export const recognize = async (mediaId: string, languageCodes: string[]) => {
   );
 
   const { results } = response.data;
-  if (!results) throw new NoRecognitionError();
+  if (!results || !results[0]) throw new NoRecognitionError();
 
   const transcript = results
     .map((result) => result.alternatives[0]?.transcript || "")
@@ -57,7 +65,7 @@ export const recognize = async (mediaId: string, languageCodes: string[]) => {
 
   if (transcript.length == 0) throw new NoRecognitionError();
 
-  const detectedLanguage = results[0]?.languageCode;
+  const detectedLanguage = results[0].languageCode;
 
   return {
     transcript,

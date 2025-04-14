@@ -6,6 +6,8 @@ import createHttpError from "http-errors";
 import { changeVolume } from "src/services/audio";
 import { Response, NextFunction } from "express";
 import { AbstractVoiceHandler } from "./common";
+import { NoRecognitionError } from "src/services/speech/SST";
+import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
 // import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 
 class Handler extends AbstractVoiceHandler {
@@ -25,10 +27,22 @@ class Handler extends AbstractVoiceHandler {
       this.context.settings.translateLanguage,
     ];
 
-    const recognizedResult = await translateSST.recognize(
-      voiceDataUri,
-      languagePool
-    );
+    let recognizedResult: translateSST.TranslateSSTResult;
+    try {
+      recognizedResult = await translateSST.recognize(voiceDataUri, languagePool);
+    } catch (e) {
+      if (e instanceof NoRecognitionError) {
+        console.log("No speech recognized");
+
+        const speech = getRandomCannedMsg(NO_SPEECH_MSGS);
+
+        const audioData = await TTS.speak(speech, this.getSpeechConfig());
+        this.sendResponse(audioData);
+        return;
+      }
+
+      throw e;
+    }
 
     console.log("Recognized speech", recognizedResult);
 
@@ -45,16 +59,10 @@ class Handler extends AbstractVoiceHandler {
       targetLanguage
     );
 
-    let audioData = await TTS.speak(
-      translatedText,
-      this.getSpeechConfig(targetLanguage)
-    );
+    let audioData = await TTS.speak(translatedText, this.getSpeechConfig(targetLanguage));
 
     if (targetLanguage != this.context.settings.myLanguage) {
-      audioData = await changeVolume(
-        audioData,
-        this.context.settings.translateVolumeBoost
-      );
+      audioData = await changeVolume(audioData, this.context.settings.translateVolumeBoost);
     }
 
     // TODO: fix
