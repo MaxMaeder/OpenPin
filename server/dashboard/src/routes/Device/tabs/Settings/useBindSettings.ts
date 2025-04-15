@@ -28,7 +28,7 @@ const useBindSettings = (_deviceId?: string) => {
   const updateRemoteSettings = useCallback(
     _.debounce(
       (settings: Partial<DeviceSettings>) => sendSettingsUpdate(deviceId, settings),
-      5000,
+      1000,
       { trailing: true }
     ),
     [deviceId]

@@ -113,7 +113,7 @@ export const INIT_DEVICE_SETTINGS: DeviceSettings = {
   translateVolumeBoost: 1.5,
   // Voice
   voiceName: "derek",
-  voiceSpeed: 1.1,
+  voiceSpeed: 1.0,
 };
 
 export const getModelsForInterface = (interfaces: ModelInterfaces): LanguageModelKey[] => {
