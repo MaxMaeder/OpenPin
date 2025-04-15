@@ -57,6 +57,8 @@ class GestureViewModel(
     }
     private var state = State.IDLE
 
+    class CaptureException(s: String) : Exception(s)
+
     private val gestureInterpreter = GestureInterpreter(
         gestureHandler = gestureHandler,
         onCapturePhoto = {
@@ -113,25 +115,36 @@ class GestureViewModel(
             gestureInterpreter.setMode(InterpreterMode.DISABLED)
             state = State.PHOTO_CAPTURE
 
-            // Capture image
             val imgFile = processHandler.createTempFile("jpeg")
-            val result = cameraManager.captureImage(imgFile)
+            try {
+                // Capture image
+                val result = cameraManager.captureImage(imgFile)
 
-            when (result) {
-                is CaptureResult.Success -> {
-                    soundPlayer.play(SystemSound.SHUTTER.key)
-                    backendManager.sendUploadRequest(imgFile)
+                when (result) {
+                    is CaptureResult.Success -> {
+                        soundPlayer.play(SystemSound.SHUTTER.key)
+                    }
+                    else -> {
+                        soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                        throw CaptureException("Image capture failed")
+                    }
                 }
 
-                else -> {
-                    soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                // Upload image
+                backendManager.sendUploadRequest(imgFile)
+
+            } catch (err: Exception) {
+                Log.e("Assistant", "Failed to complete image capture: ${err.message}")
+
+                if (err !is CaptureException) {
+                    soundPlayer.play(SystemSound.FAILED.key)
                 }
+            } finally {
+                imgFile.delete()
+
+                gestureInterpreter.setMode(InterpreterMode.NORMAL)
+                state = State.IDLE
             }
-
-            imgFile.delete()
-
-            gestureInterpreter.setMode(InterpreterMode.NORMAL)
-            state = State.IDLE
         }
     }
 
@@ -142,33 +155,44 @@ class GestureViewModel(
 
             soundPlayer.play(SystemSound.VIDEO_START.key)
 
-            // Start video capture with a 15-second maximum.
             val videoFile = processHandler.createTempFile("mp4")
-            videoCaptureSession = cameraManager.captureVideo(
-                outputFile = videoFile,
-                duration = 15000L,
-                captureConfig = null
-            )
+            try {
+                // Start video capture with a 15-second maximum
+                videoCaptureSession = cameraManager.captureVideo(
+                    outputFile = videoFile,
+                    duration = 15000L,
+                    captureConfig = null
+                )
 
-            // Wait for the video capture to complete (even if stopped early).
-            val result = videoCaptureSession?.waitForResult()
+                // Wait for the video capture to complete (even if stopped early)
+                val result = videoCaptureSession?.waitForResult()
 
-            when (result) {
-                is CaptureResult.Success -> {
-                    soundPlayer.play(SystemSound.VIDEO_END.key)
-                    backendManager.sendUploadRequest(videoFile)
+                when (result) {
+                    is CaptureResult.Success -> {
+                        soundPlayer.play(SystemSound.VIDEO_END.key)
+                    }
+                    else -> {
+                        soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                        throw CaptureException("Image capture failed")
+                    }
                 }
 
-                else -> {
-                    soundPlayer.play(SystemSound.CAPTURE_FAILED.key)
+                // Upload video
+                backendManager.sendUploadRequest(videoFile)
+
+            } catch (err: Exception) {
+                Log.e("Assistant", "Failed to complete video capture: ${err.message}")
+
+                if (err !is CaptureException) {
+                    soundPlayer.play(SystemSound.FAILED.key)
                 }
+            } finally {
+                videoCaptureSession = null
+                videoFile.delete()
+
+                gestureInterpreter.setMode(InterpreterMode.NORMAL)
+                state = State.IDLE
             }
-
-            videoCaptureSession = null
-            videoFile.delete()
-
-            gestureInterpreter.setMode(InterpreterMode.NORMAL)
-            state = State.IDLE
         }
     }
 
