@@ -6,7 +6,6 @@ import android.graphics.SurfaceTexture
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.Surface
 import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.CameraSelector
@@ -36,7 +35,6 @@ import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
-import org.openpin.appframework.sensors.microphone.RecordSession
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -241,7 +239,12 @@ class CameraManager
             }
         }
         return CaptureSessionImpl(deferred) {
-            providerForStop?.unbindAll()
+            providerForStop?.let { p ->
+                if (p.isBound(imageAnalysis) && !deferred.isCompleted) {
+                    deferred.complete(CaptureResult.Success(null))
+                    mainHandler.post { p.unbindAll() }
+                }
+            }
         }
     }
 

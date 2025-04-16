@@ -12,38 +12,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.controllers.NavigationController
-import org.openpin.primaryapp.viewmodels.LinkDeviceViewModel
+import org.openpin.primaryapp.viewmodels.OtherSettingsViewModel
 
 @Composable
-fun LinkDeviceView(navigationController: NavigationController) {
-    val viewModel: LinkDeviceViewModel = koinViewModel()
+fun OtherSettingsView(navigationController: NavigationController) {
+    val viewModel: OtherSettingsViewModel = koinInject()
 
-    // Start scanning when the view appears.
+    // Start the gesture listener logic when the view appears.
     LaunchedEffect(Unit) {
-        viewModel.startScanning(navigationController)
+        viewModel.start(navigationController)
     }
 
-    // Ensure cleanup is called when the view leaves composition.
+    // Clean up the gesture listener when the view leaves composition.
     DisposableEffect(Unit) {
-        onDispose { viewModel.cleanup() }
+        onDispose {
+            viewModel.cleanup()
+        }
     }
 
-    // UI displaying that scanning is in progress.
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text="Scanning...",
+            text = "Opening Settings",
             size = 70.sp,
             modifier = Modifier.padding(bottom = 10.dp)
         )
         Text(
-            text="Lower hand, bring QR into view of camera",
+            text = "To get back, double-tap the touchpad. Try it now to proceed.",
             size = 50.sp,
             align = TextAlign.Center
         )

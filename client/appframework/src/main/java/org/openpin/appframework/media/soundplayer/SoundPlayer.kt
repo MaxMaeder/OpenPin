@@ -1,8 +1,9 @@
+package org.openpin.appframework.media.soundplayer
+
 import android.content.Context
 import android.media.*
 import android.util.Log
 import org.openpin.appframework.media.AudioSource
-import org.openpin.appframework.media.soundplayer.SoundPlayerConfig
 import java.io.Closeable
 
 class SoundPlayer(
@@ -32,7 +33,7 @@ class SoundPlayer(
 
         soundPool.setOnLoadCompleteListener { _, sampleId, status ->
             if (status != 0) {
-                Log.e("SoundPlayer", "Failed to load sound id: $sampleId")
+                Log.e("org.openpin.appframework.media.soundplayer.SoundPlayer", "Failed to load sound id: $sampleId")
             }
         }
 
@@ -50,11 +51,11 @@ class SoundPlayer(
             .setOnAudioFocusChangeListener { }
             .build()
         val result = audioManager.requestAudioFocus(focusRequest)
-        Log.d("SoundPlayer", "Audio focus request result: $result")
+        Log.d("org.openpin.appframework.media.soundplayer.SoundPlayer", "Audio focus request result: $result")
     }
 
     /**
-     * Sets the volume level for the SoundPlayer.
+     * Sets the volume level for the org.openpin.appframework.media.soundplayer.SoundPlayer.
      */
     override fun setVolume(volume: Float) {
         currentVolume = volume.coerceIn(0.0f, 1.0f)

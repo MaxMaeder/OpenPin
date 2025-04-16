@@ -1,6 +1,6 @@
 package org.openpin.appframework.media.volume
 
-import SoundPlayer
+import org.openpin.appframework.media.soundplayer.SoundPlayer
 import android.content.Context
 import android.media.AudioManager
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler

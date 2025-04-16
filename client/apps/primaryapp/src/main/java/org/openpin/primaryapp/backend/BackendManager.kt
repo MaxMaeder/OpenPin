@@ -6,7 +6,6 @@ import com.google.gson.annotations.SerializedName
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.daemonbridge.process.RequestProcess
 import org.openpin.appframework.devicestate.battery.BatteryManager
-import org.openpin.appframework.devicestate.identity.IdentityManager
 import org.openpin.appframework.devicestate.location.LocationManager
 import org.openpin.appframework.devicestate.location.ResolvedLocation
 import org.openpin.appframework.devicestate.location.WiFiScanEntry
@@ -70,10 +69,11 @@ class BackendManager(
 ) {
     private val gson = Gson()
 
-    fun isPaired(): Boolean {
-        return configurationManager.exists(ConfigKey.BACKEND_BASE_URL) &&
-                configurationManager.exists(ConfigKey.DEVICE_ID)
-    }
+    val isPaired: Boolean
+        get() {
+            return configurationManager.exists(ConfigKey.BACKEND_BASE_URL) &&
+                    configurationManager.exists(ConfigKey.DEVICE_ID)
+        }
 
     suspend fun pairDevice(pairUrl: String): Boolean {
         val pairDetails = sendPairRequest(pairUrl)

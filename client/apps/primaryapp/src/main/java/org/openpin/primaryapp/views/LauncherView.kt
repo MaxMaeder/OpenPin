@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.openpin.appframework.ui.components.CrossfadeText
 import org.openpin.appframework.ui.components.IconButton
-import org.openpin.appframework.ui.components.Text
 import org.openpin.appframework.ui.config.UIIcon
 import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -134,14 +133,14 @@ fun LauncherView(navigationController: NavigationController) {
                     .fillMaxWidth()
                     .height(80.dp)
             ) {
-                Text(
-                    text = "wi-fi",
-                    size = 70.sp,
-                )
-                Text(
-                    text = "100%",
-                    size = 70.sp,
-                )
+//                Text(
+//                    text = "wi-fi",
+//                    size = 70.sp,
+//                )
+//                Text(
+//                    text = "100%",
+//                    size = 70.sp,
+//                )
             }
         }
     }

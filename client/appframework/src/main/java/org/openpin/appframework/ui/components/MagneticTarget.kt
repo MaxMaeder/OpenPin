@@ -1,6 +1,6 @@
 package org.openpin.appframework.ui.components
 
-import SoundPlayer
+import org.openpin.appframework.media.soundplayer.SoundPlayer
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateValueAsState
@@ -20,7 +20,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import org.koin.compose.koinInject
-import org.openpin.appframework.media.AudioType
 import org.openpin.appframework.ui.config.AppearanceTransitionConfig
 import org.openpin.appframework.ui.config.MagneticTargetConfig
 import org.openpin.appframework.ui.locals.LocalFocusedTargetId

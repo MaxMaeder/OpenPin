@@ -22,7 +22,7 @@ private class IntentProcessCallback : ProcessCallback {
 }
 
 private val processManager = ProcessManager(
-    directory = config.processHandlerDir,
+    directory = config.daemonCommDir,
     updateInterval = config.processUpdateInterval,
     callback = IntentProcessCallback()
 )
@@ -43,6 +43,7 @@ private fun handleDeviceWake() {
 }
 
 private val sleepManager = SleepManager(
+    directory = config.daemonCommDir,
     sleepAfter = config.sleepAfter,
     onWake = { handleDeviceWake() }
 )

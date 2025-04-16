@@ -1,14 +1,9 @@
 package org.openpin.appframework.media.soundplayer
 
-import SoundPlayer
-import android.util.Log
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.openpin.appframework.R
-import org.openpin.appframework.media.speechplayer.SpeechPlayer
-import org.openpin.appframework.media.AudioType
 
 suspend fun <T> withLoadingSounds(
     soundPlayer: SoundPlayer,

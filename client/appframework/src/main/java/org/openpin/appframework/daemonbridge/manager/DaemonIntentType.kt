@@ -5,7 +5,8 @@ package org.openpin.appframework.daemonbridge.manager
  */
 enum class DaemonIntentType(val action: String) {
     PROCESS_DONE("org.openpin.PROCESS_DONE_ACTION"),
-    GESTURE("org.openpin.GESTURE_ACTION");
+    GESTURE("org.openpin.GESTURE_ACTION"),
+    WAKELOCK_UPDATE("org.openpin.WAKELOCK_UPDATE");
 
     companion object {
         fun fromAction(action: String?): DaemonIntentType? {

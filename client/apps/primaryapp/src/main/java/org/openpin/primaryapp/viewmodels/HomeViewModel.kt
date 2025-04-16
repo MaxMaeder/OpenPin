@@ -1,4 +1,4 @@
-package org.openpin.primaryapp
+package org.openpin.primaryapp.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -7,11 +7,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.openpin.appframework.devicestate.battery.BatteryManager
+import org.openpin.appframework.devicestate.battery.BatteryStatus
 import org.openpin.primaryapp.backend.BackendManager
 import org.openpin.primaryapp.backend.HomeData
 
 class HomeViewModel(
-    private val backendManager: BackendManager
+    private val backendManager: BackendManager,
+    private val batteryManager: BatteryManager
 ) : ViewModel() {
 
     companion object {
@@ -24,16 +27,22 @@ class HomeViewModel(
     private val _isPaired = MutableStateFlow(false)
     val isPaired: StateFlow<Boolean> = _isPaired.asStateFlow()
 
+    private val _batteryPercentage = MutableStateFlow(0)
+    val batteryPercentage: StateFlow<Int> = _batteryPercentage.asStateFlow()
+
     private var lastFetchSystemTime: Long = 0L
-    private var isFetching = false;
+    private var isFetching = false
 
     private var homeDataTimeReference: Long = 0L // the wall clock time from backend
     private var deviceElapsedTimeAtFetch: Long = 0L // the local device clock at fetch
 
     fun fetchHomeData() {
         viewModelScope.launch {
-            val paired = backendManager.isPaired()
+            val paired = backendManager.isPaired
             _isPaired.value = paired
+
+            val batteryStatus: BatteryStatus = batteryManager.status
+            _batteryPercentage.value = (batteryStatus.percentage * 100).toInt()
 
             if (!paired) return@launch
 

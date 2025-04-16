@@ -1,7 +1,7 @@
 package org.openpin.primaryapp
 
-import GestureInterpreter
-import SoundPlayer
+import org.openpin.primaryapp.gestureinterpreter.GestureInterpreter
+import org.openpin.appframework.media.soundplayer.SoundPlayer
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -24,7 +24,7 @@ import org.openpin.primaryapp.backend.BackendManager
 import org.openpin.primaryapp.gestureinterpreter.InterpreterMode
 import java.io.File
 
-class GestureViewModel(
+class GestureManager(
     private val processHandler: ProcessHandler,
     private val gestureHandler: GestureHandler,
     private val cameraManager: CameraManager,
@@ -47,13 +47,17 @@ class GestureViewModel(
 
     private var voiceInputStart: Long = 0
 
+    private var settingsToggled = false
+    private var onSettingsToggle: ((Boolean) -> Unit)? = null
+
     private enum class State {
         IDLE,
         PHOTO_CAPTURE,
         VIDEO_CAPTURE,
         VOICE_INPUT,
         VOICE_THINKING,
-        VOICE_RESPONDING
+        VOICE_RESPONDING,
+        SETTINGS_TOGGLE
     }
     private var state = State.IDLE
 
@@ -62,43 +66,43 @@ class GestureViewModel(
     private val gestureInterpreter = GestureInterpreter(
         gestureHandler = gestureHandler,
         onCapturePhoto = {
-            Log.w("GestureInterpreter", "onTakePhoto")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onTakePhoto")
             viewModelScope.launch {
                 handleCapturePhoto()
             }
         },
         onCaptureVideoStart = {
-            Log.w("GestureInterpreter", "onTakeVideoStart")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onTakeVideoStart")
             viewModelScope.launch {
                 handleCaptureVideo()
             }
         },
         onAssistantStartAction = { useVision ->
-            Log.w("GestureInterpreter", "onStartAssistantVoiceInput: $useVision")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onStartAssistantVoiceInput: $useVision")
             viewModelScope.launch {
                 handleStartVoiceInput(isTranslating = false)
             }
         },
         onAssistantStopAction = { useVision ->
-            Log.w("GestureInterpreter", "onStopAssistantVoiceInput: $useVision")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onStopAssistantVoiceInput: $useVision")
             viewModelScope.launch {
                 handleEndVoiceInput(isTranslating = false, useVision = useVision)
             }
         },
         onTranslateStartAction = {
-            Log.w("GestureInterpreter", "onStartTranslateVoiceInput")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onStartTranslateVoiceInput")
             viewModelScope.launch {
                 handleStartVoiceInput(isTranslating = true)
             }
         },
         onTranslateStopAction = {
-            Log.w("GestureInterpreter", "onStopTranslateVoiceInput")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onStopTranslateVoiceInput")
             viewModelScope.launch {
                 handleEndVoiceInput(isTranslating = true, useVision = false)
             }
         },
         onCancelAction = {
-            Log.w("GestureInterpreter", "onCancelAction")
+            Log.w("org.openpin.primaryapp.gestureinterpreter.GestureInterpreter", "onCancelAction")
             viewModelScope.launch {
                 handleCancel()
             }
@@ -108,6 +112,20 @@ class GestureViewModel(
 
     fun addListeners() {
         gestureInterpreter.subscribeGestures()
+    }
+
+    fun enableSettingsToggle(onToggle: (Boolean) -> Unit) {
+        gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
+        state = State.SETTINGS_TOGGLE
+
+        settingsToggled = false
+        onSettingsToggle = onToggle
+    }
+
+    fun disableSettingsToggle() {
+        gestureInterpreter.setMode(InterpreterMode.NORMAL)
+        state = State.IDLE
+        onSettingsToggle = null
     }
 
     private suspend fun handleCapturePhoto() {
@@ -277,13 +295,17 @@ class GestureViewModel(
             State.VOICE_RESPONDING -> {
                 speechPlayer.stop()
             }
+            State.SETTINGS_TOGGLE -> {
+                settingsToggled = !settingsToggled
+                onSettingsToggle?.invoke(settingsToggled)
+            }
 
             else -> Unit
         }
     }
 
     private inline fun runIfPaired(action: () -> Unit) {
-        if (backendManager.isPaired()) {
+        if (backendManager.isPaired) {
             action()
         } else {
             soundPlayer.play(SystemSound.FAILED.key)

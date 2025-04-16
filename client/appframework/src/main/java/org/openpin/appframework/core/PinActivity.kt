@@ -1,6 +1,6 @@
 package org.openpin.appframework.core
 
-import SoundPlayer
+import org.openpin.appframework.media.soundplayer.SoundPlayer
 import android.Manifest
 import android.os.Bundle
 import android.util.Log
@@ -25,11 +25,13 @@ import org.openpin.appframework.media.soundplayer.SoundPlayerConfig
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
 import org.openpin.appframework.daemonbridge.manager.DaemonBridgeManager
 import org.openpin.appframework.daemonbridge.manager.DaemonIntentType
+import org.openpin.appframework.daemonbridge.power.PowerHandler
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.devicestate.battery.BatteryManager
 import org.openpin.appframework.devicestate.identity.IdentityManager
 import org.openpin.appframework.devicestate.location.LocationConfig
 import org.openpin.appframework.devicestate.location.LocationManager
+import org.openpin.appframework.devicestate.wifi.WifiManager
 import org.openpin.appframework.media.AudioType
 import org.openpin.appframework.media.speechplayer.SpeechPlayer
 import org.openpin.appframework.media.volume.VolumeConfig
@@ -117,11 +119,13 @@ abstract class PinActivity : ComponentActivity() {
 
             single { GestureHandler() }
             single { ProcessHandler() }
+            single { PowerHandler() }
 
             single(createdAtStart = true) {
                 val receiverMap = mapOf(
                     DaemonIntentType.GESTURE to get<GestureHandler>(),
-                    DaemonIntentType.PROCESS_DONE to get<ProcessHandler>()
+                    DaemonIntentType.PROCESS_DONE to get<ProcessHandler>(),
+                    DaemonIntentType.WAKELOCK_UPDATE to get<PowerHandler>()
                 )
                 DaemonBridgeManager(
                     context = get(),
@@ -152,6 +156,7 @@ abstract class PinActivity : ComponentActivity() {
             single { LocationManager(get(), get()) }
 
             single { BatteryManager(get()) }
+            single { WifiManager(get()) }
         }
 
         if (Manifest.permission.CAMERA in appPermissions) {

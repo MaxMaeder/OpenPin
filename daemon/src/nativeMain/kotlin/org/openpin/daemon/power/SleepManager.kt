@@ -2,8 +2,10 @@ package org.openpin.daemon.power
 
 import kotlinx.coroutines.*
 import org.openpin.daemon.util.SystemUtils
+import org.openpin.daemon.util.SystemUtils.readFile
 
 class SleepManager(
+    private val directory: String,
     private val sleepAfter: Long = 45 * 1000L,
     private val onWake: () -> Unit = {}
 ) {
@@ -12,19 +14,34 @@ class SleepManager(
     private var timerJob: Job? = null
     private var isProbablyAwake: Boolean = false
 
-    // Public method that awakens the device and starts the timer to "sleep" it later.
+    private val wakelockFile = "$directory/wakelock.txt"
+
     fun awaken() {
-        timerJob?.cancel()
+        resetSleepTimer()
 
         if (!isProbablyAwake) {
             println("Waking device...")
         }
 
         wakeDevice()
+    }
 
+    private fun resetSleepTimer() {
+        timerJob?.cancel()
         timerJob = scope.launch {
             delay(sleepAfter)
             sleepDevice()
+        }
+    }
+
+    private fun hasWakelock(): Boolean {
+        try {
+            val status = readFile(wakelockFile)
+
+            return status.trim() == "true"
+        } catch (e: Exception) {
+            println("Can't read Wakelock file, assuming disabled")
+            return false
         }
     }
 
@@ -39,7 +56,15 @@ class SleepManager(
 
     private fun sleepDevice() {
         println("Putting device to sleep...")
+
+        if (hasWakelock()) {
+            println("Wakelock enabled, skipping")
+            resetSleepTimer()
+            return
+        }
+
         SystemUtils.executeCommand("cmd power enable-humane-display-controller")
+        println("Sleeping")
 
         isProbablyAwake = false
     }

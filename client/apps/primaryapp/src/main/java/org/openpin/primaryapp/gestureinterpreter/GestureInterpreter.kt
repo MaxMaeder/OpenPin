@@ -1,10 +1,9 @@
+package org.openpin.primaryapp.gestureinterpreter
+
 import kotlinx.coroutines.*
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
 import org.openpin.appframework.daemonbridge.gesture.GestureSubscription
 import org.openpin.appframework.daemonbridge.gesture.GestureType
-import org.openpin.primaryapp.gestureinterpreter.GestureAction
-import org.openpin.primaryapp.gestureinterpreter.InterpreterConfig
-import org.openpin.primaryapp.gestureinterpreter.InterpreterMode
 
 class GestureInterpreter(
     private val gestureHandler: GestureHandler,
@@ -48,32 +47,48 @@ class GestureInterpreter(
     }
 
     /**
-     * Helper to execute start-gesture actions.
-     * If the interpreter is in CANCELABLE mode, it fires the cancel callback immediately.
-     * If DISABLED, the action is ignored.
-     * Otherwise, the provided block is executed.
+     * Helper to execute start‑gesture actions.
+     *
+     * If the interpreter is in CANCELABLE mode and ignoreCancel is false,
+     * it fires the cancel callback immediately.
+     * If in DISABLED mode, the event is ignored.
+     *
+     * When ignoreCancel is true, the gesture event is passed through even in CANCELABLE mode.
      */
-    private inline fun handleStartGesture(action: () -> Unit) {
-        when (mode) {
-            InterpreterMode.CANCELABLE -> { onCancelAction(); return }
-            InterpreterMode.DISABLED -> { return }
-            else -> action()
+    private inline fun handleStartGesture(ignoreCancel: Boolean = false, action: () -> Unit) {
+        if (mode == InterpreterMode.DISABLED) return
+        if (mode == InterpreterMode.CANCELABLE && !ignoreCancel) {
+            onCancelAction()
+            return
         }
+        action()
     }
 
     /**
      * Called for tap events.
-     * For a double tap (photo), if any tap in the gesture was two-finger, the photo action is triggered.
+     *
+     * For a double tap, if any tap in the gesture was two‑finger:
+     * - In normal mode, the photo action is triggered.
+     * - In CANCELABLE mode, the cancel action is fired.
+     *
+     * We use handleStartGesture(ignoreCancel = true) here so that tap
+     * events are processed by our double‑tap logic even in cancel mode.
      */
     private fun onTap(fingers: Int) {
-        handleStartGesture {
+        handleStartGesture(ignoreCancel = true) {
             if (fingers == 2) {
                 currentGestureTwoFinger = true
             }
             val now = System.currentTimeMillis()
             if (lastTapTime != null && now - lastTapTime!! <= config.doubleTapMaxInterval) {
-                if (currentGestureTwoFinger) {
-                    onCapturePhoto()
+                if (mode == InterpreterMode.CANCELABLE) {
+                    // Double tap detected in cancel mode fires cancel.
+                    onCancelAction()
+                } else {
+                    // In normal mode, a double tap with any two‑finger tap fires a photo capture.
+                    if (currentGestureTwoFinger) {
+                        onCapturePhoto()
+                    }
                 }
                 lastTapTime = null
                 currentGestureTwoFinger = false

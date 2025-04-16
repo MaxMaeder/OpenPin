@@ -3,6 +3,8 @@ package org.openpin.appframework.ui.config
 import androidx.annotation.DrawableRes
 import org.openpin.appframework.R
 
+// https://github.com/ionic-team/ionicons
+
 enum class UIIcon(@DrawableRes val resId: Int) {
     Accessibility(R.drawable.accessibility),
     Airplane(R.drawable.airplane),
@@ -91,6 +93,7 @@ enum class UIIcon(@DrawableRes val resId: Int) {
     Chatbubbles(R.drawable.chatbubbles),
     Checkbox(R.drawable.checkbox),
     Checkmark(R.drawable.checkmark),
+    CheckmarkCircle(R.drawable.checkmark_circle),
     CheckmarkDone(R.drawable.checkmark_done),
     ChevronBack(R.drawable.chevron_back),
     ChevronCollapse(R.drawable.chevron_collapse),
@@ -100,6 +103,7 @@ enum class UIIcon(@DrawableRes val resId: Int) {
     ChevronUp(R.drawable.chevron_up),
     Clipboard(R.drawable.clipboard),
     Close(R.drawable.close),
+    CloseCircle(R.drawable.close_circle),
     Cloud(R.drawable.cloud),
     CloudDone(R.drawable.cloud_done),
     CloudDownload(R.drawable.cloud_download),
