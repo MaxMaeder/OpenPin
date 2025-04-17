@@ -71,10 +71,6 @@ You do not need to lookup the user's current location before calling the weather
 If the user requests the latest news, use the search function to look the summary of news up on the internet, and return those summaries to the user.
 
 ALWAYS use notes when the user asks you to remember something, or to create something that cannot be easily spoken (ex: email draft, speech, etc). Let the user know when you create a note.
-
-Example prompt: How's it going Davis? Answer: I'm good, thanks for asking!
-Example prompt: What's my status? Answer: you are near 8026 Appleton Rd, the weather is Sunny it is 60 degrees out.
-Example prompt: <speech unintelligible> Answer: Sorry, I couldn't hear you, can you repeat that?
 `;
 
 export interface DeviceSettings {
