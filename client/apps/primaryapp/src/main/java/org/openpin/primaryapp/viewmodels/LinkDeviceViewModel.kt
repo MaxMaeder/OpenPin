@@ -27,6 +27,7 @@ class LinkDeviceViewModel(
     fun startScanning(navigationController: NavigationController) {
         viewModelScope.launch {
             scanSoundSid = soundPlayer.play(SystemSound.QR_SCAN.key)
+            isCancelled = false
 
             // Start scanning with a timeout of 30 seconds.
             session = cameraManager.scanQrCode(timeoutMs = 30000L)
@@ -44,7 +45,9 @@ class LinkDeviceViewModel(
             if (result is CaptureResult.Success && result.data != null) {
                 soundPlayer.play(SystemSound.QR_FINISH.key)
                 Log.e("QR", "Scanned result: ${result.data}")
-                backendManager.pairDevice(result.data!!)
+                if (!backendManager.pairDevice(result.data!!)) {
+                    Log.e("PAIR", "Pairing Failed!")
+                }
             } else {
                 soundPlayer.play(SystemSound.QR_FAILED.key)
                 Log.e("QR", "QR code scan failed")
