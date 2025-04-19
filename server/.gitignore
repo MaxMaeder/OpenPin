@@ -12,6 +12,7 @@ app.yaml
 .env
 .env.prod
 */keys/*.ts
+*/keys/*.ogg
 
 .DS_Store
 
