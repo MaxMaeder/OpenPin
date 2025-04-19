@@ -1,11 +1,10 @@
 import { AuthenticatedCompletionModel } from "src/services/completions";
 import { LanguageModelKey } from "./deviceSettings";
+import { SEXY_PROMPT } from "./sexyMode";
 
 // Max calls to chat completion service in one invocation of davis
 export const COMP_MAX_CALLS = 5;
 export const COMP_CALLS_EXCEEDED_MSG = `Failed to get a response from Davis in ${COMP_MAX_CALLS} calls.`;
-
-const GROK_SEXY_PROMPT = `You are grok in "sexy mode". Respond to users with short and speakable extremely flirtatious responses.`;
 
 type RequireOne<T, K extends keyof T> = Partial<T> & Required<Pick<T, K>>;
 
@@ -30,6 +29,6 @@ export const COMP_MODELS: RequireOne<
     name: "grok-2",
     supportsTools: false,
     getKey: () => process.env.GROK_KEY as string,
-    systemMsgTransform: (_) => GROK_SEXY_PROMPT,
+    systemMsgTransform: (_) => SEXY_PROMPT,
   },
 };

@@ -12,6 +12,8 @@ import { doDavis } from "src/davis";
 import { sendMsgsUpdate, sendSettingsUpdate } from "src/sockets/msgBuilders/device";
 import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
+import { addBackgroundAudio } from "src/services/audio";
+import { SEXY_BG_AUDIO_CONFIG, SEXY_BG_AUDIO_FILE } from "src/config/sexyMode";
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
@@ -19,7 +21,14 @@ class Handler extends AbstractVoiceHandler {
   }
 
   private async sendSpeech(speech: string) {
-    const audioData = await TTS.speak(speech, this.getSpeechConfig());
+    if (!this.context) throw new Error("Device context null");
+
+    let audioData = await TTS.speak(speech, this.getSpeechConfig());
+
+    if (this.context.settings.llmName == "grok-2-sexy") {
+      audioData = await addBackgroundAudio(audioData, SEXY_BG_AUDIO_FILE, SEXY_BG_AUDIO_CONFIG);
+    }
+
     this.sendResponse(audioData);
   }
 
