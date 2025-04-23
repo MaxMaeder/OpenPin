@@ -1,13 +1,11 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import {
-  getDeviceData,
-  updateDeviceData,
-} from "src/services/database/device/data";
+import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
 import { doesDeviceExist } from "src/services/database/device/list";
 import * as yup from "yup";
 import _ from "lodash";
 import { getWiFiLocation, WiFiAccessPoint } from "src/services/maps";
+import { shouldUpdateLocation } from "src/config/location";
 
 const accessPointSchema = yup.object<WiFiAccessPoint>({
   macAddress: yup.string().required(),
@@ -42,28 +40,33 @@ export const handleLocateDevice = async (req: Request, res: Response) => {
     throw err;
   }
 
-  const deviceId = req.body.deviceId;
   const accessPoints = req.body.wifiAccessPoints;
-  if (!(await doesDeviceExist(deviceId)))
-    throw createHttpError(404, "Device does not exist");
+  if (accessPoints.length == 0)
+    throw createHttpError(400, "Can't find location, no access points.");
 
-  const location = await getWiFiLocation(accessPoints);
+  const deviceId = req.body.deviceId;
+  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
+
   const deviceData = await getDeviceData(deviceId);
-
   deviceData.lastConnected = _.now();
 
-  deviceData.latitude = location.latitude;
-  deviceData.longitude = location.longitude;
-  deviceData.locationAccuracy = location.accuracy;
+  if (shouldUpdateLocation(deviceData)) {
+    const location = await getWiFiLocation(accessPoints);
+
+    deviceData.latitude = location.latitude;
+    deviceData.longitude = location.longitude;
+    deviceData.locationAccuracy = location.accuracy;
+    deviceData.latestLocationUpdate = _.now();
+  }
 
   await updateDeviceData(deviceId, deviceData);
 
   const resBody: ResolvedLocation = {
     location: {
-      lat: location.latitude,
-      lng: location.longitude,
+      lat: deviceData.latitude,
+      lng: deviceData.longitude,
     },
-    accuracy: location.accuracy,
+    accuracy: deviceData.locationAccuracy ?? 0,
   };
 
   res.status(200).send(resBody);
