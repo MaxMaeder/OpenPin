@@ -5,6 +5,7 @@
 - `docker build -f Dockerfile.dev -t openpin-server-dev .`
 - `chmod +x ./dev.sh`
 - `./dev.sh`
+- Tailscale FW: `socat TCP-LISTEN:8080,fork TCP:maxbox:8080`
 
 ## Prod
 

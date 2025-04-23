@@ -23,6 +23,7 @@ import { handleUploadCapture, parseUploadCapture } from "./endpoints/device/uplo
 import { noCacheRes } from "./util/caching";
 import { handleGetHomeData, parseGetHomeData } from "./endpoints/device/getHomeData";
 import { handleLocateDevice, parseLocateDevice } from "./endpoints/device/locateDevice";
+import { handleGetPodcast } from "./endpoints/device/streaming/podcast";
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseKey),
@@ -30,7 +31,8 @@ admin.initializeApp({
 });
 
 const app = express();
-app.set("trust proxy", 1); // One proxy (google app engine)
+app.set("trust proxy", true);
+//app.set("trust proxy", 1); // One proxy (google app engine)
 const server = createServer(app);
 
 app.use(passport.initialize());
@@ -74,6 +76,7 @@ app.post(
   parseLocateDevice,
   handleLocateDevice
 );
+app.get("/api/dev/podcast", handleGetPodcast);
 
 app.use("/favicon.svg", express.static("dashboard/dist/favicon.svg"));
 app.use("/dash-assets", express.static("dashboard/dist/dash-assets"));

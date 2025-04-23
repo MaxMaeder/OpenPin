@@ -5,7 +5,7 @@ export const SEXY_PROMPT = `You are grok in "sexy mode". Respond to users with s
 export const SEXY_BG_AUDIO_FILE = "/app/src/keys/careless_whisper.ogg";
 export const SEXY_BG_AUDIO_CONFIG: BackgroundAudioOptions = {
   startOffset: 2,
-  volume: 0.3,
+  volume: 0.2,
   preDelay: 0.5,
   postDelay: 5,
 };
