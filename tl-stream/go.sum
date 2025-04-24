@@ -1,0 +1,4 @@
+github.com/pion/webrtc/v3 v3.3.5 h1:ZsSzaMz/i9nblPdiAkZoP+E6Kmjw+jnyq3bEmU3EtRg=
+github.com/pion/webrtc/v3 v3.3.5/go.mod h1:liNa+E1iwyzyXqNUwvoMRNQ10x8h8FOeJKL8RkIbamE=
+mccoy.space/g/ogg v0.0.0-20221103053400-1ea94e6f3152 h1:p3Sx79jj5P979gSyMOoSftOXFPuGquvCZMzbOeV+8oE=
+mccoy.space/g/ogg v0.0.0-20221103053400-1ea94e6f3152/go.mod h1:Fa7PeLv7azi4nCJLxrQ2SK7pqOEvqgt9deL4K/XZCA8=

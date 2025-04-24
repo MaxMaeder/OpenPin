@@ -58,4 +58,5 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation(libs.gson)
+    implementation(libs.androidx.media3.datasource)
 }

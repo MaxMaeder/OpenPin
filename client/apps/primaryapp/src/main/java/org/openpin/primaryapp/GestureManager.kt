@@ -1,16 +1,28 @@
 package org.openpin.primaryapp
 
+import android.content.Context
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import org.openpin.primaryapp.gestureinterpreter.GestureInterpreter
 import org.openpin.appframework.media.soundplayer.SoundPlayer
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.openpin.appframework.media.speechplayer.SpeechPlayer
 import org.openpin.appframework.daemonbridge.gesture.GestureHandler
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
+import org.openpin.appframework.daemonbridge.streaming.ChunkDataSource
+import org.openpin.appframework.daemonbridge.streaming.FileChunkChannel
+import org.openpin.appframework.daemonbridge.streaming.StreamProcess
 import org.openpin.appframework.media.soundplayer.SystemSound
 import org.openpin.appframework.sensors.camera.CameraManager
 import org.openpin.appframework.sensors.camera.ImageCaptureConfig
@@ -23,8 +35,11 @@ import org.openpin.appframework.sensors.camera.CaptureSession
 import org.openpin.primaryapp.backend.BackendManager
 import org.openpin.primaryapp.gestureinterpreter.InterpreterMode
 import java.io.File
+import java.io.InputStream
+import kotlin.concurrent.thread
 
 class GestureManager(
+    private val context: Context,
     private val processHandler: ProcessHandler,
     private val gestureHandler: GestureHandler,
     private val cameraManager: CameraManager,
@@ -214,22 +229,128 @@ class GestureManager(
         }
     }
 
-    private fun handleStartVoiceInput(isTranslating: Boolean) {
-        runIfPaired {
-            gestureInterpreter.setMode(InterpreterMode.DISABLED)
-            state = State.VOICE_INPUT
+    @OptIn(UnstableApi::class)
+    private suspend fun testPodcast() {
+        val streamDir = processHandler.fileSystem.get("/podcast_stream")
+        File(streamDir, "pacing.txt").writeText("0\n")
 
-            voiceInputStart = System.currentTimeMillis()
+        // 1) start native streamer (returns instantly, stores PID)
+        val streamProc = StreamProcess(
+            url = "http://192.168.1.192:8080/api/dev/podcast",
+            outDir = streamDir.path,
+            //useUdp = false          // flip to true if you really need UDP
+        )
+        processHandler.execute(streamProc)
+        Log.e("OUT", streamProc.output)
+        Log.e("ERR", streamProc.error)
 
-            if (isTranslating) {
-                soundPlayer.play(SystemSound.TRANSLATE_START.key)
-            } else {
-                soundPlayer.play(SystemSound.ASSISTANT_START.key)
-            }
+        // 2) build player
+//        val channel = FileChunkChannel(streamDir)
+//        val mediaSource = ProgressiveMediaSource.Factory { ChunkDataSource(channel) }
+//            .createMediaSource(MediaItem.fromUri("file://dummy"))   // URI is ignored
+//        val player = ExoPlayer.Builder(context).build().apply {
+//            setMediaSource(mediaSource)
+//            prepare()
+//        }
+//
+//        // 3) play
+//        player.play()
 
-            val speechFile = processHandler.createTempFile("ogg")
-            speechCapture = microphoneManager.recordAudio(speechFile)
+        //val streamDir = processHandler.fileSystem.get("/tmp/podcast_stream")
+        // ensure pacing.txt starts at 0
+
+
+        val channel = FileChunkChannel(streamDir)
+        val dataSource = ChunkDataSource(channel)
+        val mediaSource = ProgressiveMediaSource.Factory { dataSource }
+            .createMediaSource(MediaItem.fromUri("file://dummy"))
+        val player = ExoPlayer.Builder(context).build().apply {
+            setMediaSource(mediaSource); prepare()
         }
+
+        // now we’ve signaled “I’m ready for chunk 0,1,2”:
+//        processHandler.execute(StreamProcess("http://…", streamDir.path))
+        player.play()
+
+//
+//        val dir = processHandler.fileSystem.get("/tmp/podcast_stream")
+//        playRawPcm(dir, sampleRate = 44100, channels = 2)
+    }
+
+    fun playRawPcm(
+        streamDir: File,
+        sampleRate: Int,
+        channels: Int,
+        bitDepth: Int = 16
+    ) {
+
+        Log.e("PLAYER", "PLAYING")
+        // 1) Configure the AudioTrack
+        val encoding = if (bitDepth == 16)
+            AudioFormat.ENCODING_PCM_16BIT else AudioFormat.ENCODING_PCM_8BIT
+
+        val channelMask = if (channels == 1)
+            AudioFormat.CHANNEL_OUT_MONO else AudioFormat.CHANNEL_OUT_STEREO
+
+        val audioFormat = AudioFormat.Builder()
+            .setEncoding(encoding)
+            .setSampleRate(sampleRate)
+            .setChannelMask(channelMask)
+            .build()
+
+        val minBuf = AudioTrack.getMinBufferSize(
+            sampleRate, channelMask, encoding
+        )
+
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .setAudioFormat(audioFormat)
+            .setBufferSizeInBytes(minBuf)
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .build()
+
+        track.play()
+
+        // 2) Feed it your FileChunkChannel
+        val channel = FileChunkChannel(streamDir)
+        thread(start = true) {
+            for (stream: InputStream in channel.readerSequence()) {
+                val buf = ByteArray(4096)
+                var read: Int
+                while (stream.read(buf).also { read = it } > 0) {
+                    track.write(buf, 0, read)
+                }
+                stream.close()
+            }
+            track.stop()
+            track.release()
+        }
+    }
+
+    private suspend fun handleStartVoiceInput(isTranslating: Boolean) {
+        testPodcast()
+        return
+
+//        runIfPaired {
+//            gestureInterpreter.setMode(InterpreterMode.DISABLED)
+//            state = State.VOICE_INPUT
+//
+//            voiceInputStart = System.currentTimeMillis()
+//
+//            if (isTranslating) {
+//                soundPlayer.play(SystemSound.TRANSLATE_START.key)
+//            } else {
+//                soundPlayer.play(SystemSound.ASSISTANT_START.key)
+//            }
+//
+//            val speechFile = processHandler.createTempFile("ogg")
+//            speechCapture = microphoneManager.recordAudio(speechFile)
+//        }
     }
 
     private suspend fun handleEndVoiceInput(isTranslating: Boolean, useVision: Boolean) {

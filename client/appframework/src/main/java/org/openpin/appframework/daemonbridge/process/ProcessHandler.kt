@@ -18,7 +18,10 @@ import kotlin.coroutines.suspendCoroutine
 
 class ProcessHandler : DaemonIntentReceiver, Closeable {
 
-    private lateinit var fileSystem: DaemonFileSystem
+    private lateinit var _fileSystem: DaemonFileSystem
+    val fileSystem: DaemonFileSystem
+        get() = _fileSystem
+
     private lateinit var activeProcessesFile: File
     private val activeProcesses = mutableSetOf<String>()
 
@@ -30,7 +33,7 @@ class ProcessHandler : DaemonIntentReceiver, Closeable {
     private val waiting = ConcurrentHashMap<String, WaitingProcess>()
 
     override fun setFileSystem(fileSystem: DaemonFileSystem) {
-        this.fileSystem = fileSystem
+        this._fileSystem = fileSystem
         activeProcessesFile = fileSystem.get("active-processes.txt")
     }
 

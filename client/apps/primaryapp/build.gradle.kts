@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation(libs.gson)
+    implementation(libs.androidx.media3.exoplayer)
 }
 
 fun Project.loadSecrets(vararg keys: String): Map<String, String> {
