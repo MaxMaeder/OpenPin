@@ -11,12 +11,7 @@ const reqSchema = yup.object({
   deviceId: yup.string().required(),
 });
 
-type WeatherConditions = 
-  | "rainy"
-  | "thunderstorm"
-  | "cloudy"
-  | "sunny"
-  | "snow";
+type WeatherConditions = "rainy" | "thunderstorm" | "cloudy" | "sunny" | "snow";
 
 interface HomeData {
   location?: string;
@@ -36,7 +31,7 @@ const convertConditions = (cond: ConditionName): WeatherConditions => {
       return "rainy";
     case "Thunderstorm":
     case "Tornado":
-      return "thunderstorm"
+      return "thunderstorm";
     case "Mist":
     case "Smoke":
     case "Ash":
@@ -46,16 +41,16 @@ const convertConditions = (cond: ConditionName): WeatherConditions => {
     case "Clouds":
     case "Sand":
     case "Squall":
-      return "cloudy"
+      return "cloudy";
     case "Clear":
       return "sunny";
     case "Snow":
       return "snow";
   }
-}
+};
 
 export const handleGetHomeData = async (req: Request, res: Response) => {
-  console.log(req.body)
+  console.log(req.body);
   try {
     await reqSchema.validate(req.body);
   } catch (err) {
@@ -66,12 +61,11 @@ export const handleGetHomeData = async (req: Request, res: Response) => {
   }
 
   const deviceId = req.body.deviceId;
-  if (!(await doesDeviceExist(deviceId)))
-    throw createHttpError(404, "Device does not exist");
+  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
 
   const { latitude: lat, longitude: lng } = await getDeviceData(deviceId);
 
-  const [weather, { city }, { localTime }] = await Promise.all([
+  let [weather, { city }, { localTime }] = await Promise.all([
     getWeather(lat, lng),
     getRevGeocoding(lat, lng),
     getLocalTime(lat, lng),
@@ -79,12 +73,17 @@ export const handleGetHomeData = async (req: Request, res: Response) => {
 
   const tempStr = `${Math.round(weather.currentTemp)} F`;
 
+  // TODO: Temp fix
+  if (city?.trim() == "Deerfield Beach") {
+    city = "DFB";
+  }
+
   const resBody: HomeData = {
     location: city,
     temp: tempStr,
     conditions: convertConditions(weather.currentConditions),
-    time: localTime.getTime()
-  }
+    time: localTime.getTime(),
+  };
 
   res.status(200).send(resBody);
-}
+};
