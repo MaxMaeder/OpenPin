@@ -31,3 +31,4 @@ fp-info-cache
 
 backups/
 pin-interposer.step
+venv/
