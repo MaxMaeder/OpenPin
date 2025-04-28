@@ -22,10 +22,20 @@ export interface PaginatedResult<T> {
   nextStartAfter?: Date | null;
 }
 
-export interface DeviceContentRepo<T extends DeviceContent> {
+export interface ContentStore<T extends DeviceContent> {
   list(deviceId: DeviceId, config: PaginationConfig): Promise<PaginatedResult<T>>;
   add(deviceId: DeviceId, data: Omit<T, "date">): Promise<WithId<T>>;
   update(deviceId: DeviceId, id: string, patch: Partial<T>): Promise<void>;
   remove(deviceId: DeviceId, id: string): Promise<void>;
   clear(deviceId: DeviceId): Promise<void>;
+}
+
+export interface ContentRepo<T extends DeviceContent> extends ContentStore<T> {
+  // Nothing right now
+}
+
+export function composeContentRepo<T extends DeviceContent>(
+  store: ContentStore<T>
+): ContentRepo<T> {
+  return { ...store };
 }

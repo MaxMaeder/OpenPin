@@ -1,20 +1,20 @@
 import { CollectionReference, Timestamp, getFirestore } from "firebase-admin/firestore";
 import type { DeviceId } from "src/dbTypes";
 import type {
-  DeviceContentRepo,
+  ContentStore,
   PaginationConfig,
   PaginatedResult,
   DeviceContent,
-} from "../../../repositories/device/content";
+} from "src/services/db/repositories/device/content";
 
 const fs = getFirestore();
 
 type FsColFactory = (deviceId: string) => CollectionReference;
 
-export function mkFsDeviceContentRepo<T extends DeviceContent>(
+export function mkFsContentStore<T extends DeviceContent>(
   colFactory: FsColFactory,
   pruneTo?: number
-): DeviceContentRepo<T> {
+): ContentStore<T> {
   return {
     async list(
       deviceId: DeviceId,

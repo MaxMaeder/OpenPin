@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import type { DeviceId } from "src/dbTypes";
 import type {
-  DeviceContentRepo,
+  ContentStore,
   PaginationConfig,
   WithId,
   PaginatedResult,
@@ -16,10 +16,10 @@ const prisma = new PrismaClient();
 // date      DateTime @index
 // json      Json
 
-export function mkSqlDeviceContentRepo<T extends DeviceContent>(
+export function mkSqlContentStore<T extends DeviceContent>(
   table: keyof PrismaClient,
   pruneTo?: number
-): DeviceContentRepo<T> {
+): ContentStore<T> {
   const model = prisma[table] as any;
   return {
     async list(

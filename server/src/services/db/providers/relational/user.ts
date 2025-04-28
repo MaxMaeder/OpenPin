@@ -1,11 +1,9 @@
-import type { UserRepo } from "../../repositories/user";
-import { PrismaClient } from "@prisma/client";
+import { composeUserRepo, type UserStore } from "../../repositories/user";
 import _ from "lodash";
 import { INIT_USER_DATA } from "src/config";
+import { prisma } from "./prisma";
 
-const prisma = new PrismaClient();
-
-export const userRepoSql: UserRepo = {
+export const userStoreSql: UserStore = {
   async get(uid) {
     const row = await prisma.userData.findUnique({ where: { id: uid } });
     const stored = row ? (row.json as any) : {};
@@ -18,15 +16,6 @@ export const userRepoSql: UserRepo = {
       create: { id: uid, json: { ...INIT_USER_DATA, ...patch } },
     });
   },
-  async addDevice(uid, deviceId) {
-    const cur = await this.get(uid);
-    if (!cur.deviceIds.includes(deviceId)) {
-      cur.deviceIds.push(deviceId);
-      await this.update(uid, { deviceIds: cur.deviceIds });
-    }
-  },
-  async hasDevice(uid, deviceId) {
-    const cur = await this.get(uid);
-    return cur.deviceIds.includes(deviceId);
-  },
 };
+
+export const userRepoSql = composeUserRepo(userStoreSql);

@@ -1,8 +1,21 @@
 import { makeFirestoreRepos } from "./providers/firestore";
 import { makeRelationalRepos } from "./providers/relational";
-import type { UserRepo } from "./repositories/user";
+import { DeviceCapture } from "./repositories/device/captures";
+import { ContentRepo } from "./repositories/device/content";
+import { DeviceMessage } from "./repositories/device/messages";
+import { DeviceNote } from "./repositories/device/notes";
+import type { UserData, UserRepo } from "./repositories/user";
 
-export type Repositories = { user: UserRepo /*, captures, … */ };
+export { UserData, DeviceCapture, DeviceNote, DeviceMessage };
+
+export type Repositories = {
+  user: UserRepo;
+  device: {
+    captures: ContentRepo<DeviceCapture>;
+    notes: ContentRepo<DeviceNote>;
+    msgs: ContentRepo<DeviceMessage>;
+  };
+};
 
 function selectProvider(): Repositories {
   switch (process.env.DB_BACKEND ?? "firestore") {
