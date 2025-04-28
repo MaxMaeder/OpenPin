@@ -13,6 +13,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.0",
+    "@prisma/client": "^6.6.0",
     "axios": "^1.7.2",
     "core-js": "^3.37.0",
     "date-fns": "^3.6.0",

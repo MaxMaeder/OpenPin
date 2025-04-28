@@ -4,9 +4,9 @@ import createHttpError from "http-errors";
 import { now } from "lodash";
 import multer from "multer";
 import { DeviceId } from "src/dbTypes";
-import { addDeviceCapture, DeviceCapture } from "src/services/database/device/captures";
-import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
-import { doesDeviceExist } from "src/services/database/device/list";
+import { addDeviceCapture, DeviceCapture } from "src/services/olddb/device/captures";
+import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
+import { doesDeviceExist } from "src/services/olddb/device/list";
 import { sendCapturesUpdate, sendDataUpdate } from "src/sockets/msgBuilders/device";
 import genFileName from "src/util/genFileName";
 import * as yup from "yup";
@@ -25,11 +25,7 @@ const captureFileFilter = (
 
 const multerCapture = multer({ storage: multer.memoryStorage(), fileFilter: captureFileFilter });
 
-export const parseUploadCapture = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const parseUploadCapture = (req: Request, res: Response, next: NextFunction) => {
   const upload = multerCapture.single("file");
 
   upload(req, res, (err) => {
@@ -46,7 +42,7 @@ const uploadSchema = yup.object({
 });
 
 type FileTypeInfo = {
-  fileExt: "jpeg" | "mp4"
+  fileExt: "jpeg" | "mp4";
   contentType: string;
   captureType: DeviceCapture["type"];
 };
@@ -60,18 +56,18 @@ const inferFileType = (filename: string): FileTypeInfo => {
       return {
         fileExt: "jpeg",
         contentType: "image/jpeg",
-        captureType: "image"
+        captureType: "image",
       };
     case "mp4":
       return {
         fileExt: "mp4",
         contentType: "video/mp4",
-        captureType: "video"
+        captureType: "video",
       };
     default:
       throw createHttpError(400, "Unsupported file type");
   }
-}
+};
 
 const updateLatestImage = async (deviceId: DeviceId, captureId: string) => {
   const deviceData = await getDeviceData(deviceId);
@@ -81,16 +77,15 @@ const updateLatestImage = async (deviceId: DeviceId, captureId: string) => {
 
   await updateDeviceData(deviceId, deviceData);
   sendDataUpdate(deviceId, deviceData);
-}
+};
 
 export const handleUploadCapture = async (req: Request, res: Response) => {
-
   if (!req.file) {
     throw createHttpError(400, "No file uploaded");
   }
 
   try {
-    await uploadSchema.validate(req.body)
+    await uploadSchema.validate(req.body);
   } catch (err) {
     if (err instanceof yup.ValidationError) {
       throw createHttpError(400, err.message);
@@ -99,8 +94,7 @@ export const handleUploadCapture = async (req: Request, res: Response) => {
   }
 
   const deviceId = req.body.deviceId;
-  if (!(await doesDeviceExist(deviceId)))
-    throw createHttpError(404, "Device does not exist");
+  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
 
   const { fileExt, contentType, captureType } = inferFileType(req.file.originalname);
 
@@ -114,18 +108,13 @@ export const handleUploadCapture = async (req: Request, res: Response) => {
 
   const captureDraft: Omit<DeviceCapture, "date"> = {
     type: captureType,
-    mediaId: fileName
+    mediaId: fileName,
   };
 
-  const captureEntry = await addDeviceCapture(
-    deviceId,
-    captureDraft,
-  );
+  const captureEntry = await addDeviceCapture(deviceId, captureDraft);
 
   sendCapturesUpdate(deviceId, {
-    entries: [
-      captureEntry
-    ]
+    entries: [captureEntry],
   });
 
   if (captureType == "image") {

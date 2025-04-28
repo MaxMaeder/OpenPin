@@ -1,9 +1,9 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import { doesDeviceExist } from "src/services/database/device/list";
+import { doesDeviceExist } from "src/services/olddb/device/list";
 import * as yup from "yup";
 import _ from "lodash";
-import { getDeviceData } from "src/services/database/device/data";
+import { getDeviceData } from "src/services/olddb/device/data";
 import { ConditionName, getWeather } from "src/services/weather";
 import { getLocalTime, getRevGeocoding } from "src/services/maps";
 

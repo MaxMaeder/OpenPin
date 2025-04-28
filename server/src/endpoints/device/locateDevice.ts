@@ -1,7 +1,7 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
-import { doesDeviceExist } from "src/services/database/device/list";
+import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
+import { doesDeviceExist } from "src/services/olddb/device/list";
 import * as yup from "yup";
 import _ from "lodash";
 import { getWiFiLocation, WiFiAccessPoint } from "src/services/maps";

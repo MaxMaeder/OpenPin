@@ -1,18 +1,18 @@
 import _ = require("lodash");
 import { DeviceData, DeviceId } from "src/dbTypes";
-import { getDeviceData, updateDeviceData } from "src/services/database/device/data";
+import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
 import { ParsedVoiceRequest } from "./parser";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { getDeviceSettings, updateDeviceSettings } from "src/services/database/device/settings";
-import { doesDeviceExist } from "src/services/database/device/list";
+import { getDeviceSettings, updateDeviceSettings } from "src/services/olddb/device/settings";
+import { doesDeviceExist } from "src/services/olddb/device/list";
 import createHttpError from "http-errors";
 import { DeviceSettings, TranslateLanguageKey } from "src/config/deviceSettings";
 import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
 import { Response, NextFunction } from "express";
 import { Bucket } from "@google-cloud/storage";
-import { DeviceMessage, getDeviceMsgs } from "src/services/database/device/messages";
+import { DeviceMessage, getDeviceMsgs } from "src/services/olddb/device/messages";
 
 export interface DeviceContext {
   id: DeviceId;

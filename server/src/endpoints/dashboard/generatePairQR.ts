@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import QRCode from "qrcode";
-import { createPairCode } from "src/services/database/pairRequests";
+import { createPairCode } from "src/services/olddb/pairRequests";
 import { noCacheRes } from "src/util/caching";
 
 const generateQR = async (url: string) => {
@@ -9,10 +9,9 @@ const generateQR = async (url: string) => {
   // Remove the "data:image/jpeg;base64," prefix
   const base64Data = qrDataUrl.replace(/^data:image\/png;base64,/, "");
   return Buffer.from(base64Data, "base64");
-}
+};
 
 export const handleGeneratePairQR = async (req: Request, res: Response) => {
-
   const pairCode = await createPairCode(req.userId);
 
   const baseUrl = process.env.HOSTED_BASE_URL as string;

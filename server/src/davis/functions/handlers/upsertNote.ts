@@ -6,9 +6,9 @@ import {
   DeviceNote,
   DeviceNoteDraft,
   updateDeviceNote,
-} from "src/services/database/device/notes";
+} from "src/services/olddb/device/notes";
 import _ from "lodash";
-import { WithId } from "src/services/database/device/content";
+import { WithId } from "src/services/olddb/device/content";
 import { sendNotesUpdate } from "src/sockets/msgBuilders/device";
 
 export const getNoteSlug = (note: DeviceNote) =>

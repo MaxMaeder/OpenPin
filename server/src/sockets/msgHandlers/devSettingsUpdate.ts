@@ -1,7 +1,7 @@
 import _ = require("lodash");
 
 import { ObjectSchema, boolean, number, object, string } from "yup";
-import { updateDeviceSettings } from "../../services/database/device/settings";
+import { updateDeviceSettings } from "../../services/olddb/device/settings";
 import { sendSettingsUpdate } from "../msgBuilders/device";
 import { withAuthAndValidation } from "./common";
 import {

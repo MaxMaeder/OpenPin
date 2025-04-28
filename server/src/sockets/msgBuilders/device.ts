@@ -8,10 +8,10 @@ import {
   DEV_SETTINGS_UPDATE,
 } from "../messageTypes";
 import { getDevRID } from "../roomIDs";
-import { DeviceNote } from "src/services/database/device/notes";
-import { PaginatedResult } from "src/services/database/device/content";
-import { DeviceMessage } from "src/services/database/device/messages";
-import { DeviceCapture } from "src/services/database/device/captures";
+import { DeviceNote } from "src/services/olddb/device/notes";
+import { PaginatedResult } from "src/services/olddb/device/content";
+import { DeviceMessage } from "src/services/olddb/device/messages";
+import { DeviceCapture } from "src/services/olddb/device/captures";
 import { DeviceSettings } from "src/config/deviceSettings";
 
 export const sendDataUpdate = (id: DeviceId, data: Partial<DeviceData>) =>

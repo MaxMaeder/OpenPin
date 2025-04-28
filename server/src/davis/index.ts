@@ -9,10 +9,10 @@ import { formatInTimeZone } from "date-fns-tz";
 import { functions, FunctionHandlerError } from "./functions";
 import { COMP_MAX_CALLS, COMP_MODELS } from "../config/davis";
 import { DeviceContext } from "src/endpoints/device/voice/common";
-import { DeviceNote, getDeviceNotes } from "src/services/database/device/notes";
+import { DeviceNote, getDeviceNotes } from "src/services/olddb/device/notes";
 import { COMP_CALLS_EXCEEDED_MSG } from "src/config/davis";
 import { getNoteSlug } from "./functions/handlers/upsertNote";
-import { WithId } from "src/services/database/device/content";
+import { WithId } from "src/services/olddb/device/content";
 import { addHours } from "date-fns/addHours";
 
 interface CompletionPrompt {

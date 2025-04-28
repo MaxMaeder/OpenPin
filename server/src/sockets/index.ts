@@ -4,7 +4,7 @@ import { Server, Socket } from "socket.io";
 import { handleDataReq } from "./msgHandlers/dataReq";
 import { handleDevSettingsUpdate } from "./msgHandlers/devSettingsUpdate";
 import { authUserSocket } from "../auth";
-import { getUserDevices } from "src/services/database/userData";
+import { getUserDevices } from "src/services/olddb/userData";
 import { startDevDataUpdates } from "./msgProducers/devDataUpdates";
 import {
   CLIENT_DATA_REQ,

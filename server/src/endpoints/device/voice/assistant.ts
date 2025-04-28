@@ -5,7 +5,7 @@ import {
   addDeviceMsg,
   clearDeviceMsgs,
   DeviceMessageDraft,
-} from "src/services/database/device/messages";
+} from "src/services/olddb/device/messages";
 import { ParsedVoiceRequest } from "./parser";
 import { Response, NextFunction } from "express";
 import { doDavis } from "src/davis";

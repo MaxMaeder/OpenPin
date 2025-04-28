@@ -1,12 +1,9 @@
 import { Socket } from "socket.io";
-import { doesUserHaveDevice } from "src/services/database/userData";
+import { doesUserHaveDevice } from "src/services/olddb/userData";
 import { AnyObject, ObjectSchema } from "yup";
 import { NotFoundError } from "../errors";
 
-type AuthenticatedHandler<T> = (
-  socket: Socket,
-  payload: T
-) => Promise<void>;
+type AuthenticatedHandler<T> = (socket: Socket, payload: T) => Promise<void>;
 
 export const withAuthAndValidation = <T extends AnyObject>(
   schema: ObjectSchema<T>,
@@ -15,7 +12,7 @@ export const withAuthAndValidation = <T extends AnyObject>(
   return (socket: Socket) => async (payload: unknown) => {
     const userId = socket.data.userId as string;
 
-    let validatedPayload = await schema.validate(payload, { strict: true }) as T;
+    let validatedPayload = (await schema.validate(payload, { strict: true })) as T;
 
     const hasAccess = await doesUserHaveDevice(userId, validatedPayload.id);
     if (!hasAccess) {

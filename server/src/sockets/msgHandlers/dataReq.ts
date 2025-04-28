@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { UserId } from "../../dbTypes";
-import { getUserDevices } from "../../services/database/userData";
+import { getUserDevices } from "../../services/olddb/userData";
 import { sendFullDevDetails } from "../msgProducers/devDetails";
 import { sendDataReqDone } from "../msgBuilders/client";
 
