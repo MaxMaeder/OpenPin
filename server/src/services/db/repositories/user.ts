@@ -16,19 +16,19 @@ export interface UserRepo extends UserStore {
   hasDevice(uid: string, deviceId: DeviceId): Promise<boolean>;
 }
 
-export function composeUserRepo(store: UserStore): UserRepo {
+export const composeUserRepo = (store: UserStore): UserRepo => {
   return {
     ...store,
 
-    async getDevices(uid) {
+    getDevices: async (uid) => {
       return (await store.get(uid)).deviceIds;
     },
 
-    async hasDevice(uid, deviceId) {
+    hasDevice: async (uid, deviceId) => {
       return (await store.get(uid)).deviceIds.includes(deviceId);
     },
 
-    async addDevice(uid, deviceId) {
+    addDevice: async (uid, deviceId) => {
       const data = await store.get(uid);
       if (!data.deviceIds.includes(deviceId)) {
         const updated = { deviceIds: [...data.deviceIds, deviceId] };
@@ -36,4 +36,4 @@ export function composeUserRepo(store: UserStore): UserRepo {
       }
     },
   };
-}
+};

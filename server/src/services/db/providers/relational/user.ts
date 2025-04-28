@@ -4,12 +4,12 @@ import { INIT_USER_DATA } from "src/config";
 import { prisma } from "./prisma";
 
 export const userStoreSql: UserStore = {
-  async get(uid) {
+  get: async (uid) => {
     const row = await prisma.userData.findUnique({ where: { id: uid } });
     const stored = row ? (row.json as any) : {};
     return _.defaultsDeep({}, stored, INIT_USER_DATA);
   },
-  async update(uid, patch) {
+  update: async (uid, patch) => {
     await prisma.userData.upsert({
       where: { id: uid },
       update: { json: { ...patch } },

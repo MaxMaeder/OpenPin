@@ -30,12 +30,8 @@ export interface ContentStore<T extends DeviceContent> {
   clear(deviceId: DeviceId): Promise<void>;
 }
 
-export interface ContentRepo<T extends DeviceContent> extends ContentStore<T> {
-  // Nothing right now
-}
+export type ContentRepo<T extends DeviceContent> = ContentStore<T>; // no added helpers for now
 
-export function composeContentRepo<T extends DeviceContent>(
+export const composeContentRepo = <T extends DeviceContent>(
   store: ContentStore<T>
-): ContentRepo<T> {
-  return { ...store };
-}
+): ContentRepo<T> => store;

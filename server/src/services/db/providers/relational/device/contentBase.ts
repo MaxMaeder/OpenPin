@@ -16,16 +16,16 @@ const prisma = new PrismaClient();
 // date      DateTime @index
 // json      Json
 
-export function mkSqlContentStore<T extends DeviceContent>(
+export const mkSqlContentStore = <T extends DeviceContent>(
   table: keyof PrismaClient,
   pruneTo?: number
-): ContentStore<T> {
+): ContentStore<T> => {
   const model = prisma[table] as any;
   return {
-    async list(
+    list: async (
       deviceId: DeviceId,
       config: PaginationConfig = { limit: 10 }
-    ): Promise<PaginatedResult<T>> {
+    ): Promise<PaginatedResult<T>> => {
       const rows = await model.findMany({
         where: {
           deviceId,
@@ -43,7 +43,7 @@ export function mkSqlContentStore<T extends DeviceContent>(
       return { entries, nextStartAfter };
     },
 
-    async add(deviceId, data) {
+    add: async (deviceId, data) => {
       const now = new Date();
       const row = await model.create({
         data: { deviceId, date: now, json: { ...data } },
@@ -75,4 +75,4 @@ export function mkSqlContentStore<T extends DeviceContent>(
       await model.deleteMany({ where: { deviceId } });
     },
   };
-}
+};

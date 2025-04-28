@@ -11,15 +11,15 @@ const fs = getFirestore();
 
 type FsColFactory = (deviceId: string) => CollectionReference;
 
-export function mkFsContentStore<T extends DeviceContent>(
+export const mkFsContentStore = <T extends DeviceContent>(
   colFactory: FsColFactory,
   pruneTo?: number
-): ContentStore<T> {
+): ContentStore<T> => {
   return {
-    async list(
+    list: async (
       deviceId: DeviceId,
       config: PaginationConfig = { limit: 10 }
-    ): Promise<PaginatedResult<T>> {
+    ): Promise<PaginatedResult<T>> => {
       let q = colFactory(deviceId).orderBy("date", "desc").limit(config.limit);
       if (config.startAfter) q = q.startAfter(Timestamp.fromDate(config.startAfter));
 
@@ -40,7 +40,7 @@ export function mkFsContentStore<T extends DeviceContent>(
       return { entries, nextStartAfter };
     },
 
-    async add(deviceId, data) {
+    add: async (deviceId, data) => {
       const col = colFactory(deviceId);
       const now = new Date();
       const ref = await col.add({ ...data, date: now });
@@ -58,12 +58,12 @@ export function mkFsContentStore<T extends DeviceContent>(
       return { ...(data as T), date: now, id: ref.id };
     },
 
-    update: async (_deviceId, id, patch) => {
-      await colFactory(_deviceId).doc(id).set(patch, { merge: true });
+    update: async (deviceId, id, patch) => {
+      await colFactory(deviceId).doc(id).set(patch, { merge: true });
     },
 
-    remove: async (_deviceId, id) => {
-      await colFactory(_deviceId).doc(id).delete();
+    remove: async (deviceId, id) => {
+      await colFactory(deviceId).doc(id).delete();
     },
 
     clear: async (deviceId) => {
@@ -75,4 +75,4 @@ export function mkFsContentStore<T extends DeviceContent>(
       await batch.commit();
     },
   };
-}
+};
