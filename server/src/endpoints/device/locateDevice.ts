@@ -1,11 +1,10 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
-import { doesDeviceExist } from "src/services/olddb/device/list";
 import * as yup from "yup";
 import _ from "lodash";
 import { getWiFiLocation, WiFiAccessPoint } from "src/services/maps";
 import { shouldUpdateLocation } from "src/config/location";
+import { db } from "src/services/db";
 
 const accessPointSchema = yup.object<WiFiAccessPoint>({
   macAddress: yup.string().required(),
@@ -45,9 +44,9 @@ export const handleLocateDevice = async (req: Request, res: Response) => {
     throw createHttpError(400, "Can't find location, no access points.");
 
   const deviceId = req.body.deviceId;
-  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
+  if (!(await db.device.list.exists(deviceId))) throw createHttpError(404, "Device does not exist");
 
-  const deviceData = await getDeviceData(deviceId);
+  const deviceData = await db.device.data.get(deviceId);
   deviceData.lastConnected = _.now();
 
   if (shouldUpdateLocation(deviceData)) {
@@ -59,7 +58,7 @@ export const handleLocateDevice = async (req: Request, res: Response) => {
     deviceData.latestLocationUpdate = _.now();
   }
 
-  await updateDeviceData(deviceId, deviceData);
+  await db.device.data.update(deviceId, deviceData);
 
   const resBody: ResolvedLocation = {
     location: {

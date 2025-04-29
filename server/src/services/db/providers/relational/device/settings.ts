@@ -4,14 +4,16 @@ import { composeSettingsRepo, SettingsStore } from "src/services/db/repositories
 import { prisma } from "../prisma";
 import _ from "lodash";
 
+const table = prisma.deviceSettings;
+
 export const settingsStoreSql: SettingsStore = {
   get: async (deviceId) => {
-    const row = await prisma.deviceSettings.findUnique({ where: { id: deviceId } });
+    const row = await table.findUnique({ where: { id: deviceId } });
     const stored = row ? (row.json as Partial<DeviceSettings>) : {};
     return _.defaultsDeep({}, stored, INIT_DEVICE_SETTINGS);
   },
   update: async (deviceId, patch) => {
-    await prisma.deviceSettings.upsert({
+    await table.upsert({
       where: { id: deviceId },
       update: { json: patch },
       create: { id: deviceId, json: { ...INIT_DEVICE_SETTINGS, ...patch } },

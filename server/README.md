@@ -12,3 +12,13 @@
 - `docker run -it -p 8080:8080 openpin-server`
 
 `docker compose up -d --build --remove-orphans --force-recreate`
+
+`npx prisma migrate dev --name init`
+
+`./prod.sh --build`
+
+docker exec -it openpin-dev bash
+
+# inside container
+
+npx prisma migrate dev --name my-schema-change

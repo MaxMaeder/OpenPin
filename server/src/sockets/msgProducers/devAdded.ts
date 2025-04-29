@@ -1,4 +1,4 @@
-import { DeviceId, UserId } from "src/dbTypes";
+import { UserId, DeviceId } from "src/services/db";
 import { io } from "..";
 import { getDevRID, getUserRID } from "../roomIDs";
 import { sendFullDevDetails } from "./devDetails";
@@ -16,4 +16,4 @@ export const sendNewDevDetails = async (userId: UserId, deviceId: DeviceId) => {
 
   // Send new device's data to its room
   await sendFullDevDetails(deviceId);
-}
+};

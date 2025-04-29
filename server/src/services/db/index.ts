@@ -1,25 +1,31 @@
 import { makeFirestoreRepos } from "./providers/firestore";
 import { makeRelationalRepos } from "./providers/relational";
 import { DeviceId } from "./repositories/device";
-import { DeviceCapture } from "./repositories/device/captures";
-import { ContentRepo } from "./repositories/device/content";
-import { DeviceMessage } from "./repositories/device/messages";
-import { DeviceNote } from "./repositories/device/notes";
+import { DeviceCapture, DeviceCaptureDraft } from "./repositories/device/captures";
+import { ContentRepo, WithId, PaginatedResult } from "./repositories/device/content";
+import { DeviceMessage, DeviceMessageDraft } from "./repositories/device/messages";
+import { DeviceNote, DeviceNoteDraft } from "./repositories/device/notes";
 import { DataRepo, DeviceData } from "./repositories/device/data";
 import { DeviceSettings, SettingsRepo } from "./repositories/device/settings";
 import type { UserId, UserData, UserRepo } from "./repositories/user";
-import type { PairCodeRepo } from "./repositories/pairCode";
+import type { PairCodeRepo, PairRequest } from "./repositories/pairCode";
 import { ListRepo } from "./repositories/device/list";
 
 export {
   UserId,
   DeviceId,
   UserData,
+  PairRequest,
   DeviceData,
   DeviceSettings,
+  WithId,
+  PaginatedResult,
   DeviceCapture,
+  DeviceCaptureDraft,
   DeviceNote,
+  DeviceNoteDraft,
   DeviceMessage,
+  DeviceMessageDraft,
 };
 
 export type Repositories = {

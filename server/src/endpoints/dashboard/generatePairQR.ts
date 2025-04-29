@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import QRCode from "qrcode";
-import { createPairCode } from "src/services/olddb/pairRequests";
+import { db } from "src/services/db";
 import { noCacheRes } from "src/util/caching";
 
 const generateQR = async (url: string) => {
@@ -12,7 +12,7 @@ const generateQR = async (url: string) => {
 };
 
 export const handleGeneratePairQR = async (req: Request, res: Response) => {
-  const pairCode = await createPairCode(req.userId);
+  const pairCode = await db.pairCode.create(req.userId);
 
   const baseUrl = process.env.HOSTED_BASE_URL as string;
   const pairingUrl = `${baseUrl}/api/dev/pair/${pairCode}`;

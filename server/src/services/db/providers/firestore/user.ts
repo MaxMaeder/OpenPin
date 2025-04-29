@@ -1,7 +1,8 @@
 import { composeUserRepo, UserStore } from "src/services/db/repositories/user";
 import { getFirestore } from "firebase-admin/firestore";
-import { USER_DATA_COL, INIT_USER_DATA } from "src/config";
+import { INIT_USER_DATA } from "src/config";
 import _ from "lodash";
+import { USER_DATA_COL } from "src/config/db";
 
 const fs = getFirestore();
 

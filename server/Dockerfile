@@ -1,33 +1,40 @@
-# Use Node.js base image
-FROM node:20-slim
-
-# Install ffmpeg with lavfi support
-RUN apt-get update && apt-get install -y \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
+# ---------- base ----------
+FROM node:20-slim AS base
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Copy root dependencies and install
+# ---------- deps ----------
+FROM base AS deps
 COPY package*.json ./
-RUN npm install
-
-# Copy dashboard dependencies and install
+RUN npm ci
 COPY dashboard/package*.json ./dashboard/
-RUN cd dashboard && npm install
+RUN cd dashboard && npm ci
 
-# Copy all source files (after deps are installed to optimize caching)
+# ---------- builder ----------
+FROM deps AS builder
+COPY prisma ./prisma
+RUN npx prisma generate
 COPY . .
-
-# Build dashboard (Vite)
 RUN cd dashboard && npm run build
+# builds root (tsc to lib/)
+RUN npm run build    
 
-# Build root app
-RUN npm run build
+# ---------- runtime ----------
+FROM base AS runtime
+ENV NODE_ENV=production
+RUN npm i -g tini dotenv
 
-# Expose port (adjust if needed)
+ENTRYPOINT ["tini", "--"]
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/lib        ./lib
+COPY --from=builder /app/dashboard/dist ./dashboard/dist
+COPY --from=builder /app/prisma     ./prisma
+COPY .env .env.prod ./
+COPY package*.json ./
+
+CMD ["bash", "-c", "npx prisma migrate deploy && dotenv -e .env -e .env.prod node lib/index.js"]
+
 EXPOSE 9000
-
-# Start the app
-CMD ["npm", "start"]

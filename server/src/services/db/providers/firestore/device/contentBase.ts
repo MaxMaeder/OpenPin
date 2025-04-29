@@ -1,5 +1,5 @@
 import { CollectionReference, Timestamp, getFirestore } from "firebase-admin/firestore";
-import type { DeviceId } from "src/dbTypes";
+import { DeviceId } from "src/services/db/repositories/device";
 import type {
   ContentStore,
   PaginationConfig,
@@ -12,8 +12,7 @@ const fs = getFirestore();
 type FsColFactory = (deviceId: string) => CollectionReference;
 
 export const mkFsContentStore = <T extends DeviceContent>(
-  colFactory: FsColFactory,
-  pruneTo?: number
+  colFactory: FsColFactory
 ): ContentStore<T> => {
   return {
     list: async (
@@ -40,7 +39,7 @@ export const mkFsContentStore = <T extends DeviceContent>(
       return { entries, nextStartAfter };
     },
 
-    add: async (deviceId, data) => {
+    add: async (deviceId, data, pruneTo?: number) => {
       const col = colFactory(deviceId);
       const now = new Date();
       const ref = await col.add({ ...data, date: now });

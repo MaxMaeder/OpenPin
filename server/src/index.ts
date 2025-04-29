@@ -3,13 +3,20 @@ import "tsconfig-paths/register";
 import "express-async-errors";
 
 import admin from "firebase-admin";
+import { readFileSync } from "fs";
+
+const serviceAccount = JSON.parse(readFileSync("/keys/firebaseKey.json", "utf8"));
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  storageBucket: "smartglasses-e58d8.appspot.com",
+});
+
 import { authUserEndpoint } from "./auth";
 import { createServer } from "http";
 import express from "express";
-import firebaseKey from "./keys/firebaseKey";
-import {
-  handleAssistant,
-} from "./endpoints/device/voice/assistant";
+// import firebaseKey from "./keys/firebaseKey";
+import { handleAssistant } from "./endpoints/device/voice/assistant";
 import { handleDownloadMedia } from "./endpoints/dashboard/downloadMedia";
 import { parseDeviceReq } from "./endpoints/device/voice/parser";
 import passport from "passport";
@@ -24,11 +31,6 @@ import { noCacheRes } from "./util/caching";
 import { handleGetHomeData, parseGetHomeData } from "./endpoints/device/getHomeData";
 import { handleLocateDevice, parseLocateDevice } from "./endpoints/device/locateDevice";
 
-admin.initializeApp({
-  credential: admin.credential.cert(firebaseKey),
-  storageBucket: "smartglasses-e58d8.appspot.com",
-});
-
 const app = express();
 app.set("trust proxy", 1); // One proxy (google app engine)
 const server = createServer(app);
@@ -42,38 +44,14 @@ app.get(
   // authUserEndpoint,
   handleDownloadMedia
 );
-app.get(
-  "/api/dash/pair-qr.png",
-  authUserEndpoint,
-  handleGeneratePairQR
-)
+app.get("/api/dash/pair-qr.png", authUserEndpoint, handleGeneratePairQR);
 
 app.post("/api/dev/pair/:pairCode", handlePairDevice);
-app.post(
-  "/api/dev/handle",
-  parseDeviceReq,
-  handleAssistant
-);
-app.post(
-  "/api/dev/translate",
-  parseDeviceReq,
-  handleTranslate
-);
-app.post(
-  "/api/dev/upload-capture",
-  parseUploadCapture,
-  handleUploadCapture
-);
-app.post(
-  "/api/dev/home-data",
-  parseGetHomeData,
-  handleGetHomeData
-);
-app.post(
-  "/api/dev/locate",
-  parseLocateDevice,
-  handleLocateDevice
-);
+app.post("/api/dev/handle", parseDeviceReq, handleAssistant);
+app.post("/api/dev/translate", parseDeviceReq, handleTranslate);
+app.post("/api/dev/upload-capture", parseUploadCapture, handleUploadCapture);
+app.post("/api/dev/home-data", parseGetHomeData, handleGetHomeData);
+app.post("/api/dev/locate", parseLocateDevice, handleLocateDevice);
 
 app.use("/favicon.svg", express.static("dashboard/dist/favicon.svg"));
 app.use("/dash-assets", express.static("dashboard/dist/dash-assets"));

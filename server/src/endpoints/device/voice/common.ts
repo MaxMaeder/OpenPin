@@ -1,18 +1,14 @@
 import _ = require("lodash");
-import { DeviceData, DeviceId } from "src/dbTypes";
-import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
 import { ParsedVoiceRequest } from "./parser";
 import genFileName from "src/util/genFileName";
 import { getStorage } from "firebase-admin/storage";
-import { getDeviceSettings, updateDeviceSettings } from "src/services/olddb/device/settings";
-import { doesDeviceExist } from "src/services/olddb/device/list";
 import createHttpError from "http-errors";
 import { DeviceSettings, TranslateLanguageKey } from "src/config/deviceSettings";
 import { MSFT_TTS_VOICES } from "src/config/speechSynthesis";
 import { SynthesisConfig } from "src/services/speech/TTS";
 import { Response, NextFunction } from "express";
 import { Bucket } from "@google-cloud/storage";
-import { DeviceMessage, getDeviceMsgs } from "src/services/olddb/device/messages";
+import { db, DeviceData, DeviceId, DeviceMessage } from "src/services/db";
 
 export interface DeviceContext {
   id: DeviceId;
@@ -50,7 +46,7 @@ export class AbstractVoiceHandler {
    * Gets device messages within specified context window from DB
    */
   private async getDeviceMsgs(id: DeviceId, window: number) {
-    const result = await getDeviceMsgs(id, {
+    const result = await db.device.msgs.list(id, {
       limit: window,
     });
 
@@ -63,9 +59,12 @@ export class AbstractVoiceHandler {
   private async getDeviceContext() {
     const id = this.req.metadata.deviceId;
 
-    if (!(await doesDeviceExist(id))) throw createHttpError(404, "Device does not exist");
+    if (!(await db.device.list.exists(id))) throw createHttpError(404, "Device does not exist");
 
-    const [data, settings] = await Promise.all([getDeviceData(id), getDeviceSettings(id)]);
+    const [data, settings] = await Promise.all([
+      db.device.data.get(id),
+      db.device.settings.get(id),
+    ]);
 
     const msgs = await this.getDeviceMsgs(id, settings.messagesToKeep);
 
@@ -157,8 +156,8 @@ export class AbstractVoiceHandler {
       // This will scale interestingly
 
       await Promise.all([
-        updateDeviceData(this.context.id, this.context.data),
-        updateDeviceSettings(this.context.id, this.context.settings),
+        db.device.data.update(this.context.id, this.context.data),
+        db.device.settings.update(this.context.id, this.context.settings),
       ]);
     });
   }

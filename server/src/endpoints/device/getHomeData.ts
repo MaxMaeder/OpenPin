@@ -1,11 +1,10 @@
 import { json, Request, Response } from "express";
 import createHttpError from "http-errors";
-import { doesDeviceExist } from "src/services/olddb/device/list";
 import * as yup from "yup";
 import _ from "lodash";
-import { getDeviceData } from "src/services/olddb/device/data";
 import { ConditionName, getWeather } from "src/services/weather";
 import { getLocalTime, getRevGeocoding } from "src/services/maps";
+import { db } from "src/services/db";
 
 const reqSchema = yup.object({
   deviceId: yup.string().required(),
@@ -61,9 +60,9 @@ export const handleGetHomeData = async (req: Request, res: Response) => {
   }
 
   const deviceId = req.body.deviceId;
-  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
+  if (!(await db.device.list.exists(deviceId))) throw createHttpError(404, "Device does not exist");
 
-  const { latitude: lat, longitude: lng } = await getDeviceData(deviceId);
+  const { latitude: lat, longitude: lng } = await db.device.data.get(deviceId);
 
   let [weather, { city }, { localTime }] = await Promise.all([
     getWeather(lat, lng),

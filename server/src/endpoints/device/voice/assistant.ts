@@ -1,11 +1,6 @@
 import * as SST from "src/services/speech/SST";
 import * as TTS from "src/services/speech/TTS";
 import { AbstractVoiceHandler } from "./common";
-import {
-  addDeviceMsg,
-  clearDeviceMsgs,
-  DeviceMessageDraft,
-} from "src/services/olddb/device/messages";
 import { ParsedVoiceRequest } from "./parser";
 import { Response, NextFunction } from "express";
 import { doDavis } from "src/davis";
@@ -14,6 +9,7 @@ import { STORE_VOICE_RECORDINGS } from "src/config/logging";
 import { getRandomCannedMsg, NO_SPEECH_MSGS } from "src/config/cannedMsgs";
 import { addBackgroundAudio } from "src/services/audio";
 import { SEXY_BG_AUDIO_CONFIG, SEXY_BG_AUDIO_FILE } from "src/config/sexyMode";
+import { db, DeviceMessageDraft } from "src/services/db";
 
 class Handler extends AbstractVoiceHandler {
   constructor(req: ParsedVoiceRequest, res: Response, next: NextFunction) {
@@ -60,7 +56,7 @@ class Handler extends AbstractVoiceHandler {
       });
 
       // Need to clear here, since we only upsert at end
-      await clearDeviceMsgs(this.context.id);
+      await db.device.msgs.clear(this.context.id);
 
       this.context.msgs = [];
       this.context.settings.clearMessages = false;
@@ -85,7 +81,7 @@ class Handler extends AbstractVoiceHandler {
         msgDraft.userImgId = imageUploadResult.name;
       }
 
-      const msgEntry = await addDeviceMsg(
+      const msgEntry = await db.device.msgs.add(
         this.context.id,
         msgDraft,
         this.context.settings.messagesToKeep

@@ -1,4 +1,4 @@
-import { DeviceId } from "src/dbTypes";
+import { DeviceId } from ".";
 
 export interface DeviceContent {
   date: Date;
@@ -23,8 +23,8 @@ export interface PaginatedResult<T> {
 }
 
 export interface ContentStore<T extends DeviceContent> {
-  list(deviceId: DeviceId, config: PaginationConfig): Promise<PaginatedResult<T>>;
-  add(deviceId: DeviceId, data: Omit<T, "date">): Promise<WithId<T>>;
+  list(deviceId: DeviceId, config?: PaginationConfig): Promise<PaginatedResult<T>>;
+  add(deviceId: DeviceId, data: Omit<T, "date">, pruneTo?: number): Promise<WithId<T>>;
   update(deviceId: DeviceId, id: string, patch: Partial<T>): Promise<void>;
   remove(deviceId: DeviceId, id: string): Promise<void>;
   clear(deviceId: DeviceId): Promise<void>;

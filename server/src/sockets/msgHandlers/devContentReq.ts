@@ -1,9 +1,7 @@
 import { date, object, ObjectSchema, string } from "yup";
 import { sendCapturesUpdate, sendMsgsUpdate, sendNotesUpdate } from "../msgBuilders/device";
-import { deleteDeviceCapture, getDeviceCaptures } from "src/services/olddb/device/captures";
 import { withAuthAndValidation } from "./common";
-import { deleteDeviceNote, getDeviceNotes } from "src/services/olddb/device/notes";
-import { deleteDeviceMsg, getDeviceMsgs } from "src/services/olddb/device/messages";
+import { db } from "src/services/db";
 
 interface MoreContentPayload {
   id: string;
@@ -28,7 +26,7 @@ const deleteContentSchema: ObjectSchema<DeleteContentPayload> = object({
 export const handleMoreCapturesReq = withAuthAndValidation(
   moreContentSchema,
   async (_, payload) => {
-    const captures = await getDeviceCaptures(payload.id, {
+    const captures = await db.device.captures.list(payload.id, {
       startAfter: payload.startAfter,
       limit: 10,
     });
@@ -39,12 +37,12 @@ export const handleMoreCapturesReq = withAuthAndValidation(
 export const handleDeleteCaptureReq = withAuthAndValidation(
   deleteContentSchema,
   async (_, payload) => {
-    await deleteDeviceCapture(payload.id, payload.entryId);
+    await db.device.captures.remove(payload.id, payload.entryId);
   }
 );
 
 export const handleMoreNotesReq = withAuthAndValidation(moreContentSchema, async (_, payload) => {
-  const notes = await getDeviceNotes(payload.id, {
+  const notes = await db.device.notes.list(payload.id, {
     startAfter: payload.startAfter,
     limit: 10,
   });
@@ -54,12 +52,12 @@ export const handleMoreNotesReq = withAuthAndValidation(moreContentSchema, async
 export const handleDeleteNoteReq = withAuthAndValidation(
   deleteContentSchema,
   async (_, payload) => {
-    await deleteDeviceNote(payload.id, payload.entryId);
+    await db.device.notes.remove(payload.id, payload.entryId);
   }
 );
 
 export const handleMoreMsgsReq = withAuthAndValidation(moreContentSchema, async (_, payload) => {
-  const messages = await getDeviceMsgs(payload.id, {
+  const messages = await db.device.msgs.list(payload.id, {
     startAfter: payload.startAfter,
     limit: 10,
   });
@@ -69,6 +67,6 @@ export const handleMoreMsgsReq = withAuthAndValidation(moreContentSchema, async 
 export const handleDeleteMsgsReq = withAuthAndValidation(
   deleteContentSchema,
   async (_, payload) => {
-    await deleteDeviceMsg(payload.id, payload.entryId);
+    await db.device.msgs.remove(payload.id, payload.entryId);
   }
 );

@@ -1,8 +1,9 @@
 import { getFirestore } from "firebase-admin/firestore";
 import _ from "lodash";
-import { DEV_DATA_COL, INIT_DEVICE_DATA } from "src/config";
+import { INIT_DEVICE_DATA } from "src/config";
 import { composeDataRepo, DataStore } from "src/services/db/repositories/device/data";
 import { DeviceData } from "src/services/db";
+import { DEV_DATA_COL } from "src/config/db";
 
 const fs = getFirestore();
 

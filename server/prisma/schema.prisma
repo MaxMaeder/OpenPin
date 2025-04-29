@@ -1,0 +1,53 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model UserData { 
+  id String @id
+  json Json 
+}
+model Device { 
+  id String @id
+}
+model DeviceData { 
+  id String @id 
+  json Json 
+}
+model DeviceSettings {
+  id String @id
+  json Json
+}
+
+model DeviceCapture {
+  id String @id @default(cuid())
+  deviceId String
+  date DateTime @default(now())
+  json Json
+  @@index([deviceId, date])
+}
+
+model DeviceMessage { 
+  id String @id @default(cuid())
+  deviceId String
+  date DateTime @default(now())
+  json Json
+  @@index([deviceId, date])
+}
+model DeviceNote    { 
+  id String @id @default(cuid())
+  deviceId String
+  date DateTime @default(now())
+  json Json
+  @@index([deviceId, date])
+}
+
+model PairCode {
+  code String @id @default(uuid())
+  userId String
+  createdAt DateTime @default(now())
+}

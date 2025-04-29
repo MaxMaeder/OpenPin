@@ -1,4 +1,3 @@
-import { DeviceData, DeviceId } from "src/dbTypes";
 import { sendToRoom } from "..";
 import {
   DEV_CAPTURES_UPDATE,
@@ -8,11 +7,15 @@ import {
   DEV_SETTINGS_UPDATE,
 } from "../messageTypes";
 import { getDevRID } from "../roomIDs";
-import { DeviceNote } from "src/services/olddb/device/notes";
-import { PaginatedResult } from "src/services/olddb/device/content";
-import { DeviceMessage } from "src/services/olddb/device/messages";
-import { DeviceCapture } from "src/services/olddb/device/captures";
 import { DeviceSettings } from "src/config/deviceSettings";
+import {
+  DeviceCapture,
+  DeviceData,
+  DeviceId,
+  DeviceMessage,
+  DeviceNote,
+  PaginatedResult,
+} from "src/services/db";
 
 export const sendDataUpdate = (id: DeviceId, data: Partial<DeviceData>) =>
   sendToRoom(getDevRID(id), DEV_DATA_UPDATE, {

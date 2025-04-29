@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import type { DeviceId } from "src/dbTypes";
 import type {
   ContentStore,
   PaginationConfig,
@@ -7,6 +6,7 @@ import type {
   PaginatedResult,
   DeviceContent,
 } from "../../../repositories/device/content";
+import { DeviceId } from "src/services/db/repositories/device";
 
 const prisma = new PrismaClient();
 
@@ -17,10 +17,9 @@ const prisma = new PrismaClient();
 // json      Json
 
 export const mkSqlContentStore = <T extends DeviceContent>(
-  table: keyof PrismaClient,
-  pruneTo?: number
+  tableName: keyof PrismaClient
 ): ContentStore<T> => {
-  const model = prisma[table] as any;
+  const model = prisma[tableName] as any;
   return {
     list: async (
       deviceId: DeviceId,
@@ -43,7 +42,7 @@ export const mkSqlContentStore = <T extends DeviceContent>(
       return { entries, nextStartAfter };
     },
 
-    add: async (deviceId, data) => {
+    add: async (deviceId, data, pruneTo?: number) => {
       const now = new Date();
       const row = await model.create({
         data: { deviceId, date: now, json: { ...data } },

@@ -1,15 +1,9 @@
 import { object, string, ValidationError } from "yup";
 import { FunctionHandlerError, FunctionHandlerReturnType } from "..";
 import { DavisToolContext } from "src/davis";
-import {
-  addDeviceNote,
-  DeviceNote,
-  DeviceNoteDraft,
-  updateDeviceNote,
-} from "src/services/olddb/device/notes";
 import _ from "lodash";
-import { WithId } from "src/services/olddb/device/content";
 import { sendNotesUpdate } from "src/sockets/msgBuilders/device";
+import { db, DeviceNote, DeviceNoteDraft, WithId } from "src/services/db";
 
 export const getNoteSlug = (note: DeviceNote) =>
   note.title
@@ -63,22 +57,25 @@ export const handleUpsertNote = async (
 
     const noteUpdate = _.pick(storedNote, ["title", "content"]);
 
-    const note = await updateDeviceNote(context.id, storedNote.id, noteUpdate);
-    if (!note) {
-      throw new FunctionHandlerError("Failed to find note to update in DB.");
-    }
+    // TODO: THIS WILL FAIL
+    await db.device.notes.update(context.id, storedNote.id, noteUpdate);
+    // const note =
+    // if (!note) {
+    //   throw new FunctionHandlerError("Failed to find note to update in DB.");
+    // }
 
-    sendNotesUpdate(context.id, {
-      entries: [note],
-    });
+    // sendNotesUpdate(context.id, {
+    //   entries: [note],
+    // });
 
-    return `Note '${note.title}' updated.`;
+    return "BLAH";
+    //return `Note '${note.title}' updated.`;
   } else {
     const noteDraft: DeviceNoteDraft = {
       title: title!, // We know title will be here if no slug
       content,
     };
-    const note = await addDeviceNote(context.id, noteDraft);
+    const note = await db.device.notes.add(context.id, noteDraft);
 
     sendNotesUpdate(context.id, {
       entries: [note],

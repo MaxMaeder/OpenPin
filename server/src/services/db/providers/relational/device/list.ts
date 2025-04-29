@@ -1,12 +1,14 @@
 import { composeListRepo, ListStore } from "src/services/db/repositories/device/list";
 import { prisma } from "../prisma";
 
+const table = prisma.device;
+
 export const listStoreSql: ListStore = {
   create: async (deviceId) => {
-    await prisma.device.create({ data: { id: deviceId } });
+    await table.create({ data: { id: deviceId } });
   },
   exists: async (deviceId) => {
-    return !!(await prisma.device.findUnique({ where: { id: deviceId }, select: { id: true } }));
+    return !!(await table.findUnique({ where: { id: deviceId }, select: { id: true } }));
   },
 };
 

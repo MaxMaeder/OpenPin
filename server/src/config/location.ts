@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { DeviceData } from "src/dbTypes";
+import { DeviceData } from "src/services/db";
 
 export const LOCATION_UPDATE_INTERVAL = 2 * 60 * 60 * 1000; // 2hrs, in ms
 

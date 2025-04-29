@@ -1,5 +1,5 @@
 import { getFirestore } from "firebase-admin/firestore";
-import { PAIR_CODES_COL } from "src/config";
+import { PAIR_CODES_COL } from "src/config/db";
 import { composePairCodeRepo, PairCodeStore } from "src/services/db/repositories/pairCode";
 
 const fs = getFirestore();

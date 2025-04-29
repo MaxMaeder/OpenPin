@@ -1,5 +1,5 @@
 import { getFirestore } from "firebase-admin/firestore";
-import { DEV_LIST_COL } from "src/config";
+import { DEV_LIST_COL } from "src/config/db";
 import { composeListRepo, ListStore } from "src/services/db/repositories/device/list";
 
 const fs = getFirestore();

@@ -1,13 +1,12 @@
 import axios from "axios";
 import admin from "firebase-admin";
-import firebaseKey from "../keys/firebaseKey";
 
 const getGoogleClient = async () => {
   const credential = admin.app().options.credential;
   if (!credential) throw Error("No credential");
   const token = await credential.getAccessToken();
 
-  const projectId = firebaseKey.projectId;
+  const projectId = admin.app().options.projectId;
 
   return axios.create({
     baseURL: `https://translation.googleapis.com/v3/projects/${projectId}/locations/global`,

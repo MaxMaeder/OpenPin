@@ -2,7 +2,7 @@ import { mkFsContentStore } from "./contentBase";
 import { composeContentRepo } from "src/services/db/repositories/device/content";
 import { DeviceCapture } from "src/services/db";
 import { getFirestore } from "firebase-admin/firestore";
-import { DEV_CAPTURES_COL } from "src/config";
+import { DEV_CAPTURES_COL } from "src/config/db";
 
 const col = (deviceId: string) =>
   getFirestore().collection(DEV_CAPTURES_COL).doc(deviceId).collection("entries");

@@ -1,9 +1,9 @@
 import { getFirestore } from "firebase-admin/firestore";
 import _ from "lodash";
-import { DEV_SETTINGS_COL } from "src/config";
 import { INIT_DEVICE_SETTINGS } from "src/config/deviceSettings";
 import { composeSettingsRepo, SettingsStore } from "src/services/db/repositories/device/settings";
 import { DeviceSettings } from "src/services/db";
+import { DEV_SETTINGS_COL } from "src/config/db";
 
 const fs = getFirestore();
 

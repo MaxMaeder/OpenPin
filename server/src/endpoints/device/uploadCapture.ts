@@ -3,10 +3,7 @@ import { getStorage } from "firebase-admin/storage";
 import createHttpError from "http-errors";
 import { now } from "lodash";
 import multer from "multer";
-import { DeviceId } from "src/dbTypes";
-import { addDeviceCapture, DeviceCapture } from "src/services/olddb/device/captures";
-import { getDeviceData, updateDeviceData } from "src/services/olddb/device/data";
-import { doesDeviceExist } from "src/services/olddb/device/list";
+import { db, DeviceCapture, DeviceId } from "src/services/db";
 import { sendCapturesUpdate, sendDataUpdate } from "src/sockets/msgBuilders/device";
 import genFileName from "src/util/genFileName";
 import * as yup from "yup";
@@ -70,12 +67,12 @@ const inferFileType = (filename: string): FileTypeInfo => {
 };
 
 const updateLatestImage = async (deviceId: DeviceId, captureId: string) => {
-  const deviceData = await getDeviceData(deviceId);
+  const deviceData = await db.device.data.get(deviceId);
 
   deviceData.latestImage = captureId;
   deviceData.latestImageCaptured = now();
 
-  await updateDeviceData(deviceId, deviceData);
+  await db.device.data.update(deviceId, deviceData);
   sendDataUpdate(deviceId, deviceData);
 };
 
@@ -94,7 +91,7 @@ export const handleUploadCapture = async (req: Request, res: Response) => {
   }
 
   const deviceId = req.body.deviceId;
-  if (!(await doesDeviceExist(deviceId))) throw createHttpError(404, "Device does not exist");
+  if (!(await db.device.list.exists(deviceId))) throw createHttpError(404, "Device does not exist");
 
   const { fileExt, contentType, captureType } = inferFileType(req.file.originalname);
 
@@ -111,7 +108,7 @@ export const handleUploadCapture = async (req: Request, res: Response) => {
     mediaId: fileName,
   };
 
-  const captureEntry = await addDeviceCapture(deviceId, captureDraft);
+  const captureEntry = await db.device.captures.add(deviceId, captureDraft);
 
   sendCapturesUpdate(deviceId, {
     entries: [captureEntry],

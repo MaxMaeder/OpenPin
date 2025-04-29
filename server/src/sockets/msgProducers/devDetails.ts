@@ -1,6 +1,4 @@
-import { DeviceId } from "src/dbTypes";
-import { getDeviceData } from "src/services/olddb/device/data";
-import { getDeviceSettings } from "src/services/olddb/device/settings";
+import { db, DeviceId } from "src/services/db";
 import {
   sendCapturesUpdate,
   sendDataUpdate,
@@ -8,15 +6,12 @@ import {
   sendNotesUpdate,
   sendSettingsUpdate,
 } from "../msgBuilders/device";
-import { getDeviceCaptures } from "src/services/olddb/device/captures";
-import { getDeviceNotes } from "src/services/olddb/device/notes";
-import { getDeviceMsgs } from "src/services/olddb/device/messages";
 
 export const sendFullDevDetails = async (deviceId: DeviceId) => {
-  sendDataUpdate(deviceId, await getDeviceData(deviceId));
-  sendSettingsUpdate(deviceId, await getDeviceSettings(deviceId));
+  sendDataUpdate(deviceId, await db.device.data.get(deviceId));
+  sendSettingsUpdate(deviceId, await db.device.settings.get(deviceId));
 
-  sendCapturesUpdate(deviceId, await getDeviceCaptures(deviceId));
-  sendNotesUpdate(deviceId, await getDeviceNotes(deviceId));
-  sendMsgsUpdate(deviceId, await getDeviceMsgs(deviceId));
+  sendCapturesUpdate(deviceId, await db.device.captures.list(deviceId));
+  sendNotesUpdate(deviceId, await db.device.notes.list(deviceId));
+  sendMsgsUpdate(deviceId, await db.device.msgs.list(deviceId));
 };

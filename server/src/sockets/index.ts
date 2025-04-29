@@ -1,10 +1,8 @@
-import { UserId } from "../dbTypes";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { handleDataReq } from "./msgHandlers/dataReq";
 import { handleDevSettingsUpdate } from "./msgHandlers/devSettingsUpdate";
 import { authUserSocket } from "../auth";
-import { getUserDevices } from "src/services/olddb/userData";
 import { startDevDataUpdates } from "./msgProducers/devDataUpdates";
 import {
   CLIENT_DATA_REQ,
@@ -27,6 +25,7 @@ import {
   handleMoreMsgsReq,
   handleMoreNotesReq,
 } from "./msgHandlers/devContentReq";
+import { db, UserId } from "src/services/db";
 
 export let io: Server | undefined;
 
@@ -61,7 +60,7 @@ export const setupSocket = (server: HttpServer) => {
 
 const joinRooms = async (socket: Socket, userId: UserId) => {
   try {
-    const userDevices = await getUserDevices(userId);
+    const userDevices = await db.user.getDevices(userId);
 
     // Each socket joins a room for the signed-in user
     // + a room per device that user owns

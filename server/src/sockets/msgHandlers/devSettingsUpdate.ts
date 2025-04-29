@@ -1,7 +1,4 @@
-import _ = require("lodash");
-
 import { ObjectSchema, boolean, number, object, string } from "yup";
-import { updateDeviceSettings } from "../../services/olddb/device/settings";
 import { sendSettingsUpdate } from "../msgBuilders/device";
 import { withAuthAndValidation } from "./common";
 import {
@@ -14,6 +11,8 @@ import {
   TranslateLanguageKey,
   VisionModelKey,
 } from "src/config/deviceSettings";
+import _ from "lodash";
+import { db } from "src/services/db";
 
 interface DeviceSettingsPayload extends Partial<DeviceSettings> {
   id: string;
@@ -60,7 +59,7 @@ export const handleDevSettingsUpdate = withAuthAndValidation(
     const deviceId = payload.id;
 
     const settings: Partial<DeviceSettings> = _.omit(payload, "id");
-    await updateDeviceSettings(deviceId, settings);
+    await db.device.settings.update(deviceId, settings);
 
     sendSettingsUpdate(deviceId, settings, [socket.id]);
   }

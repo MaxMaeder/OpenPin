@@ -1,4 +1,3 @@
-import firebaseKey from "src/keys/firebaseKey";
 import admin from "firebase-admin";
 import axios from "axios";
 import { NoRecognitionError } from "./SST";
@@ -8,7 +7,7 @@ const getGoogleClient = async () => {
   if (!credential) throw Error("No credential");
   const token = await credential.getAccessToken();
 
-  const projectId = firebaseKey.projectId;
+  const projectId = admin.app().options.projectId;
 
   return axios.create({
     baseURL: `https://speech.googleapis.com/v2/projects/${projectId}/locations/global/recognizers/_`,

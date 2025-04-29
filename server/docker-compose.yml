@@ -1,14 +1,36 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
     build: .
     image: openpin-server
+    env_file:
+      - .env
     ports:
       - "9000:9000"
     networks:
       - appnet
+    volumes:
+      - ${FIREBASE_KEY_PATH}:/keys/firebaseKey.json:ro
+    depends_on:
+      db:
+        condition: service_healthy
     restart: always
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: openpin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      retries: 10
+    networks: [appnet]
+    profiles: ["with-db"]
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -18,6 +40,9 @@ services:
     networks:
       - appnet
     restart: unless-stopped
+
+volumes:
+  pgdata:
 
 networks:
   appnet:

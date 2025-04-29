@@ -1,4 +1,4 @@
-import { DeviceId } from "src/dbTypes";
+import { DeviceId } from "./device";
 
 export type UserId = string;
 export type UserData = {

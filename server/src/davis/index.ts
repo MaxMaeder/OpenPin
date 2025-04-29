@@ -9,11 +9,10 @@ import { formatInTimeZone } from "date-fns-tz";
 import { functions, FunctionHandlerError } from "./functions";
 import { COMP_MAX_CALLS, COMP_MODELS } from "../config/davis";
 import { DeviceContext } from "src/endpoints/device/voice/common";
-import { DeviceNote, getDeviceNotes } from "src/services/olddb/device/notes";
 import { COMP_CALLS_EXCEEDED_MSG } from "src/config/davis";
 import { getNoteSlug } from "./functions/handlers/upsertNote";
-import { WithId } from "src/services/olddb/device/content";
 import { addHours } from "date-fns/addHours";
+import { db, DeviceNote, WithId } from "src/services/db";
 
 interface CompletionPrompt {
   text: string;
@@ -69,7 +68,7 @@ class DavisEngine {
    * Gets all device notes from DB
    */
   private async getNotes() {
-    const results = await getDeviceNotes(this.context.id, {
+    const results = await db.device.notes.list(this.context.id, {
       limit: 1000, // Fetch all notes
     });
 

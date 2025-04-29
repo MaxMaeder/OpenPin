@@ -1,6 +1,6 @@
 import { PassThrough } from "stream";
 import { DeviceMetadata } from "../../src/endpoints/device/voice/parser";
-import { UserId } from "../../src/dbTypes";
+import { UserId } from "src/services/db";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -9,5 +9,5 @@ declare module "express-serve-static-core" {
     audioBuffer: Buffer;
     userId: UserId;
   }
-  interface Response { }
+  interface Response {}
 }

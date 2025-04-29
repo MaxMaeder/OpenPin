@@ -1,7 +1,7 @@
 /* eslint-disable quotes */
 /* eslint-disable max-len */
-import { DeviceData, UserData } from "../dbTypes";
 import { SpeechSynthesisOutputFormat } from "microsoft-cognitiveservices-speech-sdk";
+import { DeviceData, UserData } from "src/services/db";
 
 export const REQ_METADATA_SIZE = 512;
 
@@ -15,22 +15,11 @@ export const MSFT_TTS_REGION = "eastus";
 export const MSFT_TTS_LANGUAGE = "en-US";
 export const MSFT_TTS_VOICE = "en-US-DavisNeural";
 export const MSFT_TTS_MULTILINGUAL_VOICE = "en-US-DavisMultilingualNeural";
-export const MSFT_TTS_FORMAT =
-  SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus;
+export const MSFT_TTS_FORMAT = SpeechSynthesisOutputFormat.Ogg16Khz16BitMonoOpus;
 
-export const DEV_MSGS_COL = "DeviceMessages2"; // Todo: fix this
 export const DEV_MSGS_NUM = 10;
 
-export const USER_DATA_COL = "Users";
-export const PAIR_CODES_COL = "PairCodes";
-export const DEV_LIST_COL = "Devices";
-export const DEV_DATA_COL = "DeviceData";
-export const DEV_SETTINGS_COL = "DeviceSettings";
-export const DEV_CAPTURES_COL = "DeviceCaptures";
-export const DEV_NOTES_COL = "DeviceNotes";
-
-export const TEST_TEXT =
-  "This is a test of the audio pipeline. This is the end of the test.";
+export const TEST_TEXT = "This is a test of the audio pipeline. This is the end of the test.";
 
 export const LOW_BATTERY_PERCENT = 0.2;
 
