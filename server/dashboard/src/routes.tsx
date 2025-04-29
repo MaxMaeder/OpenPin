@@ -32,6 +32,8 @@ const GuestGuard = () => {
   return !user ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
+const simpleAuth = import.meta.env.SIMPLE_AUTH;
+
 export const router = createBrowserRouter([
   {
     element: <ModalsLayout />,
@@ -58,8 +60,12 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/auth/login" replace /> },
           { path: "login", element: <LoginRoute /> },
-          { path: "signup", element: <SignupRoute /> },
-          { path: "reset", element: <ResetRoute /> },
+          ...(!simpleAuth
+            ? [
+              { path: "signup", element: <SignupRoute /> },
+              { path: "reset", element: <ResetRoute /> },
+            ]
+            : []),
         ],
       },
       {
