@@ -32,7 +32,7 @@ const GuestGuard = () => {
   return !user ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
-const simpleAuth = import.meta.env.SIMPLE_AUTH;
+const simpleAuth = import.meta.env.DASH_SIMPLE_AUTH;
 
 export const router = createBrowserRouter([
   {

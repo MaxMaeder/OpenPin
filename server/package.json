@@ -13,7 +13,7 @@
   "main": "lib/index.js",
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.0",
-    "@prisma/client": "^6.6.0",
+    "@prisma/client": "^6.7.0",
     "axios": "^1.7.2",
     "core-js": "^3.37.0",
     "date-fns": "^3.6.0",
@@ -72,6 +72,7 @@
     "eslint-plugin-import": "^2.25.4",
     "firebase-functions-test": "^3.0.0",
     "nodemon": "^3.1.9",
+    "prisma": "^6.7.0",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.13",
     "typescript": "5.1.6"

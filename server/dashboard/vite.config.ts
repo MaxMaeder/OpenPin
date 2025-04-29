@@ -16,7 +16,8 @@ export default defineConfig({
       src: path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    "import.meta.env.SIMPLE_AUTH": process.env.SIMPLE_AUTH === "true",
-  },
+
+  envDir: path.resolve(__dirname, ".."),
+
+  envPrefix: "DASH_",
 });

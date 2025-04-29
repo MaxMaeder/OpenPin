@@ -23,10 +23,12 @@ const LoginRoute = () => {
     signInWithEmailAndPassword(data.email, data.password);
   };
 
+  const simpleAuth = import.meta.env.DASH_SIMPLE_AUTH;
+
   return (
     <AuthLayout
       title="Log In"
-      links={[{
+      links={(!simpleAuth) && [{
         label: "Create Account",
         href: "/auth/signup",
       }, {

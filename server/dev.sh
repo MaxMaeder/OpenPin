@@ -20,6 +20,8 @@ DB_BACKEND=${DB_BACKEND:-postgres}
 DB_PORT=${DB_PORT:-5432}
 STUDIO_PORT=${STUDIO_PORT:-5555}
 NET=devnet
+NM_VOL=openpin-dev-node-modules
+DASH_NM_VOL=openpin-dev-dash-node-modules
 
 # ──────────────────────────────────────────────
 # 2.  Clean-up helper (runs on Ctrl-C / exit)
@@ -34,9 +36,11 @@ cleanup () {
 trap cleanup INT TERM EXIT
 
 # ──────────────────────────────────────────────
-# 3.  Network
+# 3.  Network / volumes
 # ──────────────────────────────────────────────
 docker network inspect "$NET" >/dev/null 2>&1 || { echo "🔵 Creating network $NET"; docker network create "$NET"; }
+docker volume inspect "$NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $NM_VOL";  docker volume create "$NM_VOL"; }
+docker volume inspect "$DASH_NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $DASH_NM_VOL";  docker volume create "$DASH_NM_VOL"; }
 
 # ──────────────────────────────────────────────
 # 3.  Postgres (optional)
@@ -55,7 +59,7 @@ if [[ "$DB_BACKEND" == "postgres" ]]; then
   if docker container inspect openpin-dev-db &>/dev/null; then
     echo "✅  Found existing Postgres container."
     if ! docker start openpin-dev-db >/dev/null 2>&1; then
-      echo "⚠️  Could not start it (probably missing network) – recreating ..."
+      echo "⚠️  Could not start it (probably missing network) - recreating ..."
       docker rm -f openpin-dev-db
       postgres_create
     fi
@@ -71,7 +75,9 @@ if [[ "$DB_BACKEND" == "postgres" ]]; then
             psql -U postgres -d openpin -tAc "select count(*) from information_schema.tables where table_schema='public';")
   if [[ "$TABLES" == "0" ]]; then
     echo "🆕  Running initial Prisma migration ..."
-    docker run --rm --network "$NET" -v "$PWD":/app -w /app \
+    docker run --rm --network "$NET" \
+      -v "$PWD":/app -w /app \
+      -v "$NM_VOL":/app/node_modules \
       -e DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@openpin-dev-db:5432/openpin" \
       node:20-slim bash -c "npm ci --omit=dev --silent && npx prisma generate && npx prisma migrate deploy"
   fi
@@ -79,6 +85,7 @@ if [[ "$DB_BACKEND" == "postgres" ]]; then
   prisma_start () {
     docker run -d --name prisma-studio --network "$NET" \
       -v "$PWD":/app -w /app \
+      -v "$NM_VOL":/app/node_modules \
       -e DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@openpin-dev-db:5432/openpin" \
       -p "$STUDIO_PORT":5555 \
       node:20-slim bash -c "npm ci --omit=dev --silent && npx prisma generate && npx prisma studio --hostname 0.0.0.0 --port 5555"
@@ -109,6 +116,8 @@ docker run --rm -it \
   --name openpin-dev \
   --network $NET \
   -v "$PWD":/app \
+  -v "$NM_VOL":/app/node_modules \
+  -v "$DASH_NM_VOL":/app/dashboard/node_modules \
   -v "$FIREBASE_KEY_PATH":/keys/firebaseKey.json:ro \
   -w /app \
   -p 8080:8080 \
