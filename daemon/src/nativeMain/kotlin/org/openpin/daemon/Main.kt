@@ -28,6 +28,12 @@ private val processManager = ProcessManager(
 )
 
 private fun handleDeviceWake() {
+    IntentManager.sendBroadcast(
+        IntentManager.BroadcastType.POWER_EVENT_ACTION,
+        mapOf("sleeping" to false)
+    )
+
+    // Launch client activity if specified and not already running
     if (config.clientActivity.isNullOrBlank())
         return
 

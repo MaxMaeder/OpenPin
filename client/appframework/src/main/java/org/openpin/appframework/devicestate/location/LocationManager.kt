@@ -7,44 +7,88 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.openpin.appframework.daemonbridge.power.PowerHandler
+import org.openpin.appframework.daemonbridge.power.PowerSubscription
 import org.openpin.appframework.daemonbridge.process.ProcessHandler
 import org.openpin.appframework.daemonbridge.process.RequestProcess
 import java.io.Closeable
+import kotlin.time.Duration
 
 class LocationManager(
     private val processHandler: ProcessHandler,
-    private val config: LocationConfig = LocationConfig(),
+    private val powerHandler: PowerHandler,
+    private val config: LocationConfig,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : Closeable {
     private val TAG = "LocationManager"
 
     private var scanJob: Job? = null
+    private var powerSub: PowerSubscription? = null
+    private var nextInterval: Duration? = null
 
     var latestScanResults: List<WiFiScanEntry> = emptyList()
     var latestLocation: ResolvedLocation? = null
 
     fun start() {
-        val interval = config.scanInterval ?: return
+        // Skip if already running
+        if (scanJob != null) return
 
-        if (scanJob != null) return // already running
-
-        scanJob = scope.launch {
-            while (isActive) {
-                runScan()
-                delay(interval)
-            }
+        // Subscribe to power events
+        powerSub = powerHandler.subscribePowerEvents { event ->
+            // If sleeping == false, device has just woken
+            // Let's reschedule subsequent scans
+            if (!event.sleeping) scope.launch { resetScheduleAndRunNow() }
         }
+
+
+        // Kick-off immediately, then schedule subsequent scans
+        scope.launch { resetScheduleAndRunNow() }
     }
 
     fun stop() {
         scanJob?.cancel()
         scanJob = null
+
+        powerSub?.let { powerHandler.unsubscribe(it) }
+        powerSub = null
     }
 
+    /**
+     * Cancels running location update schedule (if any),
+     * runs a scan immediately,
+     * schedules subsequent scans with the (possibly) exponential back-off
+     */
+    private suspend fun resetScheduleAndRunNow() {
+        scanJob?.cancelAndJoin()
+
+        runScan()
+
+        // Reset interval
+        // If null, don't schedule location updates
+        nextInterval = config.scanInterval ?: return
+
+        scanJob = scope.launch {
+            while (isActive) {
+                delay(nextInterval!!)
+                runScan()
+
+                if (config.exponentialInterval) {
+                    // If exponential interval configured, double the time until the next scan
+                    nextInterval = nextInterval!! * 2
+                }
+            }
+        }
+    }
+
+    /**
+     * Run a scan
+     */
     suspend fun runScan() {
+        Log.e(TAG, "SCANNING!")
         val scan = WiFiScanProcess()
         try {
             processHandler.execute(scan)

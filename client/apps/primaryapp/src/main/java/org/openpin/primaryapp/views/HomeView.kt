@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -86,11 +87,21 @@ fun HomeView(navigationController: NavigationController) {
                     modifier = Modifier
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.spacedBy(50.dp, Alignment.CenterHorizontally)
                 ) {
-                    Text(homeData.location ?: "—", size = 70.sp)
-                    Spacer(modifier = Modifier.width(50.dp))
-                    Text(homeData.temp ?: "—", size = 70.sp)
+                    Text(
+                        text = homeData.location ?: "—",
+                        modifier = Modifier.weight(1f), // limits width
+                        size = 70.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Text(
+                        text = homeData.temp ?: "—",
+                        size = 70.sp
+                    )
                 }
 
                 // Middle row

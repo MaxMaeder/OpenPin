@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import org.openpin.appframework.ui.locals.LocalContentColor
 import org.openpin.appframework.ui.locals.LocalUIConfig
@@ -16,7 +17,10 @@ fun Text(
     modifier: Modifier = Modifier,
     size: TextUnit? = null,
     weight: FontWeight? = null,
-    align: TextAlign = TextAlign.Unspecified
+    align: TextAlign = TextAlign.Unspecified,
+    maxLines: Int = Int.MAX_VALUE,
+    softWrap: Boolean = true,
+    overflow: TextOverflow = TextOverflow.Clip
 ) {
     val config = LocalUIConfig.current.text
 
@@ -29,6 +33,9 @@ fun Text(
             fontWeight = weight ?: config.fontWeight,
             color = LocalContentColor.current
         ),
-        modifier = modifier
+        modifier = modifier,
+        maxLines = maxLines,
+        softWrap = softWrap,
+        overflow = overflow
     )
 }

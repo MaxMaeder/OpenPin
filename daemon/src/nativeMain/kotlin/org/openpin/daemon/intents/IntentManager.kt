@@ -8,6 +8,7 @@ object IntentManager {
     enum class BroadcastType(val action: String) {
         GESTURE_ACTION("org.openpin.GESTURE_ACTION"),
         PROCESS_DONE_ACTION("org.openpin.PROCESS_DONE_ACTION"),
+        POWER_EVENT_ACTION("org.openpin.POWER_EVENT_ACTION"),
     }
 
     @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
@@ -19,6 +20,7 @@ object IntentManager {
                 when (value) {
                     is String -> append(" --es \"$key\" \"$value\"")
                     is Int -> append(" --ei \"$key\" $value")
+                    is Boolean -> append(" --ez \"$key\" $value")
                     is Enum<*> -> append(" --es \"$key\" \"${value}\"")
                     else -> throw IllegalArgumentException("Unsupported type for key '$key': ${value::class.simpleName}")
                 }

@@ -125,7 +125,7 @@ abstract class PinActivity : ComponentActivity() {
                 val receiverMap = mapOf(
                     DaemonIntentType.GESTURE to get<GestureHandler>(),
                     DaemonIntentType.PROCESS_DONE to get<ProcessHandler>(),
-                    DaemonIntentType.WAKELOCK_UPDATE to get<PowerHandler>()
+                    DaemonIntentType.POWER_EVENT to get<PowerHandler>()
                 )
                 DaemonBridgeManager(
                     context = get(),
@@ -153,7 +153,7 @@ abstract class PinActivity : ComponentActivity() {
             }
 
             single { locationConfig }
-            single { LocationManager(get(), get()) }
+            single { LocationManager(get(), get(), get()) }
 
             single { BatteryManager(get()) }
             single { WifiManager(get()) }

@@ -11,13 +11,19 @@ class PowerHandler : DaemonIntentReceiver, Closeable {
     private lateinit var fileSystem: DaemonFileSystem
     private lateinit var wakelockFile: File
 
+    private val subscriptions = mutableSetOf<PowerSubscription>()
+
     override fun setFileSystem(fileSystem: DaemonFileSystem) {
         this.fileSystem = fileSystem
         wakelockFile = fileSystem.get("wakelock.txt")
     }
 
     override fun onReceive(extras: Bundle?) {
-        // No-op, there are no power intents to receive
+        val event = parsePowerEvent(extras) ?: return
+
+        subscriptions.forEach { sub ->
+            sub.callback(event)
+        }
     }
 
     fun setWakelock(enabled: Boolean) {
@@ -30,7 +36,31 @@ class PowerHandler : DaemonIntentReceiver, Closeable {
         wakelockFile.writeText(enabled.toString())
     }
 
+    /**
+     * Subscribe to all power events get back a handle for unsubscribing later.
+     */
+    fun subscribePowerEvents(
+        callback: (PowerEvent) -> Unit
+    ): PowerSubscription {
+        val sub = PowerSubscription(callback)
+        subscriptions.add(sub)
+        return sub
+    }
+
+    /**
+     * Unsubscribe using the handle returned from subscribeGesture.
+     */
+    fun unsubscribe(sub: PowerSubscription) {
+        subscriptions.remove(sub)
+    }
+
     override fun close() {
-        // No-op, nothing to close
+        subscriptions.clear()
+    }
+
+    private fun parsePowerEvent(extras: Bundle?): PowerEvent? {
+        extras ?: return null
+        val sleeping = extras.getBoolean("sleeping")
+        return PowerEvent(sleeping)
     }
 }
