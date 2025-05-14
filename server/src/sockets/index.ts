@@ -2,7 +2,7 @@ import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { handleDataReq } from "./msgHandlers/dataReq";
 import { handleDevSettingsUpdate } from "./msgHandlers/devSettingsUpdate";
-import { authUserSocket } from "../auth";
+import auth from "../services/auth";
 import { startDevDataUpdates } from "./msgProducers/devDataUpdates";
 import {
   CLIENT_DATA_REQ,
@@ -33,7 +33,7 @@ export const setupSocket = (server: HttpServer) => {
   io = new Server(server, {
     path: "/dash-link/",
   });
-  io.use(authUserSocket);
+  io.use(auth.authUserSocket);
 
   io.on("connection", (socket) => {
     try {

@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
+import { User } from "src/state/slices/authSlice";
 
 const instance = axios.create({
   baseURL: "/",
-  //baseURL: "http://localhost:8080",
 });
 
 export class ApiError extends Error {
@@ -26,47 +26,60 @@ const handleError = (error: AxiosError): ApiError => {
   return new ApiError("An unexpected error occurred");
 };
 
-let authToken: string | undefined;
-
 const api = {
-  setAuthToken: (newToken?: string) => {
-    authToken = newToken;
-    if (!authToken) delete instance.defaults.headers.common["Authorization"];
-    else
-      instance.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
-  },
-  loginUser: async (username: string, password: string): Promise<string> => {
+  login: async (email: string, password: string): Promise<User> => {
     try {
-      const res = await instance.post("/api/dash/login", {
-        username,
+      //console.log(email, password);
+      const { data } = await instance.post<{ user: User }>("/api/dash/auth/login", {
+        email,
         password,
       });
-
-      return res.data.token;
+      return data.user;
     } catch (error) {
-      throw handleError(error as AxiosError<unknown>);
+      throw handleError(error as AxiosError);
     }
   },
-  uploadFirmware: async (deviceId: string, binaryFile: File): Promise<void> => {
-    try {
-      const formData = new FormData();
-      formData.append("deviceId", deviceId);
-      formData.append("file", binaryFile);
 
-      await instance.post("/api/dash/firmware-upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+  signup: async (email: string, password: string): Promise<User> => {
+    try {
+      const { data } = await instance.post<{ user: User }>("/api/dash/auth/signup", {
+        email,
+        password,
       });
+      return data.user;
     } catch (error) {
-      throw handleError(error as AxiosError<unknown>);
+      throw handleError(error as AxiosError);
+    }
+  },
+
+  me: async (): Promise<User> => {
+    try {
+      const { data } = await instance.get<User>("/api/dash/auth/me");
+      return data;
+    } catch (error) {
+      throw handleError(error as AxiosError);
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      await instance.post("/api/dash/auth/logout");
+    } catch (error) {
+      throw handleError(error as AxiosError);
+    }
+  },
+
+  resetPassword: async (email: string): Promise<void> => {
+    try {
+      await instance.post("/auth/reset-password", { email });
+    } catch (error) {
+      throw handleError(error as AxiosError);
     }
   },
   getMediaDownloadUrl: (_: string, mediaName: string) =>
     //`/api/dash/media-download/${mediaName}?token=${token}`,
-  `/api/dash/media-download/${mediaName}`,
-  getPairQrUrl: (token: string) =>
-    `/api/dash/pair-qr.png?token=${token}`,
+    `/api/dash/media-download/${mediaName}`,
+  getPairQrUrl: (token: string) => `/api/dash/pair-qr.png?token=${token}`,
 };
 
 export default api;

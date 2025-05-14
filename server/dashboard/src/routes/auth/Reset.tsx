@@ -1,17 +1,18 @@
 import { Stack, Text, TextInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
-import { useSendPasswordResetEmail } from 'react-firebase-hooks/auth';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
-import { auth } from 'src/comm/firebase.ts';
 import { notifications } from '@mantine/notifications';
 import { emailValidation } from './common';
+import { useAuth } from 'src/state/hooks';
+import { useEffect } from 'react';
 
 type ResetFormInputs = {
   email: string;
 };
 
 const ResetPasswordRoute = () => {
+  const { resetPassword, clearError, status, error: apiErr } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -19,18 +20,19 @@ const ResetPasswordRoute = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<ResetFormInputs>();
-  const [sendPasswordResetEmail, sending, fbError] = useSendPasswordResetEmail(auth);
+
+  useEffect(() => {
+    clearError();
+  }, []);
 
   const onSubmit = async (data: ResetFormInputs) => {
-    const success = await sendPasswordResetEmail(data.email);
-    if (success) {
-      notifications.show({
-        title: "Password Reset Sent",
-        message: "Check your email for a link to reset your password.",
-        position: "top-right"
-      })
-      navigate("/auth/login");
-    }
+    await resetPassword(data.email);
+    notifications.show({
+      title: "Password Reset Sent",
+      message: "Check your email for a link to reset your password.",
+      position: "top-right"
+    })
+    navigate("/auth/login");
   };
 
   return (
@@ -52,10 +54,10 @@ const ResetPasswordRoute = () => {
             error={errors.email?.message}
             {...register('email', emailValidation)}
           />
-          <Button type="submit" loading={sending} mt="xs">
+          <Button type="submit" loading={status == "loading"} mt="xs">
             Reset Password
           </Button>
-          {fbError && <Text c="red">{fbError.message}</Text>}
+          {apiErr && <Text c="red">{apiErr}</Text>}
         </Stack>
       </form>
     </AuthLayout>

@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import authReducer from "./slices/authSlice";
 import commReducer from "./slices/commSlice";
 import dataReducer from "./slices/dataSlice";
 import settingsReducer from "./slices/settingsSlice";
@@ -10,12 +11,13 @@ import messagesReducer from "./slices/msgsSlice";
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     comm: commReducer,
     settings: settingsReducer,
     data: dataReducer,
     notes: notesReducer,
     captures: capturesReducer,
-    messages: messagesReducer
+    messages: messagesReducer,
   },
 });
 

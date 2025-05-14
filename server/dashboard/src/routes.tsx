@@ -4,32 +4,33 @@ import LoginRoute from "./routes/auth/Login.tsx";
 import ResetRoute from "./routes/auth/Reset.tsx";
 import SignupRoute from "./routes/auth/Signup.tsx";
 import NotFoundRoute from "./routes/NotFound/index.tsx";
-import { auth } from "./comm/firebase.ts";
-import { useAuthState } from "react-firebase-hooks/auth";
 import DeviceRoute from "./routes/Device/index.tsx";
 import SelectDeviceRoute from "./routes/SelectDevice/index.tsx";
 import { Loader } from "@mantine/core";
 import ModalsLayout from "./layouts/ModalsLayout.tsx";
+import { useRequireAuth } from "./state/hooks.ts";
 
 const AuthGuard = () => {
-  const [user, loading] = useAuthState(auth);
+  const { ready, authenticated } = useRequireAuth();
   const location = useLocation();
 
-  if (loading) return <Loader />
+  if (!ready) return <Loader />
 
   const redirectTo = `/auth/login?redirectTo=${encodeURIComponent(location.pathname + location.search)}`;
 
-  return user ? <Outlet /> : <Navigate to={redirectTo} replace />;
+  return authenticated ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
 const GuestGuard = () => {
-  const [user] = useAuthState(auth);
+  const { ready, authenticated } = useRequireAuth();
   const location = useLocation();
+
+  if (!ready) return <Loader />
 
   const params = new URLSearchParams(location.search);
   const redirectTo = params.get("redirectTo") || "/";
 
-  return !user ? <Outlet /> : <Navigate to={redirectTo} replace />;
+  return !authenticated ? <Outlet /> : <Navigate to={redirectTo} replace />;
 };
 
 const simpleAuth = import.meta.env.DASH_SIMPLE_AUTH;

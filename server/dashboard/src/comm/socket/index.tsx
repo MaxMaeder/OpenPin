@@ -17,7 +17,7 @@ import {
   setConnected,
   setLoading,
 } from "../../state/slices/commSlice";
-import { useAppDispatch } from "../../state/hooks";
+import { useAppDispatch, useAuth } from "../../state/hooks";
 import superjson from "superjson";
 import {
   CLIENT_DATA_REQ,
@@ -33,7 +33,6 @@ import { PaginatedData } from "src/state/slices/createContentSlice";
 import { capturesActions, DeviceCapture } from "src/state/slices/capturesSlice";
 import { DeviceNote, notesActions } from "src/state/slices/notesSlice";
 import { DeviceMessage, msgsActions } from "src/state/slices/msgsSlice";
-import { useAuthToken } from "../AuthTokenProvider";
 
 interface SocketContextProps {
   sendMessage: (event: string, message: any) => void;
@@ -48,17 +47,17 @@ interface SocketProviderProps {
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const dispatch = useAppDispatch();
-  const { user, idToken: token } = useAuthToken();
+  const { user } = useAuth();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     // Only establish the socket connection if we have both user and token.
-    if (!user || !token) return;
+    if (!user) return;
 
     // Create a new socket connection using the current token.
     const socket: Socket = io("/", {
       path: "/dash-link/",
-      auth: { token },
+      withCredentials: true,
     });
     socketRef.current = socket;
 
@@ -111,7 +110,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
     };
-  }, [user, token, dispatch]); // reinitialize socket if user or token changes
+  }, [user, dispatch]); // reinitialize socket if user changes
 
   const sendMessage = useCallback((event: string, message: any) => {
     if (socketRef.current) {

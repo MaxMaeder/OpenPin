@@ -1,9 +1,9 @@
 import { Stack, Text, TextInput, PasswordInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
-import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
-import { auth } from 'src/comm/firebase.ts';
 import { emailValidation } from './common';
+import { useAuth } from 'src/state/hooks';
+import { useEffect } from 'react';
 
 type SignupFormInputs = {
   email: string;
@@ -12,17 +12,20 @@ type SignupFormInputs = {
 };
 
 const SignupRoute = () => {
+  const { signup, clearError, status, error: apiErr } = useAuth();
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm<SignupFormInputs>();
-  const [createUserWithEmailAndPassword, _, loading, fbError] =
-    useCreateUserWithEmailAndPassword(auth);
+
+  useEffect(() => {
+    clearError();
+  }, []);
 
   const onSubmit = (data: SignupFormInputs) => {
-    createUserWithEmailAndPassword(data.email, data.password);
+    signup(data.email, data.password);
   };
 
   const password = watch('password');
@@ -68,10 +71,10 @@ const SignupRoute = () => {
                 value === password || 'Passwords do not match',
             })}
           />
-          <Button type="submit" loading={loading} mt="xs">
+          <Button type="submit" loading={status == "loading"} mt="xs">
             Create Account
           </Button>
-          {fbError && <Text c="red">{fbError.message}</Text>}
+          {apiErr && <Text c="red">{apiErr}</Text>}
         </Stack>
       </form>
     </AuthLayout>

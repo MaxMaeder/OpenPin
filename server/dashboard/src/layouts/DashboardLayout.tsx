@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import BaseLayout, { BaseLayoutProps } from "./BaseLayout";
 import { IconLogout, IconPlus } from "@tabler/icons-react";
-import { useAppSelector } from "../state/hooks";
+import { useAppSelector, useAuth } from "../state/hooks";
 
 import Logo from "../assets/logo.svg";
 import SocketError from "../comm/socket/SocketError";
@@ -18,8 +18,6 @@ import { openConfirmModal, openPairModal } from "../modals";
 import { selectDeviceNames } from "../state/slices/settingsSlice";
 import useIsMobile from "../util/useIsMobile";
 import { useMemo } from "react";
-import { auth } from "../comm/firebase";
-import { useSignOut } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
 import { useDeviceId } from "../util/useDeviceId";
 import { bgStyle } from "src/assets/bgStyle";
@@ -27,7 +25,7 @@ import { bgStyle } from "src/assets/bgStyle";
 const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [signOut] = useSignOut(auth);
+  const { logout } = useAuth();
 
   const deviceNames = useAppSelector(selectDeviceNames);
 
@@ -50,7 +48,7 @@ const DashboardLayout = ({ children, ...props }: BaseLayoutProps) => {
   const handleLogout = async () => {
     await openConfirmModal("Confirm Log Out", "Are you sure you want to log out?");
 
-    signOut();
+    logout();
   };
 
   return (

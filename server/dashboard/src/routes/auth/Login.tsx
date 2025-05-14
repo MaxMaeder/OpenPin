@@ -1,9 +1,9 @@
 import { Stack, Text, TextInput, PasswordInput, Button } from '@mantine/core';
 import { useForm } from 'react-hook-form';
-import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import AuthLayout from 'src/layouts/AuthLayout.tsx';
-import { auth } from 'src/comm/firebase.ts';
 import { emailValidation } from './common';
+import { useAuth } from 'src/state/hooks';
+import { useEffect } from 'react';
 
 type LoginFormInputs = {
   email: string;
@@ -11,30 +11,27 @@ type LoginFormInputs = {
 };
 
 const LoginRoute = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormInputs>();
-  const [signInWithEmailAndPassword, _, loading, fbError] =
-    useSignInWithEmailAndPassword(auth);
+  const { login, clearError, status, error: apiErr } = useAuth();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>();
+
+  useEffect(() => {
+    clearError();
+  }, []);
 
   const onSubmit = (data: LoginFormInputs) => {
-    signInWithEmailAndPassword(data.email, data.password);
+    login(data.email, data.password);
   };
 
   const simpleAuth = import.meta.env.DASH_SIMPLE_AUTH;
+  const links = !simpleAuth ? [
+    { label: "Create Account", href: "/auth/signup" },
+    { label: "Forgot Password?", href: "/auth/reset" },
+  ] : undefined;
 
   return (
     <AuthLayout
       title="Log In"
-      links={(!simpleAuth) && [{
-        label: "Create Account",
-        href: "/auth/signup",
-      }, {
-        label: "Forgot Password?",
-        href: "/auth/reset",
-      }]}
+      links={links}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack>
@@ -50,10 +47,10 @@ const LoginRoute = () => {
             error={errors.password?.message}
             {...register('password', { required: true })}
           />
-          <Button type="submit" loading={loading} mt="xs">
+          <Button type="submit" loading={status == "loading"} mt="xs">
             Log In
           </Button>
-          {fbError && <Text c="red">{fbError.message}</Text>}
+          {apiErr && <Text c="red">{apiErr}</Text>}
         </Stack>
       </form>
     </AuthLayout>
