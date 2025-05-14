@@ -39,8 +39,8 @@ trap cleanup INT TERM EXIT
 # 3.  Network / volumes
 # ──────────────────────────────────────────────
 docker network inspect "$NET" >/dev/null 2>&1 || { echo "🔵 Creating network $NET"; docker network create "$NET"; }
-docker volume inspect "$NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $NM_VOL";  docker volume create "$NM_VOL"; }
-docker volume inspect "$DASH_NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $DASH_NM_VOL";  docker volume create "$DASH_NM_VOL"; }
+# docker volume inspect "$NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $NM_VOL";  docker volume create "$NM_VOL"; }
+# docker volume inspect "$DASH_NM_VOL"  >/dev/null 2>&1 || { echo "🔵 Creating volume $DASH_NM_VOL";  docker volume create "$DASH_NM_VOL"; }
 
 # ──────────────────────────────────────────────
 # 3.  Postgres (optional)
@@ -76,20 +76,24 @@ if [[ "$DB_BACKEND" == "postgres" ]]; then
   if [[ "$TABLES" == "0" ]]; then
     echo "🆕  Running initial Prisma migration ..."
     docker run --rm --network "$NET" \
+      -u $(id -u):$(id -g) \
       -v "$PWD":/app -w /app \
-      -v "$NM_VOL":/app/node_modules \
       -e DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@openpin-dev-db:5432/openpin" \
       node:20-slim bash -c "npm ci --omit=dev --silent && npx prisma generate && npx prisma migrate deploy"
   fi
 
+  #      -v "$NM_VOL":/app/node_modules \
+
   prisma_start () {
     docker run -d --name prisma-studio --network "$NET" \
+      -u $(id -u):$(id -g) \
       -v "$PWD":/app -w /app \
-      -v "$NM_VOL":/app/node_modules \
       -e DATABASE_URL="postgresql://postgres:$POSTGRES_PASSWORD@openpin-dev-db:5432/openpin" \
       -p "$STUDIO_PORT":5555 \
       node:20-slim bash -c "npm ci --omit=dev --silent && npx prisma generate && npx prisma studio --hostname 0.0.0.0 --port 5555"
   }
+  
+  #-v "$NM_VOL":/app/node_modules \
 
   if docker container inspect prisma-studio &>/dev/null; then
     echo "✅  Found existing Prisma Studio."
@@ -115,9 +119,8 @@ echo "🚀  Starting OpenPin dev server (Ctrl-C to quit)..."
 docker run --rm -it \
   --name openpin-dev \
   --network $NET \
+  -u $(id -u):$(id -g) \
   -v "$PWD":/app \
-  -v "$NM_VOL":/app/node_modules \
-  -v "$DASH_NM_VOL":/app/dashboard/node_modules \
   -v "$FIREBASE_KEY_PATH":/keys/firebaseKey.json:ro \
   -w /app \
   -p 8080:8080 \
@@ -129,3 +132,6 @@ docker run --rm -it \
     npx --yes prisma generate
     npm run dev
   '
+
+# -v "$NM_VOL":/app/node_modules \
+# -v "$DASH_NM_VOL":/app/dashboard/node_modules \
