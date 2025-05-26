@@ -29,7 +29,7 @@ class Handler extends AbstractVoiceHandler {
       audioData = await addBackgroundAudio(audioData, SEXY_BG_AUDIO_FILE, SEXY_BG_AUDIO_CONFIG);
     }
 
-    this.sendResponse(audioData);
+    await this.sendResponse(audioData);
   }
 
   public async run() {

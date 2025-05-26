@@ -37,7 +37,7 @@ class Handler extends AbstractVoiceHandler {
         const speech = getRandomCannedMsg(NO_SPEECH_MSGS);
 
         const audioData = await TTS.speak(speech, this.getSpeechConfig());
-        this.sendResponse(audioData);
+        await this.sendResponse(audioData);
         return;
       }
 
@@ -71,7 +71,7 @@ class Handler extends AbstractVoiceHandler {
       });
     }
 
-    this.sendResponse(audioData);
+    await this.sendResponse(audioData);
   }
 }
 
