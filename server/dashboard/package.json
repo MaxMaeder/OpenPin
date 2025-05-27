@@ -14,6 +14,7 @@
     "@mantine/hooks": "^7.10.1",
     "@mantine/modals": "7.10.1",
     "@mantine/notifications": "^7.10.1",
+    "@mdx-js/rollup": "^3.1.0",
     "@reduxjs/toolkit": "^2.2.5",
     "@tabler/icons-react": "^3.5.0",
     "@vis.gl/react-google-maps": "^1.0.2",

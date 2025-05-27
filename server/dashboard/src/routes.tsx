@@ -10,6 +10,8 @@ import DeviceRoute from "./routes/Device/index.tsx";
 import SelectDeviceRoute from "./routes/SelectDevice/index.tsx";
 import { Loader } from "@mantine/core";
 import ModalsLayout from "./layouts/ModalsLayout.tsx";
+import PrivacyRoute from "./routes/legal/Privacy/index.tsx";
+import TermsRoute from "./routes/legal/Terms/index.tsx";
 
 const AuthGuard = () => {
   const [user, loading] = useAuthState(auth);
@@ -60,6 +62,13 @@ export const router = createBrowserRouter([
           { path: "login", element: <LoginRoute /> },
           { path: "signup", element: <SignupRoute /> },
           { path: "reset", element: <ResetRoute /> },
+        ],
+      },
+      {
+        path: "/legal",
+        children: [
+          { path: "privacy", element: <PrivacyRoute /> },
+          { path: "terms", element: <TermsRoute /> },
         ],
       },
       {

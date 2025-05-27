@@ -50,6 +50,29 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({ title, children, links 
           </Paper>
         </Stack>
       </Center>
+      <Group mb="sm" gap="0" justify="center" style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0
+      }} >
+        <Button
+          variant="transparent"
+          color="gray"
+          component={NavLink}
+          to="/legal/terms"
+        >
+          Terms of Service
+        </Button>
+        <Button
+          variant="transparent"
+          color="gray"
+          component={NavLink}
+          to="/legal/terms"
+        >
+          Privacy Policy
+        </Button>
+      </Group>
     </BaseLayout>
   );
 };
